@@ -21,16 +21,43 @@ export default function StockTable({
 }: Props) {
   const estado = (cantidad: number) => {
     if (cantidad < 0)
-      return <span className="text-red-400">Negativo</span>
+      return (
+        <span
+          className="text-red-400"
+          title="Stock negativo: se han realizado ventas sin stock registrado. Se recomienda hacer recuento para auditoría."
+        >
+          Negativo
+        </span>
+      )
+
     if (cantidad === 0)
       return (
-        <span className="text-orange-400">
+        <span
+          className="text-orange-400"
+          title="Producto sin stock disponible"
+        >
           Sin stock
         </span>
       )
+
     if (cantidad <= 5)
-      return <span className="text-yellow-400">Bajo</span>
-    return <span className="text-green-400">OK</span>
+      return (
+        <span
+          className="text-yellow-400"
+          title="Stock bajo: considerar reposición"
+        >
+          Bajo
+        </span>
+      )
+
+    return (
+      <span
+        className="text-green-400"
+        title="Stock en niveles normales"
+      >
+        OK
+      </span>
+    )
   }
 
   return (
@@ -74,9 +101,14 @@ export default function StockTable({
             stock.map(item => (
               <tr
                 key={item._id}
-                className={`border-t border-slate-800 ${
-                  item.habilitado ? '' : 'opacity-60'
-                }`}
+                className={`border-t border-slate-800 ${!item.habilitado
+                    ? 'opacity-60'
+                    : item.cantidad < 0
+                      ? 'bg-red-950/20'
+                      : item.cantidad <= 5
+                        ? 'bg-yellow-950/10'
+                        : ''
+                  }`}
               >
                 <td className="p-3 font-medium">
                   {item.productoId.nombre}
