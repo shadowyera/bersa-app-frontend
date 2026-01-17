@@ -88,25 +88,37 @@ export default function StockPage() {
     },
   })
 
+  const prioridadStock = (item: StockProducto) => {
+    if (!item.habilitado) return 4
+    if (item.cantidad < 0) return 1
+    if (item.cantidad <= 5) return 2
+    return 3
+  }
+
   /* =====================================================
      FILTERS (correctamente memorizados)
   ===================================================== */
 
   const filtered = useMemo(() => {
-    return stock.filter(item => {
-      const producto = item.productoId
-      if (!producto) return false
+    return stock
+      .filter(item => {
+        const producto = item.productoId
+        if (!producto) return false
 
-      const text =
-        `${producto.nombre} ${producto.codigo}`.toLowerCase()
+        const text =
+          `${producto.nombre} ${producto.codigo}`.toLowerCase()
 
-      if (search && !text.includes(search.toLowerCase()))
-        return false
+        if (search && !text.includes(search.toLowerCase()))
+          return false
 
-      if (onlyLow && item.cantidad > 5) return false
+        if (onlyLow && item.cantidad > 5) return false
 
-      return true
-    })
+        return true
+      })
+      .sort(
+        (a, b) =>
+          prioridadStock(a) - prioridadStock(b)
+      )
   }, [stock, search, onlyLow])
 
   useEffect(() => {
