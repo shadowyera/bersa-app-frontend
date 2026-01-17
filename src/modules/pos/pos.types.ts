@@ -32,4 +32,5 @@ export interface ProductoPOS {
   nombre: string
   precio: number
   activo: boolean
+  codigo?: string
 }

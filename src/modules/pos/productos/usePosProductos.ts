@@ -1,6 +1,7 @@
 import { useMemo, useDeferredValue } from 'react'
 import { useProductosPOS } from '@/shared/queries/useProductos'
 import { useStockSucursal } from '@/shared/hooks/useStockSucursal'
+import type { ProductoPOS } from '../pos.types'
 
 /**
  * Hook de lectura para el POS
@@ -21,6 +22,8 @@ export function usePosProductos(
     isLoading: loadingProductos,
   } = useProductosPOS()
 
+  const productosCatalogoTyped = productosCatalogo as ProductoPOS[]
+
   /* ===============================
      Stock normalizado (ya existente)
   =============================== */
@@ -37,9 +40,9 @@ export function usePosProductos(
   const productosFiltrados = useMemo(() => {
     const q = deferredQuery.toLowerCase()
 
-    if (!q) return productosCatalogo
+    if (!q) return productosCatalogoTyped
 
-    return productosCatalogo.filter(
+    return productosCatalogoTyped.filter(
       p =>
         p.nombre.toLowerCase().includes(q) ||
         p.codigo?.includes(deferredQuery)
