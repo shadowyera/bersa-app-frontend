@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 
 /* ===============================
    UI POS – Vista de Venta
@@ -14,15 +14,6 @@ import SeleccionarTipoPagoModal from '../../Cobro/ui/SeleccionarTipoPagoModal'
 =============================== */
 import type { CartItem, ProductoPOS } from '../../pos.types'
 
-/**
- * Props de PosVentaView
- *
- * IMPORTANTE:
- * - Este componente es 100% PRESENTACIONAL
- * - No usa hooks de dominio
- * - No conoce reglas de negocio
- * - Todo llega resuelto desde el controller
- */
 export interface PosVentaViewProps {
   /* ===============================
      Scanner
@@ -43,7 +34,7 @@ export interface PosVentaViewProps {
   /* ===============================
      Venta / Carrito
   =============================== */
-  cart: CartItem[]          // ✅ AQUÍ ESTÁ EL CAMBIO
+  cart: CartItem[]
   onIncrease: (productoId: string) => void
   onDecrease: (productoId: string) => void
   total: number
@@ -72,21 +63,7 @@ export interface PosVentaViewProps {
   }
 }
 
-/**
- * PosVentaView
- *
- * Vista principal del POS (venta).
- *
- * Responsabilidades:
- * - Renderizar scanner, productos, carrito y cobro
- * - Aplicar bloqueos visuales
- *
- * NO:
- * - Maneja estado
- * - Usa hooks de dominio
- * - Conoce reglas de negocio
- */
-export default function PosVentaView({
+function PosVentaView({
   scannerRef,
   onAddProduct,
   onFocusScanner,
@@ -171,10 +148,11 @@ export default function PosVentaView({
                     if (bloqueado) return
                     onCobrar()
                   }}
-                  className={`mt-4 w-full py-2 rounded text-white transition ${bloqueado
+                  className={`mt-4 w-full py-2 rounded text-white transition ${
+                    bloqueado
                       ? 'bg-gray-500 cursor-not-allowed'
                       : 'bg-emerald-600 hover:bg-emerald-700'
-                    }`}
+                  }`}
                 >
                   {cargandoCaja
                     ? 'Validando caja…'
@@ -213,3 +191,5 @@ export default function PosVentaView({
     </>
   )
 }
+
+export default memo(PosVentaView)

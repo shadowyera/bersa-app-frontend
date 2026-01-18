@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react'
 import ModalBase from './ModalBase'
 import { useResumenCaja } from '../../hooks/useResumenCaja'
 
@@ -6,13 +7,25 @@ interface Props {
   onClose: () => void
 }
 
-export default function ResumenCajaModal({
+/**
+ * Modal con el resumen actual de una caja.
+ *
+ * - UI pura
+ * - Consume datos vía hook
+ * - No contiene lógica de dominio
+ */
+function ResumenCajaModal({
   cajaId,
   onClose,
 }: Props) {
-  const { data, loading, refresh } = useResumenCaja(cajaId)
+  const { data, loading, refresh } =
+    useResumenCaja(cajaId)
 
   if (!cajaId) return null
+
+  const handleRefresh = useCallback(() => {
+    refresh()
+  }, [refresh])
 
   return (
     <ModalBase
@@ -28,9 +41,18 @@ export default function ResumenCajaModal({
       {!loading && data && (
         <>
           <div className="space-y-3 text-sm">
-            <Fila label="Monto inicial" value={data.montoInicial} />
-            <Fila label="Total ventas" value={data.totalVentas} />
-            <Fila label="Efectivo por ventas" value={data.efectivoVentas} />
+            <Fila
+              label="Monto inicial"
+              value={data.montoInicial}
+            />
+            <Fila
+              label="Total ventas"
+              value={data.totalVentas}
+            />
+            <Fila
+              label="Efectivo por ventas"
+              value={data.efectivoVentas}
+            />
 
             <div className="border-t border-slate-700 my-2" />
 
@@ -43,7 +65,7 @@ export default function ResumenCajaModal({
 
           <div className="mt-6 flex justify-center gap-4">
             <button
-              onClick={refresh}
+              onClick={handleRefresh}
               className="px-6 py-2 bg-slate-700 rounded"
             >
               Actualizar
@@ -62,15 +84,26 @@ export default function ResumenCajaModal({
   )
 }
 
-function Fila({
-  label,
-  value,
-  bold,
-}: {
+export default memo(ResumenCajaModal)
+
+/* ===============================
+   Subcomponente
+=============================== */
+
+interface FilaProps {
   label: string
   value: number
   bold?: boolean
-}) {
+}
+
+/**
+ * Fila simple label / valor.
+ */
+const Fila = memo(function Fila({
+  label,
+  value,
+  bold,
+}: FilaProps) {
   return (
     <div
       className={`flex justify-between ${
@@ -81,4 +114,4 @@ function Fila({
       <span>${value.toLocaleString()}</span>
     </div>
   )
-}
+})

@@ -10,11 +10,11 @@ interface ModalBaseProps {
 }
 
 /**
- * ModalBase PRO (con Portal)
+ * Modal base con Portal.
  *
- * ✔ Renderiza en document.body
- * ✔ No lo afecta ningún layout
- * ✔ Z-index garantizado
+ * - Renderiza en document.body
+ * - Aísla el modal de cualquier layout
+ * - Maneja overlay, header, body y footer
  */
 export default function ModalBase({
   title,
@@ -39,7 +39,13 @@ export default function ModalBase({
 
       {/* Modal */}
       <div
-        className={`relative w-full ${maxWidthClass} mx-4 rounded-2xl bg-slate-900 text-slate-100 shadow-2xl border border-slate-700`}
+        className={`
+          relative w-full mx-4
+          ${maxWidthClass}
+          rounded-2xl
+          bg-slate-900 text-slate-100
+          shadow-2xl border border-slate-700
+        `}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">

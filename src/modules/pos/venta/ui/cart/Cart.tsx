@@ -1,6 +1,7 @@
+import { memo } from 'react'
 import CartItemRow from './CartItemRow'
 import { useCartSummary } from './useCartSummary'
-import type { CartItem } from '../../../pos.types';
+import type { CartItem } from '../../../pos.types'
 
 interface Props {
   items: CartItem[]
@@ -12,22 +13,17 @@ interface Props {
 /**
  * Cart
  *
- * Responsabilidad:
- * - Layout
- * - Composición de UI
- *
- * ❗ NO calcula lógica
- * ❗ NO maneja reglas de negocio
+ * Componente presentacional del carrito.
+ * - Compone filas, totales y alertas
+ * - No maneja reglas de negocio
  */
-export default function Cart({
+function Cart({
   items,
   onIncrease,
   onDecrease,
   onUserAction,
 }: Props) {
-  /* ===============================
-     Derivados (hook)
-  =============================== */
+  // Estado derivado del carrito
   const {
     total,
     hayStockInsuficiente,
@@ -48,7 +44,7 @@ export default function Cart({
         </span>
       </div>
 
-      {/* Alerta global */}
+      {/* Advertencia de stock */}
       {hayStockInsuficiente && (
         <div className="mb-3 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1">
           ⚠ El stock del sistema puede no reflejar la
@@ -56,7 +52,7 @@ export default function Cart({
         </div>
       )}
 
-      {/* Lista */}
+      {/* Lista de items */}
       <div className="flex-1 overflow-auto space-y-2">
         {items.length === 0 && (
           <div className="text-sm text-slate-400 text-center mt-6">
@@ -87,3 +83,5 @@ export default function Cart({
     </div>
   )
 }
+
+export default memo(Cart)

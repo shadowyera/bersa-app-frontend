@@ -1,14 +1,15 @@
-import { useCaja } from "../context/CajaProvider"
+import { memo, useCallback } from 'react'
+import { useCaja } from '../context/CajaProvider'
 import { useCajasDisponibles } from '../hooks/useCajasDisponibles'
 
 /**
- * SeleccionarCajaContenido
+ * Contenido de selección de caja.
  *
- * 👉 NO es modal
- * 👉 NO usa portal
- * 👉 Vive dentro del POS (bloqueado por PosLock)
+ * - Vive dentro del POS (bloqueado por PosLock)
+ * - No es modal ni usa portal
+ * - UI pura (orquesta hooks)
  */
-export default function SeleccionarCajaContenido() {
+function SeleccionarCajaContenido() {
   const {
     seleccionarCaja,
     validandoCaja,
@@ -19,6 +20,21 @@ export default function SeleccionarCajaContenido() {
     loading,
     error,
   } = useCajasDisponibles()
+
+  const handleSelectCaja = useCallback(
+    (caja: {
+      id: string
+      nombre: string
+    }) => {
+      seleccionarCaja({
+        id: caja.id,
+        nombre: caja.nombre,
+        sucursalId: '',
+        activa: true,
+      })
+    },
+    [seleccionarCaja]
+  )
 
   return (
     <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
@@ -57,25 +73,20 @@ export default function SeleccionarCajaContenido() {
                 <li key={caja.id}>
                   <button
                     onClick={() =>
-                      seleccionarCaja({
-                        id: caja.id,
-                        nombre: caja.nombre,
-                        sucursalId: '',
-                        activa: true,
-                      })
+                      handleSelectCaja(caja)
                     }
                     disabled={validandoCaja}
                     className={`
-                  w-full p-4 rounded-xl border
-                  flex items-center justify-between
-                  text-left
-                  transition-all duration-150
-                  ${abierta
-                        ? 'border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20'
-                        : 'border-slate-700 bg-slate-800 hover:bg-slate-700'
+                      w-full p-4 rounded-xl border
+                      flex items-center justify-between
+                      text-left transition-all duration-150
+                      ${
+                        abierta
+                          ? 'border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20'
+                          : 'border-slate-700 bg-slate-800 hover:bg-slate-700'
                       }
-                  disabled:opacity-50
-                `}
+                      disabled:opacity-50
+                    `}
                   >
                     <div className="space-y-1">
                       <div className="font-medium text-slate-100">
@@ -84,21 +95,26 @@ export default function SeleccionarCajaContenido() {
 
                       {abierta && (
                         <div className="text-xs text-slate-400">
-                          Abierta por {caja.usuarioAperturaNombre ?? '—'}
+                          Abierta por{' '}
+                          {caja.usuarioAperturaNombre ??
+                            '—'}
                         </div>
                       )}
                     </div>
 
                     <div
                       className={`
-                    px-3 py-1 rounded-full text-xs font-semibold
-                    ${abierta
-                          ? 'bg-emerald-500 text-emerald-950'
-                          : 'bg-slate-600 text-slate-100'
+                        px-3 py-1 rounded-full text-xs font-semibold
+                        ${
+                          abierta
+                            ? 'bg-emerald-500 text-emerald-950'
+                            : 'bg-slate-600 text-slate-100'
                         }
-                  `}
+                      `}
                     >
-                      {abierta ? 'ABIERTA' : 'CERRADA'}
+                      {abierta
+                        ? 'ABIERTA'
+                        : 'CERRADA'}
                     </div>
                   </button>
                 </li>
@@ -110,3 +126,5 @@ export default function SeleccionarCajaContenido() {
     </div>
   )
 }
+
+export default memo(SeleccionarCajaContenido)

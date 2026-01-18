@@ -7,17 +7,17 @@ interface Props {
   stockMap: Record<string, number>
   loading: boolean
 
-  /**
-   * Acción de dominio (estable desde PosPage)
-   */
   onAddProduct: (producto: ProductoPOS) => void
-
-  /**
-   * Acción UX (focus scanner)
-   */
   onAnyClick?: () => void
 }
 
+/**
+ * ProductGrid
+ *
+ * - SIEMPRE renderiza el grid (nunca se desmonta)
+ * - loading es SOLO visual / UX
+ * - evita parpadeos post-cobro
+ */
 function ProductGrid({
   productos,
   stockMap,
@@ -25,30 +25,10 @@ function ProductGrid({
   onAddProduct,
   onAnyClick,
 }: Props) {
-  /* ===============================
-     Estados base
-  =============================== */
-  if (loading) {
-    return (
-      <div className="text-slate-400">
-        Cargando productos…
-      </div>
-    )
-  }
-
-  if (productos.length === 0) {
-    return (
-      <div className="text-slate-500">
-        No hay productos
-      </div>
-    )
-  }
-
-  /* ===============================
-     Handler estable
-     - evita closures por item
-     - mantiene memo del Card
-  =============================== */
+  /**
+   * Handler estable
+   * - mantiene memo de ProductCard
+   */
   const handleAdd = useCallback(
     (producto: ProductoPOS) => {
       onAddProduct(producto)
@@ -57,31 +37,48 @@ function ProductGrid({
     [onAddProduct, onAnyClick]
   )
 
-  /* ===============================
-     Render
-  =============================== */
   return (
-    <div className="grid grid-cols-2 gap-2">
-      {productos.map(p => {
-        const stock = stockMap[p._id] ?? 0
+    <div className="relative">
+      {/* ===============================
+          Grid de productos (SIEMPRE)
+      =============================== */}
+      <div
+        className={`
+          grid grid-cols-2 gap-2
+          transition-opacity duration-150
+          ${loading ? 'opacity-70 pointer-events-none' : ''}
+        `}
+      >
+        {productos.length === 0 && (
+          <div className="col-span-2 text-center text-slate-500 py-6">
+            No hay productos
+          </div>
+        )}
 
-        return (
-          <ProductCard
-            key={p._id}
-            nombre={p.nombre}
-            precio={p.precio}
-            activo={p.activo}
-            stock={stock}
-            onAdd={() => handleAdd(p)}
-          />
-        )
-      })}
+        {productos.map(p => {
+          const stock = stockMap[p._id] ?? 0
+
+          return (
+            <ProductCard
+              key={p._id}
+              nombre={p.nombre}
+              precio={p.precio}
+              activo={p.activo}
+              stock={stock}
+              onAdd={() => handleAdd(p)}
+            />
+          )
+        })}
+      </div>
+
+      {/* ===============================
+          Loading silencioso (opcional)
+      =============================== */}
+      {loading && (
+        <div className="absolute inset-0 pointer-events-none" />
+      )}
     </div>
   )
 }
 
-/**
- * Memo:
- * - el grid solo rerenderiza si cambian props
- */
 export default memo(ProductGrid)

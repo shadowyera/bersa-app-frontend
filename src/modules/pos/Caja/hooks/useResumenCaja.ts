@@ -2,12 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/shared/api/api'
 
 /**
- * Resumen informativo de la caja
- * NO cierra la caja
- * Puede usarse para:
- * - ver estado actual
- * - cuadrar momentáneamente
- * - previo al cierre
+ * Resumen informativo de una caja.
+ *
+ * - NO cierra la caja
+ * - NO modifica estado
+ * - Se usa para visualización y cuadratura
  */
 export interface ResumenCajaResponse {
   cajaId: string
@@ -19,6 +18,9 @@ export interface ResumenCajaResponse {
   efectivoEsperado: number
 }
 
+/**
+ * Hook de lectura del resumen de caja.
+ */
 export function useResumenCaja(cajaId: string) {
   const [data, setData] =
     useState<ResumenCajaResponse | null>(null)
@@ -29,9 +31,10 @@ export function useResumenCaja(cajaId: string) {
 
     setLoading(true)
     try {
-      const { data } = await api.get<ResumenCajaResponse>(
-        `/cajas/${cajaId}/resumen-previo`
-      )
+      const { data } =
+        await api.get<ResumenCajaResponse>(
+          `/cajas/${cajaId}/resumen-previo`
+        )
       setData(data)
     } finally {
       setLoading(false)

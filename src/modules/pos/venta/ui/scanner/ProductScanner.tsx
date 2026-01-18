@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { useScanProduct } from './useScanProduct'
 import { useScannerToast } from './useScannerToast'
 
@@ -25,7 +25,7 @@ interface Props {
  *
  * ❗ NO contiene lógica de negocio
  */
-export default function ProductScanner({
+function ProductScanner({
   onAddProduct,
   scannerRef,
 }: Props) {
@@ -42,9 +42,9 @@ export default function ProductScanner({
   }, [scannerRef])
 
   /* ===============================
-     Procesar escaneo
+     Procesar escaneo (ESTABLE)
   =============================== */
-  const handleScan = async () => {
+  const handleScan = useCallback(async () => {
     const code = value.trim()
     if (!code) return
 
@@ -68,7 +68,26 @@ export default function ProductScanner({
       setValue('')
       scannerRef.current?.focus()
     }
-  }
+  }, [value, scan, onAddProduct, showToast, scannerRef])
+
+  /* ===============================
+     Handlers input (ESTABLES)
+  =============================== */
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setValue(e.target.value)
+    },
+    []
+  )
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleScan()
+      }
+    },
+    [handleScan]
+  )
 
   return (
     <>
@@ -79,12 +98,8 @@ export default function ProductScanner({
         <input
           ref={scannerRef}
           value={value}
-          onChange={e =>
-            setValue(e.target.value)
-          }
-          onKeyDown={e =>
-            e.key === 'Enter' && handleScan()
-          }
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
           autoComplete="off"
           spellCheck={false}
         />
@@ -108,3 +123,5 @@ export default function ProductScanner({
     </>
   )
 }
+
+export default memo(ProductScanner)

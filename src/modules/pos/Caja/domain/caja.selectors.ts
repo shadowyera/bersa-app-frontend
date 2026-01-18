@@ -5,7 +5,7 @@ import type { Caja, AperturaCaja } from './caja.types'
 ===================================================== */
 
 /**
- * Modelo de caja para listados / selección
+ * Modelo de caja para listados y selección.
  */
 export interface CajaUI {
   id: string
@@ -15,7 +15,7 @@ export interface CajaUI {
 }
 
 /**
- * Modelo específico para la barra de caja activa
+ * Modelo para la barra de caja activa.
  */
 export interface BarraCajaUI {
   visible: boolean
@@ -30,8 +30,8 @@ export interface BarraCajaUI {
 ===================================================== */
 
 /**
- * Selector para listado / selección de cajas
- * Usado en: SeleccionarCajaModal
+ * Mapea una caja de dominio a un modelo UI
+ * para listados / selección.
  */
 export function mapCajaToUI(
   caja: Caja,
@@ -46,8 +46,8 @@ export function mapCajaToUI(
 }
 
 /**
- * Selector para la barra de caja activa
- * Usado en: BarraCajaActiva
+ * Construye el modelo UI para la barra
+ * de caja activa.
  */
 export function buildBarraCajaUI(
   caja: Caja | null,

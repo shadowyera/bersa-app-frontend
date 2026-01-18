@@ -1,25 +1,17 @@
 import type { PagoPOS, TipoPago } from '../../pos.types'
 
 interface BuildPagosInput {
-  /** Total final cobrado (con redondeo) */
   totalCobrado: number
-
-  /** Modo de pago */
   modo: TipoPago
-
-  /** Monto efectivo validado */
   efectivo: number
-
-  /** Monto débito validado */
   debito: number
 }
 
 /**
- * Construye los pagos a persistir
+ * Construye el arreglo de pagos a persistir.
  *
- * ⚠️ Asume que:
- * - los montos YA fueron validados por cobro.logic
- * - efectivo + debito === totalCobrado en MIXTO
+ * Precondición:
+ * - Los montos ya fueron validados por cobro.logic
  */
 export function buildPagos({
   totalCobrado,
@@ -30,26 +22,17 @@ export function buildPagos({
   switch (modo) {
     case 'EFECTIVO':
       return [
-        {
-          tipo: 'EFECTIVO',
-          monto: totalCobrado,
-        },
+        { tipo: 'EFECTIVO', monto: totalCobrado },
       ]
 
     case 'DEBITO':
       return [
-        {
-          tipo: 'DEBITO',
-          monto: totalCobrado,
-        },
+        { tipo: 'DEBITO', monto: totalCobrado },
       ]
 
     case 'CREDITO':
       return [
-        {
-          tipo: 'CREDITO',
-          monto: totalCobrado,
-        },
+        { tipo: 'CREDITO', monto: totalCobrado },
       ]
 
     case 'TRANSFERENCIA':
@@ -62,14 +45,8 @@ export function buildPagos({
 
     case 'MIXTO':
       return [
-        {
-          tipo: 'EFECTIVO',
-          monto: efectivo,
-        },
-        {
-          tipo: 'DEBITO',
-          monto: debito,
-        },
+        { tipo: 'EFECTIVO', monto: efectivo },
+        { tipo: 'DEBITO', monto: debito },
       ]
 
     default:

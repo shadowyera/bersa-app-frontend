@@ -5,9 +5,12 @@ import {
 } from '@tanstack/react-query'
 import { api } from '@/shared/api/api'
 import { useAuth } from '@/modules/auth/useAuth'
+import {
+  registerCajaRealtimeHandler,
+} from '../caja.realtime'
 
 /* =====================================================
-   Tipo UI para el selector
+   Tipo UI
 ===================================================== */
 export interface CajaDisponibleUI {
   id: string
@@ -40,8 +43,7 @@ async function fetchCajasDisponibles(
     abierta: Boolean(caja.abierta),
     usuarioAperturaNombre:
       caja.usuarioAperturaNombre,
-    fechaApertura:
-      caja.fechaApertura,
+    fechaApertura: caja.fechaApertura,
   }))
 }
 
@@ -54,49 +56,34 @@ export function useCajasDisponibles() {
 
   const sucursalId = user?.sucursalId ?? ''
 
-  /* -------------------------------
-     React Query
-  -------------------------------- */
   const query = useQuery<CajaDisponibleUI[]>({
     queryKey:
       CAJAS_DISPONIBLES_QUERY_KEY(sucursalId),
     enabled: Boolean(sucursalId),
     queryFn: () =>
       fetchCajasDisponibles(sucursalId),
-
     staleTime: 10_000,
     refetchOnWindowFocus: false,
   })
 
   /* -------------------------------
-     SSE
-     👉 SOLO refresca la lista
+     Realtime
+     - SOLO invalida cache
   -------------------------------- */
   useEffect(() => {
     if (!sucursalId) return
 
-    const es = new EventSource('/api/realtime/cajas')
-
-
-    es.onmessage = () => {
-      queryClient.invalidateQueries({
-        queryKey:
-          CAJAS_DISPONIBLES_QUERY_KEY(sucursalId),
+    const unregister =
+      registerCajaRealtimeHandler(() => {
+        queryClient.invalidateQueries({
+          queryKey:
+            CAJAS_DISPONIBLES_QUERY_KEY(sucursalId),
+        })
       })
-    }
 
-    es.onerror = () => {
-      es.close()
-    }
-
-    return () => {
-      es.close()
-    }
+    return unregister
   }, [sucursalId, queryClient])
 
-  /* -------------------------------
-     API del hook
-  -------------------------------- */
   return {
     cajas: query.data ?? [],
     loading: query.isLoading,

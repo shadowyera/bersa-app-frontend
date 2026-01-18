@@ -1,9 +1,20 @@
+import { memo } from 'react'
+
 interface PosLockProps {
   open: boolean
   children: React.ReactNode
 }
 
-export default function PosLock({ open, children }: PosLockProps) {
+/**
+ * PosLock
+ *
+ * Overlay de bloqueo del POS.
+ *
+ * - Renderiza a sus hijos centrados
+ * - Bloquea interacción con el contenido inferior
+ * - No maneja estado ni lógica
+ */
+function PosLock({ open, children }: PosLockProps) {
   if (!open) return null
 
   return (
@@ -12,3 +23,5 @@ export default function PosLock({ open, children }: PosLockProps) {
     </div>
   )
 }
+
+export default memo(PosLock)

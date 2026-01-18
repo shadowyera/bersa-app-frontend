@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useCallback } from 'react'
 
 interface Props {
   nombre: string
@@ -28,16 +28,24 @@ function ProductCard({
   const agotado = activo && stock <= 0
 
   /* ===============================
+     Handlers (ESTABLES)
+  =============================== */
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      if (bloqueado) return
+      onAdd()
+    },
+    [bloqueado, onAdd]
+  )
+
+  /* ===============================
      Render
   =============================== */
   return (
     <button
       disabled={bloqueado}
-      onMouseDown={e => {
-        e.preventDefault()
-        if (bloqueado) return
-        onAdd()
-      }}
+      onMouseDown={handleMouseDown}
       className={`
         p-3 rounded text-left transition
         ${

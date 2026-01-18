@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useCallback } from 'react'
 import type { CartItem } from '@/modules/pos/pos.types'
 
 interface Props {
@@ -9,10 +9,9 @@ interface Props {
 }
 
 /**
- * Fila individual del carrito
+ * Fila individual del carrito.
  *
- * - Componente PURO
- * - Memoizado
+ * Componente presentacional y memoizado.
  */
 function CartItemRow({
   item,
@@ -20,6 +19,24 @@ function CartItemRow({
   onDecrease,
   onUserAction,
 }: Props) {
+  const handleDecrease = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      onDecrease(item.productoId)
+      onUserAction?.()
+    },
+    [item.productoId, onDecrease, onUserAction]
+  )
+
+  const handleIncrease = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      onIncrease(item.productoId)
+      onUserAction?.()
+    },
+    [item.productoId, onIncrease, onUserAction]
+  )
+
   return (
     <div className="flex justify-between items-center bg-slate-700/60 hover:bg-slate-700 transition rounded px-3 py-2">
       {/* Info */}
@@ -35,11 +52,7 @@ function CartItemRow({
       {/* Controles */}
       <div className="flex items-center gap-2 ml-3">
         <button
-          onMouseDown={e => {
-            e.preventDefault()
-            onDecrease(item.productoId)
-            onUserAction?.()
-          }}
+          onMouseDown={handleDecrease}
           className="w-8 h-8 rounded bg-slate-600 hover:bg-slate-500 text-slate-100 text-lg leading-none"
         >
           −
@@ -50,11 +63,7 @@ function CartItemRow({
         </span>
 
         <button
-          onMouseDown={e => {
-            e.preventDefault()
-            onIncrease(item.productoId)
-            onUserAction?.()
-          }}
+          onMouseDown={handleIncrease}
           className="w-8 h-8 rounded bg-slate-600 hover:bg-slate-500 text-slate-100 text-lg leading-none"
         >
           +

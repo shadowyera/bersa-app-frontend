@@ -10,29 +10,21 @@ import { buildPagos } from '../domain/pagos.factory'
 import { normalizarNumero } from '../ui/utils/normalizarNumero'
 
 interface UseCobroPOSProps {
-  /** Total original de la venta (sin redondeo) */
   totalVenta: number
-
-  /** Persistencia de la venta (PosPage) */
   onConfirmVenta: (
     data: ConfirmacionCobro
   ) => Promise<void>
 }
 
 /**
- * useCobroPOS
+ * Hook orquestador del flujo de cobro POS.
  *
- * Hook orquestador del flujo de cobro POS
+ * - Maneja estado UI (inputs y modales)
+ * - Normaliza valores numéricos
+ * - Consume dominio puro de cobro
+ * - Construye el payload final
  *
- * RESPONSABILIDADES:
- * - Mantener estado UI (strings)
- * - Normalizar valores numéricos
- * - Usar dominio puro
- * - Construir pagos
- *
- * NO:
- * - Renderiza UI
- * - Contiene JSX
+ * No renderiza UI ni conoce backend.
  */
 export function useCobroPOS({
   totalVenta,
@@ -40,7 +32,6 @@ export function useCobroPOS({
 }: UseCobroPOSProps) {
   /* ===============================
      Estado UI
-     (STRINGS – inputs reales)
   =============================== */
   const [showTipoPago, setShowTipoPago] =
     useState(false)
@@ -50,6 +41,7 @@ export function useCobroPOS({
   const [modoPago, setModoPago] =
     useState<TipoPago | null>(null)
 
+  // Inputs como strings (UX)
   const [efectivoRaw, setEfectivo] =
     useState('')
   const [debitoRaw, setDebito] =
@@ -60,7 +52,6 @@ export function useCobroPOS({
 
   /* ===============================
      Normalización numérica
-     (único punto de conversión)
   =============================== */
   const efectivo = useMemo(
     () => normalizarNumero(efectivoRaw),
@@ -74,7 +65,6 @@ export function useCobroPOS({
 
   /* ===============================
      Estado de dominio
-     (fuente única de verdad)
   =============================== */
   const estado: EstadoCobro | null =
     useMemo(() => {
@@ -161,31 +151,26 @@ export function useCobroPOS({
      API pública
   =============================== */
   return {
-    /* estado dominio */
     estado,
 
-    /* flags UI */
     showTipoPago,
     showPayment,
     loading,
 
-    /* modo */
     modoPago,
     selectTipoPago,
 
-    /* montos (STRINGS) */
     setEfectivo,
     setDebito,
 
-    /* flujo */
     openCobro,
     confirm,
     closeAll,
   }
 }
 
-/* ===============================
-   Tipo exportado para UI
-=============================== */
+/**
+ * Tipo del controller de cobro expuesto a la UI.
+ */
 export type CobroController =
   ReturnType<typeof useCobroPOS>

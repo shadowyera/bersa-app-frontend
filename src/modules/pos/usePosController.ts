@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 /* ===============================
@@ -20,26 +20,15 @@ import { usePosProductos } from './productos/usePosProductos'
 =============================== */
 import { useScannerFocus } from './venta/hooks/useScannerFocus'
 
-/**
- * usePosController
- *
- * Hook de orquestación del POS.
- *
- * Responsabilidades:
- * - Conectar caja + venta + productos + cobro
- * - Exponer handlers listos para la UI
- * - Calcular estados derivados (bloqueos)
- *
- * NO renderiza UI
- * NO contiene JSX
- */
 export function usePosController() {
   /* ===============================
      Auth
   =============================== */
   const { user } = useAuth()
   if (!user) {
-    throw new Error('usePosController debe usarse con usuario autenticado')
+    throw new Error(
+      'usePosController debe usarse con usuario autenticado'
+    )
   }
 
   const SUCURSAL_ID = user.sucursalId
@@ -83,15 +72,24 @@ export function usePosController() {
   } = usePosProductos(SUCURSAL_ID, query)
 
   /* ===============================
-     Agregar producto
+     Bloqueos UX
   =============================== */
-  const handleAddProduct = useCallback(
+  const bloqueado =
+    cargandoCaja ||
+    !cajaSeleccionada ||
+    !aperturaActiva
+
+  /* ===============================
+     Agregar producto (ESTABLE)
+  =============================== */
+  const onAddProduct = useCallback(
     (p: {
       _id: string
       nombre: string
       precio: number
       activo: boolean
     }) => {
+      if (bloqueado) return
       if (!p.activo) return
 
       venta.addProduct({
@@ -103,18 +101,19 @@ export function usePosController() {
 
       focusScanner()
     },
-    [venta, stockMap, focusScanner]
+    [bloqueado, venta, stockMap, focusScanner]
   )
 
   /* ===============================
-     Cobro
+     Confirmar venta (ESTABLE)
   =============================== */
-  const cobro = useCobroPOS({
-    totalVenta: venta.total,
-
-    onConfirmVenta: async ({
+  const onConfirmVenta = useCallback(
+    async ({
       pagos,
       ajusteRedondeo,
+    }: {
+      pagos: any[]
+      ajusteRedondeo: number
     }) => {
       if (!cajaSeleccionada || !aperturaActiva)
         return
@@ -131,7 +130,6 @@ export function usePosController() {
         })),
       })
 
-      // Refrescar stock de sucursal
       queryClient.invalidateQueries({
         queryKey: ['stock-sucursal', SUCURSAL_ID],
       })
@@ -139,16 +137,29 @@ export function usePosController() {
       venta.clear()
       focusScanner()
     },
-  })
+    [
+      cajaSeleccionada,
+      aperturaActiva,
+      venta,
+      queryClient,
+      SUCURSAL_ID,
+      focusScanner,
+    ]
+  )
 
   /* ===============================
-     Bloqueos UX
+     Cobro (REFERENCIA ESTABLE)
   =============================== */
-  const bloqueado =
-    cargandoCaja ||
-    !cajaSeleccionada ||
-    !aperturaActiva
+  const cobro = useCobroPOS({
+    totalVenta: venta.total,
+    onConfirmVenta,
+  })
 
+  const cobroStable = useMemo(() => cobro, [cobro])
+
+  /* ===============================
+     API pública
+  =============================== */
   return {
     /* Scanner */
     scannerRef,
@@ -172,12 +183,10 @@ export function usePosController() {
     bloqueado,
 
     /* Acciones */
-    onAddProduct: bloqueado
-      ? () => {}
-      : handleAddProduct,
-    onCobrar: cobro.openCobro,
+    onAddProduct,
+    onCobrar: cobroStable.openCobro,
 
     /* Cobro */
-    cobro,
+    cobro: cobroStable,
   }
 }

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { useCaja } from '../../context/CajaProvider'
 import { useCajaBarra } from '../../hooks/useCajaBarra'
 import ResumenCajaModal from './ResumenCajaModal'
 
-export default function BarraCajaActiva() {
+function BarraCajaActiva() {
   const [showCorte, setShowCorte] = useState(false)
 
   const barra = useCajaBarra()
@@ -13,18 +13,30 @@ export default function BarraCajaActiva() {
     closingCaja,
   } = useCaja()
 
-  // Si no hay caja activa, no mostramos la barra
-  if (!barra.visible) return null
-
   const disabled = cargando || closingCaja
+
+  // ✅ Hooks SIEMPRE antes del return
+  const handleOpenCorte = useCallback(() => {
+    setShowCorte(true)
+  }, [])
+
+  const handleCloseCorte = useCallback(() => {
+    setShowCorte(false)
+  }, [])
+
+  const handleCerrarCaja = useCallback(() => {
+    iniciarCierre()
+  }, [iniciarCierre])
+
+  // ✅ RETURN DESPUÉS de todos los hooks
+  if (!barra.visible) return null
 
   return (
     <>
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700">
         <div className="px-4 h-10 flex items-center justify-between">
-          {/* ===========================
-              Info caja
-          ============================ */}
+
+          {/* Info caja */}
           <div className="flex items-center gap-3 text-sm">
             <div className="flex items-center gap-2 text-emerald-400 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
@@ -38,39 +50,36 @@ export default function BarraCajaActiva() {
             </div>
           </div>
 
-          {/* ===========================
-              Acciones
-          ============================ */}
+          {/* Acciones */}
           <div className="flex items-center gap-3 text-xs">
             <button
-              onClick={() => setShowCorte(true)}
+              onClick={handleOpenCorte}
               className="px-3 py-1 bg-slate-700 rounded"
             >
-              💵 Corte
+              🧾 Resumen
             </button>
 
             <button
-              onClick={iniciarCierre}
+              onClick={handleCerrarCaja}
               disabled={disabled}
               className="px-3 py-1 bg-red-600 rounded disabled:opacity-50"
             >
               {closingCaja
-                ? 'Cerrando...'
+                ? 'Cerrando…'
                 : 'Cerrar Caja'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ===========================
-          Corte de caja (independiente)
-      ============================ */}
       {showCorte && (
         <ResumenCajaModal
           cajaId={barra.cajaId}
-          onClose={() => setShowCorte(false)}
+          onClose={handleCloseCorte}
         />
       )}
     </>
   )
 }
+
+export default memo(BarraCajaActiva)

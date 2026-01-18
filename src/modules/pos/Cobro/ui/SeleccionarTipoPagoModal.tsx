@@ -1,44 +1,45 @@
+import { memo, useCallback } from 'react'
 import { PAYMENT_METHODS } from '../../pos.payments'
 import type { TipoPago } from '../../pos.types'
 
 interface Props {
-  /**
-   * Se dispara cuando el usuario elige
-   * un método de pago
-   */
   onSelect: (tipo: TipoPago) => void
-
-  /**
-   * Cierra el modal sin seleccionar
-   */
   onClose: () => void
 }
 
 /**
- * SeleccionarTipoPagoModal
+ * Modal para seleccionar el método de pago.
  *
- * - UI PURA
- * - No contiene lógica de negocio
- * - No conoce cobro ni pagos
+ * - UI pura
+ * - No conoce reglas de cobro ni dominio
  */
-export default function SeleccionarTipoPagoModal({
+function SeleccionarTipoPagoModal({
   onSelect,
   onClose,
 }: Props) {
+  const handleSelect = useCallback(
+    (tipo: TipoPago) => {
+      onSelect(tipo)
+    },
+    [onSelect]
+  )
+
+  const handleClose = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      onClose()
+    },
+    [onClose]
+  )
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-slate-800 p-6 rounded-xl w-[420px]">
 
-        {/* ===============================
-            Título
-           =============================== */}
         <h2 className="text-lg font-bold mb-4 text-white">
           ¿Cómo paga el cliente?
         </h2>
 
-        {/* ===============================
-            Métodos de pago
-           =============================== */}
         <div className="space-y-3">
           {(Object.keys(PAYMENT_METHODS) as TipoPago[]).map(
             tipo => {
@@ -49,7 +50,7 @@ export default function SeleccionarTipoPagoModal({
                   key={tipo}
                   onMouseDown={e => {
                     e.preventDefault()
-                    onSelect(tipo)
+                    handleSelect(tipo)
                   }}
                   className="
                     w-full text-left p-4 rounded-lg
@@ -71,14 +72,8 @@ export default function SeleccionarTipoPagoModal({
           )}
         </div>
 
-        {/* ===============================
-            Cancelar
-           =============================== */}
         <button
-          onMouseDown={e => {
-            e.preventDefault()
-            onClose()
-          }}
+          onMouseDown={handleClose}
           className="
             mt-4 w-full text-sm
             text-slate-400 hover:text-white
@@ -90,3 +85,5 @@ export default function SeleccionarTipoPagoModal({
     </div>
   )
 }
+
+export default memo(SeleccionarTipoPagoModal)

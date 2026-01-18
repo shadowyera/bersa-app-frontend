@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { useCaja } from '../context/CajaProvider'
 
-export default function AbrirCajaContenido() {
+/**
+ * Contenido de apertura de caja.
+ *
+ * - UI pura
+ * - Vive dentro de PosLock
+ * - No maneja reglas de negocio
+ */
+function AbrirCajaContenido() {
   const {
     cajaSeleccionada,
     aperturaActiva,
@@ -10,15 +17,25 @@ export default function AbrirCajaContenido() {
     cargando,
   } = useCaja()
 
-  const [montoInicial, setMontoInicial] = useState('')
+  const [montoInicial, setMontoInicial] =
+    useState('')
 
-  if (!cajaSeleccionada || aperturaActiva) return null
+  if (!cajaSeleccionada || aperturaActiva)
+    return null
 
-  const handleConfirmar = async () => {
+  const handleConfirmar = useCallback(async () => {
     const monto = Number(montoInicial)
     if (Number.isNaN(monto) || monto < 0) return
+
     await abrirCaja(monto)
-  }
+  }, [montoInicial, abrirCaja])
+
+  const handleChangeMonto = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMontoInicial(e.target.value)
+    },
+    []
+  )
 
   return (
     <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
@@ -62,15 +79,15 @@ export default function AbrirCajaContenido() {
               inputMode="numeric"
               placeholder="0"
               value={montoInicial}
-              onChange={(e) => setMontoInicial(e.target.value)}
+              onChange={handleChangeMonto}
               disabled={cargando}
               className="
-            w-full pl-8 pr-3 py-3 rounded-xl
-            bg-slate-800 border border-slate-700
-            text-lg text-slate-100
-            focus:outline-none focus:ring-2 focus:ring-emerald-500
-            disabled:opacity-60
-          "
+                w-full pl-8 pr-3 py-3 rounded-xl
+                bg-slate-800 border border-slate-700
+                text-lg text-slate-100
+                focus:outline-none focus:ring-2 focus:ring-emerald-500
+                disabled:opacity-60
+              "
             />
           </div>
 
@@ -87,14 +104,16 @@ export default function AbrirCajaContenido() {
           onClick={handleConfirmar}
           disabled={cargando}
           className="
-        w-full py-3 rounded-xl font-semibold
-        bg-emerald-600 hover:bg-emerald-500
-        text-white text-sm
-        disabled:opacity-50 disabled:cursor-not-allowed
-        transition
-      "
+            w-full py-3 rounded-xl font-semibold
+            bg-emerald-600 hover:bg-emerald-500
+            text-white text-sm
+            disabled:opacity-50 disabled:cursor-not-allowed
+            transition
+          "
         >
-          {cargando ? 'Abriendo caja…' : 'Confirmar apertura'}
+          {cargando
+            ? 'Abriendo caja…'
+            : 'Confirmar apertura'}
         </button>
 
         <button
@@ -102,9 +121,9 @@ export default function AbrirCajaContenido() {
           onClick={deseleccionarCaja}
           disabled={cargando}
           className="
-        text-xs text-slate-400 hover:text-slate-200
-        transition
-      "
+            text-xs text-slate-400 hover:text-slate-200
+            transition
+          "
         >
           ← Cambiar caja seleccionada
         </button>
@@ -112,3 +131,5 @@ export default function AbrirCajaContenido() {
     </div>
   )
 }
+
+export default memo(AbrirCajaContenido)

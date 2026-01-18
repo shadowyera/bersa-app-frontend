@@ -1,30 +1,22 @@
 import type { TipoPago } from '../../pos.types'
 import type { EstadoCobro } from './cobro.types'
-import { calcularRedondeoCLP } from './redondeo.ts'
+import { calcularRedondeoCLP } from './redondeo'
 
 interface CalcularEstadoCobroInput {
-  /** Total original de la venta */
   totalVenta: number
-
-  /** Modo de pago */
   modo: TipoPago
-
-  /** Monto ingresado en efectivo */
   efectivo: number
-
-  /** Monto ingresado en débito (solo MIXTO) */
   debito: number
 }
 
 /**
- * Calcula el estado financiero del cobro
+ * Calcula el estado financiero de un cobro.
  *
- * Regla base:
- * - Aplica redondeo CLP
- * - Calcula vuelto y falta
- * - Decide si se puede confirmar el cobro
+ * - Aplica redondeo legal CLP
+ * - Calcula totales, vuelto y falta
+ * - Determina si el cobro puede confirmarse
  *
- * ❗ Dominio PURO
+ * Dominio puro (sin efectos secundarios)
  */
 export function calcularEstadoCobro({
   totalVenta,
@@ -33,7 +25,7 @@ export function calcularEstadoCobro({
   debito,
 }: CalcularEstadoCobroInput): EstadoCobro {
   /* ===============================
-     Redondeo legal
+     Redondeo CLP
   =============================== */
   const {
     totalCobrado,
@@ -41,7 +33,7 @@ export function calcularEstadoCobro({
   } = calcularRedondeoCLP(totalVenta)
 
   /* ===============================
-     Total pagado (según modo)
+     Total pagado según modo
   =============================== */
   const totalPagado =
     modo === 'EFECTIVO'
@@ -64,8 +56,7 @@ export function calcularEstadoCobro({
   )
 
   /* ===============================
-     Reglas de confirmación
-     (idénticas a tu lógica original)
+     Regla de confirmación
   =============================== */
   const puedeConfirmar =
     modo === 'EFECTIVO'

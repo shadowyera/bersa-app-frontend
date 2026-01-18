@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState, useCallback } from 'react'
 import type { TipoPago } from '../../pos.types'
 import type { EstadoCobro } from '../domain/cobro.types'
 import { normalizarNumero } from './utils/normalizarNumero'
@@ -28,25 +28,22 @@ interface Props {
   estado: EstadoCobro | null
   loading?: boolean
 
-  /* setters desde useCobroPOS (DOMINIO) */
   setEfectivo: (value: string) => void
   setDebito: (value: string) => void
 
-  /* flujo */
   onConfirm: () => void
   onClose: () => void
 }
 
 /**
- * PaymentModal
+ * Modal de cobro del POS.
  *
- * - UI PURA
- * - Trabaja SOLO con strings (inputs reales)
- * - NO parsea dominio
- * - NO arma pagos
- * - NO valida reglas de negocio
+ * UI pura:
+ * - Maneja inputs como strings
+ * - No conoce reglas de negocio
+ * - No construye pagos
  */
-export default function PaymentModal({
+function PaymentModal({
   totalVenta,
   modo,
   estado,
@@ -57,14 +54,13 @@ export default function PaymentModal({
   onClose,
 }: Props) {
   /* ===============================
-     Estado local UI (strings)
+     Estado local UI
   =============================== */
   const [efectivoRaw, setEfectivoRaw] = useState('')
   const [debitoRaw, setDebitoRaw] = useState('')
 
   /* ===============================
-     Reset al cambiar modo o total
-     (SIEMPRE strings)
+     Reset al cambiar contexto
   =============================== */
   useEffect(() => {
     setEfectivoRaw('')
@@ -74,34 +70,54 @@ export default function PaymentModal({
   }, [modo, totalVenta, setEfectivo, setDebito])
 
   /* ===============================
-     Handlers UI
+     Handlers
   =============================== */
 
-  const handleEfectivoChange = (raw: string) => {
-    setEfectivoRaw(raw)
+  const handleEfectivoChange = useCallback(
+    (raw: string) => {
+      setEfectivoRaw(raw)
+      setEfectivo(raw)
 
-    // 👉 El dominio decide cómo interpretar el string
-    setEfectivo(raw)
+      // En modo MIXTO, el débito es el resto (solo UI)
+      if (modo === 'MIXTO' && estado) {
+        const num = normalizarNumero(raw)
+        const resto = Math.max(
+          0,
+          estado.totalCobrado - num
+        )
+        const restoStr = resto ? String(resto) : ''
+        setDebito(restoStr)
+        setDebitoRaw(restoStr)
+      }
+    },
+    [modo, estado, setEfectivo, setDebito]
+  )
 
-    // MIXTO: calculamos el resto solo para UI
-    if (modo === 'MIXTO' && estado) {
-      const num = normalizarNumero(raw)
-      const resto = Math.max(
-        0,
-        estado.totalCobrado - num
+  const sumarEfectivo = useCallback(
+    (monto: number) => {
+      const actual = normalizarNumero(efectivoRaw)
+      handleEfectivoChange(
+        String(actual + monto)
       )
+    },
+    [efectivoRaw, handleEfectivoChange]
+  )
 
-      const restoStr = resto ? String(resto) : ''
-      setDebito(restoStr)
-      setDebitoRaw(restoStr)
-    }
-  }
+  const handleConfirm = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      onConfirm()
+    },
+    [onConfirm]
+  )
 
-  const sumarEfectivo = (monto: number) => {
-    const actual = normalizarNumero(efectivoRaw)
-    const nuevo = actual + monto
-    handleEfectivoChange(String(nuevo))
-  }
+  const handleClose = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      onClose()
+    },
+    [onClose]
+  )
 
   /* ===============================
      Render
@@ -113,16 +129,10 @@ export default function PaymentModal({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-slate-800 p-6 rounded-xl w-[420px] shadow-2xl">
 
-        {/* ===============================
-            Título
-        =============================== */}
         <h2 className="text-xl font-bold mb-3 text-white">
           {TITULOS[modo]}
         </h2>
 
-        {/* ===============================
-            Resumen financiero
-        =============================== */}
         <PaymentSummary estado={estado} />
 
         {/* ===============================
@@ -199,10 +209,7 @@ export default function PaymentModal({
         =============================== */}
         <div className="flex gap-3 mt-6">
           <button
-            onMouseDown={e => {
-              e.preventDefault()
-              onClose()
-            }}
+            onMouseDown={handleClose}
             className="flex-1 bg-slate-600 p-2 rounded-lg"
           >
             Cancelar
@@ -212,10 +219,7 @@ export default function PaymentModal({
             disabled={
               !estado.puedeConfirmar || loading
             }
-            onMouseDown={e => {
-              e.preventDefault()
-              onConfirm()
-            }}
+            onMouseDown={handleConfirm}
             className="flex-1 bg-emerald-600 p-2 rounded-lg font-semibold disabled:opacity-50"
           >
             {loading
@@ -228,3 +232,5 @@ export default function PaymentModal({
     </div>
   )
 }
+
+export default memo(PaymentModal)

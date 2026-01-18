@@ -1,43 +1,59 @@
 import type { CartItem } from '../pos.types'
 import type { ProductoVendible } from './venta.types'
 
-/**
- * Agregar producto al carrito
- *
- * Reglas:
- * - Si existe, aumenta cantidad
- * - Si no existe, lo agrega
- * - Siempre recalcula subtotal
- * - Marca stock insuficiente si aplica
- */
+/* ===============================
+   Helpers internos
+=============================== */
+
+function calcularSubtotal(
+  cantidad: number,
+  precioUnitario: number
+) {
+  return cantidad * precioUnitario
+}
+
+function hayStockInsuficiente(
+  cantidad: number,
+  stock?: number
+) {
+  return (
+    stock !== undefined && cantidad > stock
+  )
+}
+
+/* ===============================
+   Agregar producto al carrito
+=============================== */
 export function agregarProducto(
   cart: CartItem[],
   producto: ProductoVendible
 ): CartItem[] {
-  const stock = producto.stockDisponible
+  let encontrado = false
 
-  const existing = cart.find(
-    i => i.productoId === producto.productoId
-  )
+  const nuevoCart = cart.map(item => {
+    if (item.productoId !== producto.productoId)
+      return item
 
-  if (existing) {
-    const nuevaCantidad = existing.cantidad + 1
+    encontrado = true
 
-    const stockInsuficiente =
-      stock !== undefined &&
-      nuevaCantidad > stock
+    const cantidad = item.cantidad + 1
 
-    return cart.map(item =>
-      item.productoId === producto.productoId
-        ? {
-            ...item,
-            cantidad: nuevaCantidad,
-            subtotal:
-              nuevaCantidad * item.precioUnitario,
-            stockInsuficiente,
-          }
-        : item
-    )
+    return {
+      ...item,
+      cantidad,
+      subtotal: calcularSubtotal(
+        cantidad,
+        item.precioUnitario
+      ),
+      stockInsuficiente: hayStockInsuficiente(
+        cantidad,
+        producto.stockDisponible
+      ),
+    }
+  })
+
+  if (encontrado) {
+    return nuevoCart
   }
 
   return [
@@ -48,15 +64,17 @@ export function agregarProducto(
       precioUnitario: producto.precioUnitario,
       cantidad: 1,
       subtotal: producto.precioUnitario,
-      stockInsuficiente:
-        stock !== undefined && stock < 1,
+      stockInsuficiente: hayStockInsuficiente(
+        1,
+        producto.stockDisponible
+      ),
     },
   ]
 }
 
-/**
- * Aumentar cantidad de un producto existente
- */
+/* ===============================
+   Aumentar cantidad
+=============================== */
 export function aumentarCantidad(
   cart: CartItem[],
   productoId: string
@@ -65,50 +83,58 @@ export function aumentarCantidad(
     if (item.productoId !== productoId)
       return item
 
-    const nuevaCantidad = item.cantidad + 1
-    const stock = item.stockDisponible
+    const cantidad = item.cantidad + 1
 
     return {
       ...item,
-      cantidad: nuevaCantidad,
-      subtotal:
-        nuevaCantidad * item.precioUnitario,
-      stockInsuficiente:
-        stock !== undefined &&
-        nuevaCantidad > stock,
+      cantidad,
+      subtotal: calcularSubtotal(
+        cantidad,
+        item.precioUnitario
+      ),
+      stockInsuficiente: hayStockInsuficiente(
+        cantidad,
+        item.stockDisponible
+      ),
     }
   })
 }
 
-/**
- * Disminuir cantidad
- */
+/* ===============================
+   Disminuir cantidad
+=============================== */
 export function disminuirCantidad(
   cart: CartItem[],
   productoId: string
 ): CartItem[] {
   return cart
-    .map(item =>
-      item.productoId === productoId
-        ? {
-            ...item,
-            cantidad: item.cantidad - 1,
-            subtotal:
-              (item.cantidad - 1) *
-              item.precioUnitario,
-            stockInsuficiente: false,
-          }
-        : item
-    )
+    .map(item => {
+      if (item.productoId !== productoId)
+        return item
+
+      const cantidad = item.cantidad - 1
+
+      return {
+        ...item,
+        cantidad,
+        subtotal: calcularSubtotal(
+          cantidad,
+          item.precioUnitario
+        ),
+        stockInsuficiente: false,
+      }
+    })
     .filter(item => item.cantidad > 0)
 }
 
-/**
- * Total del carrito
- */
-export function calcularTotal(cart: CartItem[]) {
+/* ===============================
+   Total del carrito
+=============================== */
+export function calcularTotal(
+  cart: CartItem[]
+) {
   return cart.reduce(
-    (sum, i) => sum + i.subtotal,
+    (total, item) => total + item.subtotal,
     0
   )
 }

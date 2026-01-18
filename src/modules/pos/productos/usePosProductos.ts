@@ -4,28 +4,29 @@ import { useStockSucursal } from '@/shared/hooks/useStockSucursal'
 import type { ProductoPOS } from '../pos.types'
 
 /**
- * Hook de lectura para el POS
+ * Hook de lectura de productos para el POS.
  *
- * - NO muta estado
- * - NO maneja venta
- * - Solo compone datos existentes
+ * - Combina catálogo + stock
+ * - Aplica búsqueda (solo UI)
+ * - No muta estado ni conoce venta
  */
 export function usePosProductos(
   sucursalId: string,
   query: string
 ) {
   /* ===============================
-     Catálogo (React Query)
+     Catálogo de productos
   =============================== */
   const {
     data: productosCatalogo = [],
     isLoading: loadingProductos,
   } = useProductosPOS()
 
-  const productosCatalogoTyped = productosCatalogo as ProductoPOS[]
+  const productosTyped =
+    productosCatalogo as ProductoPOS[]
 
   /* ===============================
-     Stock normalizado (ya existente)
+     Stock por sucursal
   =============================== */
   const {
     stock: stockMap,
@@ -33,21 +34,19 @@ export function usePosProductos(
   } = useStockSucursal(sucursalId)
 
   /* ===============================
-     Búsqueda diferida (solo UI)
+     Búsqueda diferida (UX)
   =============================== */
   const deferredQuery = useDeferredValue(query)
 
   const productosFiltrados = useMemo(() => {
-    const q = deferredQuery.toLowerCase()
+    const q = deferredQuery.trim().toLowerCase()
+    if (!q) return productosTyped
 
-    if (!q) return productosCatalogoTyped
-
-    return productosCatalogoTyped.filter(
-      p =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.codigo?.includes(deferredQuery)
+    return productosTyped.filter(p =>
+      p.nombre.toLowerCase().includes(q) ||
+      p.codigo?.includes(deferredQuery)
     )
-  }, [productosCatalogo, deferredQuery])
+  }, [productosTyped, deferredQuery])
 
   return {
     productos: productosFiltrados,

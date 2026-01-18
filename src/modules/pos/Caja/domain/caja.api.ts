@@ -3,13 +3,13 @@ import type { AperturaCaja } from './caja.types'
 import { ESTADO_APERTURA_CAJA } from './caja.types'
 
 /* =====================================================
-   DTOs (backend REAL)
+   DTO backend (respuesta real)
 ===================================================== */
 
 /**
- * Representación EXACTA de lo que envía el backend
- * 👉 No se exporta
- * 👉 Solo se usa para normalizar
+ * Representación EXACTA de la apertura enviada por el backend.
+ * ⚠️ No se exporta.
+ * ⚠️ No se usa directamente en UI.
  */
 interface AperturaCajaDTO {
   _id: string
@@ -33,6 +33,7 @@ interface AperturaCajaDTO {
    Normalizador
    DTO → Dominio frontend
 ===================================================== */
+
 function normalizarApertura(
   dto: AperturaCajaDTO
 ): AperturaCaja {
@@ -57,20 +58,19 @@ function normalizarApertura(
 }
 
 /* =====================================================
-   API pública (infraestructura pura)
+   API pública (infraestructura)
 ===================================================== */
 
 /**
- * Obtiene la apertura activa de una caja
+ * Obtiene la apertura activa de una caja.
  *
- * 🔑 Reglas:
- * - Si no hay apertura → backend responde null
- * - NO decide nada, solo entrega datos
+ * - Si no hay apertura, el backend responde null
+ * - No contiene reglas de negocio
  */
 export async function getAperturaActiva(
   cajaId: string
 ): Promise<AperturaCaja | null> {
-  const { data } = await api.get(
+  const { data } = await api.get<AperturaCajaDTO | null>(
     `/cajas/${cajaId}/apertura-activa`
   )
 
@@ -79,17 +79,16 @@ export async function getAperturaActiva(
 }
 
 /**
- * Abre una caja
+ * Abre una caja.
  *
- * 🔑 Reglas:
- * - Backend valida concurrencia
- * - Backend decide usuarioAperturaId
+ * - El backend valida concurrencia
+ * - El backend define el usuario de apertura
  */
 export async function abrirCaja(params: {
   cajaId: string
   montoInicial: number
 }): Promise<AperturaCaja> {
-  const { data } = await api.post(
+  const { data } = await api.post<AperturaCajaDTO>(
     `/cajas/${params.cajaId}/abrir`,
     {
       montoInicial: params.montoInicial,
@@ -100,10 +99,9 @@ export async function abrirCaja(params: {
 }
 
 /**
- * Obtiene el resumen previo al cierre
+ * Obtiene el resumen previo al cierre de caja.
  *
- * 👉 Usado SOLO para el modal de confirmación
- * 👉 Sin lógica de negocio frontend
+ * 👉 Usado solo para confirmación visual.
  */
 export async function getResumenPrevioCaja(
   cajaId: string
@@ -116,11 +114,10 @@ export async function getResumenPrevioCaja(
 }
 
 /**
- * Cierra la caja (automático)
+ * Cierra la caja.
  *
- * 🔑 Reglas:
- * - Backend decide usuario de cierre
- * - Backend calcula diferencias
+ * - El backend calcula diferencias
+ * - El backend define el usuario de cierre
  */
 export async function cerrarCajaAutomatico(params: {
   cajaId: string

@@ -1,9 +1,5 @@
-import { buscarProductoPorCodigo } from "@/modules/pos/pos.api"
+import { buscarProductoPorCodigo } from '@/modules/pos/pos.api'
 
-/**
- * Resultado de escaneo válido para el POS
- * (UI-friendly, no dominio de venta)
- */
 export interface ProductoEscaneado {
   _id: string
   nombre: string
@@ -14,17 +10,19 @@ export interface ProductoEscaneado {
 }
 
 /**
- * Hook responsable de:
- * - Buscar producto por código
- * - Validar estado
- * - Lanzar errores semánticos
+ * Hook para procesar un código escaneado.
+ *
+ * - Busca el producto por código
+ * - Valida que exista y esté activo
+ * - Lanza errores semánticos para la UI
  */
 export function useScanProduct() {
   const scan = async (
     code: string
   ): Promise<ProductoEscaneado> => {
-    const producto =
-      await buscarProductoPorCodigo(code)
+    const producto = await buscarProductoPorCodigo(
+      code
+    )
 
     if (!producto) {
       throw new Error('NOT_FOUND')

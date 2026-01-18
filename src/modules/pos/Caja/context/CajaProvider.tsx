@@ -13,7 +13,6 @@ import type { ReactNode } from 'react'
    Domain
 ===================================================== */
 import type { Caja, AperturaCaja } from '../domain/caja.types'
-
 import {
   getAperturaActiva,
   abrirCaja as apiAbrirCaja,
@@ -28,7 +27,6 @@ import {
   connectCajaRealtime,
   registerCajaRealtimeHandler,
 } from '../caja.realtime'
-
 import type { RealtimeEvent } from '@/shared/realtime/realtime.events'
 
 /* =====================================================
@@ -85,17 +83,13 @@ export function CajaProvider({ children }: { children: ReactNode }) {
   /* -------------------- Estado base -------------------- */
   const [cajaSeleccionada, setCajaSeleccionada] =
     useState<Caja | null>(null)
-
   const [aperturaActiva, setAperturaActiva] =
     useState<AperturaCaja | null>(null)
 
   /* -------------------- Flags -------------------- */
-  const [validandoCaja, setValidandoCaja] =
-    useState(false)
-  const [cargando, setCargando] =
-    useState(false)
-  const [closingCaja, setClosingCaja] =
-    useState(false)
+  const [validandoCaja, setValidandoCaja] = useState(false)
+  const [cargando, setCargando] = useState(false)
+  const [closingCaja, setClosingCaja] = useState(false)
   const [error, setError] = useState<string>()
 
   /* -------------------- UI cierre -------------------- */
@@ -103,8 +97,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     useState(false)
   const [resumenPrevio, setResumenPrevio] =
     useState<ResumenPrevioCaja | null>(null)
-  const [montoFinal, setMontoFinal] =
-    useState('')
+  const [montoFinal, setMontoFinal] = useState('')
 
   /* -------------------- Ref para SSE -------------------- */
   const cajaRef = useRef<Caja | null>(null)
@@ -114,15 +107,41 @@ export function CajaProvider({ children }: { children: ReactNode }) {
   }, [cajaSeleccionada])
 
   /* =====================================================
+     Helpers
+  ===================================================== */
+  const persistCaja = (caja: Caja) => {
+    localStorage.setItem(
+      CAJA_STORAGE_KEY,
+      JSON.stringify({ id: caja.id, nombre: caja.nombre })
+    )
+  }
+
+  const resetCajaLocal = useCallback(() => {
+    localStorage.removeItem(CAJA_STORAGE_KEY)
+
+    setCajaSeleccionada(null)
+    setAperturaActiva(null)
+
+    setShowCierreModal(false)
+    setResumenPrevio(null)
+    setMontoFinal('')
+
+    setError(undefined)
+    setCargando(false)
+    setClosingCaja(false)
+    setValidandoCaja(false)
+  }, [])
+
+  /* =====================================================
      SSE
   ===================================================== */
   useEffect(() => {
     registerCajaRealtimeHandler((event: RealtimeEvent) => {
       const caja = cajaRef.current
+      if (!caja) return
 
       if (
         event.type === 'CAJA_CERRADA' &&
-        caja &&
         event.cajaId === caja.id
       ) {
         resetCajaLocal()
@@ -130,7 +149,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     })
 
     connectCajaRealtime()
-  }, [])
+  }, [resetCajaLocal])
 
   /* =====================================================
      RESTORE DESDE LOCALSTORAGE
@@ -147,7 +166,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
       try {
         const apertura = await getAperturaActiva(persisted.id)
         if (!apertura) {
-          localStorage.removeItem(CAJA_STORAGE_KEY)
+          resetCajaLocal()
           return
         }
 
@@ -157,36 +176,16 @@ export function CajaProvider({ children }: { children: ReactNode }) {
           sucursalId: apertura.sucursalId,
           activa: true,
         })
-
         setAperturaActiva(apertura)
       } catch {
-        localStorage.removeItem(CAJA_STORAGE_KEY)
+        resetCajaLocal()
       } finally {
         setValidandoCaja(false)
       }
     }
 
     restore()
-  }, [])
-
-  /* =====================================================
-     Helpers
-  ===================================================== */
-  const persistCaja = (caja: Caja) => {
-    localStorage.setItem(
-      CAJA_STORAGE_KEY,
-      JSON.stringify({ id: caja.id, nombre: caja.nombre })
-    )
-  }
-
-  const resetCajaLocal = () => {
-    localStorage.removeItem(CAJA_STORAGE_KEY)
-    setCajaSeleccionada(null)
-    setAperturaActiva(null)
-    setShowCierreModal(false)
-    setResumenPrevio(null)
-    setMontoFinal('')
-  }
+  }, [resetCajaLocal])
 
   /* =====================================================
      Acciones
@@ -196,28 +195,30 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     setError(undefined)
 
     try {
-      setCajaSeleccionada(caja)
-      persistCaja(caja)
-
       const apertura = await getAperturaActiva(caja.id)
+
+      setCajaSeleccionada(caja)
       setAperturaActiva(apertura)
+      persistCaja(caja)
     } catch {
       resetCajaLocal()
       setError('No se pudo seleccionar la caja')
     } finally {
       setValidandoCaja(false)
     }
-  }, [])
+  }, [resetCajaLocal])
 
   const deseleccionarCaja = useCallback(() => {
     resetCajaLocal()
-  }, [])
+  }, [resetCajaLocal])
 
   const abrirCaja = useCallback(
     async (montoInicial: number) => {
       if (!cajaSeleccionada) return
 
       setCargando(true)
+      setError(undefined)
+
       try {
         const apertura = await apiAbrirCaja({
           cajaId: cajaSeleccionada.id,
@@ -237,6 +238,8 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     if (!cajaSeleccionada) return
 
     setCargando(true)
+    setError(undefined)
+
     try {
       const resumen = await getResumenPrevioCaja(
         cajaSeleccionada.id
@@ -255,6 +258,8 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     if (!cajaSeleccionada) return
 
     setClosingCaja(true)
+    setError(undefined)
+
     try {
       await cerrarCajaAutomatico({
         cajaId: cajaSeleccionada.id,
@@ -266,7 +271,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     } finally {
       setClosingCaja(false)
     }
-  }, [cajaSeleccionada, montoFinal])
+  }, [cajaSeleccionada, montoFinal, resetCajaLocal])
 
   const cancelarCierre = useCallback(() => {
     setShowCierreModal(false)

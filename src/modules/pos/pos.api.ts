@@ -7,6 +7,9 @@ import type { StockProducto } from '@/shared/types/stock.types'
    Tipos POS
 ================================ */
 
+/**
+ * Payload para crear una venta desde el POS
+ */
 export interface CrearVentaPOSPayload {
   cajaId: string
   aperturaCajaId: string
@@ -17,7 +20,7 @@ export interface CrearVentaPOSPayload {
   }[]
   pagos: PagoPOS[]
 
-  /** 🔥 Redondeo de efectivo */
+  // Ajuste por redondeo de efectivo (CLP)
   ajusteRedondeo: number
 }
 
@@ -41,12 +44,14 @@ export interface CajaDTO {
 }
 
 /* ================================
-   Productos (POS-specific)
+   Productos (POS)
 ================================ */
 
 /**
- * 🔎 Buscar producto por código de barras
- * Endpoint específico de POS
+ * Busca un producto por código de barras.
+ *
+ * - Retorna null si no existe
+ * - Lanza error para otros casos
  */
 export const buscarProductoPorCodigo = async (
   codigo: string
@@ -68,16 +73,24 @@ export const buscarProductoPorCodigo = async (
    Cajas
 ================================ */
 
+/**
+ * Obtiene cajas de la sucursal del usuario autenticado
+ */
 export const getCajasBySucursal = async (): Promise<CajaDTO[]> => {
-  const { data } = await api.get('/cajas') // sucursal desde JWT
+  const { data } = await api.get('/cajas')
   return data
 }
 
+/**
+ * Retorna la apertura activa de una caja (o null)
+ */
 export const getAperturaActiva = async (
   cajaId: string
 ): Promise<AperturaCaja | null> => {
   try {
-    const { data } = await api.get(`/cajas/${cajaId}/apertura-activa`)
+    const { data } = await api.get(
+      `/cajas/${cajaId}/apertura-activa`
+    )
     return data
   } catch (error: any) {
     if (error.response?.status === 404) {
@@ -87,33 +100,55 @@ export const getAperturaActiva = async (
   }
 }
 
+/**
+ * Abre una caja con monto inicial
+ */
 export const abrirCaja = async (
   cajaId: string,
   montoInicial: number
 ) => {
-  const { data } = await api.post(`/cajas/${cajaId}/abrir`, {
-    montoInicial,
-  })
+  const { data } = await api.post(
+    `/cajas/${cajaId}/abrir`,
+    { montoInicial }
+  )
   return data
 }
 
+/**
+ * Cierra una caja automáticamente
+ */
 export const cerrarCajaAutomatico = async (
   cajaId: string,
   montoFinal: number
 ) => {
-  const { data } = await api.post(`/cajas/${cajaId}/cerrar-automatico`, {
-    montoFinal,
-  })
+  const { data } = await api.post(
+    `/cajas/${cajaId}/cerrar-automatico`,
+    { montoFinal }
+  )
   return data
 }
 
-export const getResumenPrevioCaja = async (cajaId: string) => {
-  const { data } = await api.get(`/cajas/${cajaId}/resumen-previo`)
+/**
+ * Obtiene el resumen previo al cierre de caja
+ */
+export const getResumenPrevioCaja = async (
+  cajaId: string
+) => {
+  const { data } = await api.get(
+    `/cajas/${cajaId}/resumen-previo`
+  )
   return data
 }
 
-export const getCorteCajeros = async (cajaId: string) => {
-  const { data } = await api.get(`/cajas/${cajaId}/corte-cajeros`)
+/**
+ * Obtiene el corte por cajero
+ */
+export const getCorteCajeros = async (
+  cajaId: string
+) => {
+  const { data } = await api.get(
+    `/cajas/${cajaId}/corte-cajeros`
+  )
   return data
 }
 
@@ -121,24 +156,32 @@ export const getCorteCajeros = async (cajaId: string) => {
    Ventas POS
 ================================ */
 
+/**
+ * Crea una venta desde el POS
+ */
 export const crearVentaPOS = async (
   payload: CrearVentaPOSPayload
 ) => {
-  const { data } = await api.post('/ventas/pos', payload)
+  const { data } = await api.post(
+    '/ventas/pos',
+    payload
+  )
   return data
 }
 
 /* ================================
-   Stock (reexport shared)
+   Stock (reexport)
 ================================ */
 
 /**
- * ⚠️ Este endpoint NO es POS-specific,
- * se reexporta para comodidad
+ * Obtiene stock por sucursal.
+ * No es POS-specific, se reexporta por conveniencia.
  */
 export const getStockBySucursal = async (
   sucursalId: string
 ): Promise<StockProducto[]> => {
-  const { data } = await api.get(`/stock/sucursal/${sucursalId}`)
+  const { data } = await api.get(
+    `/stock/sucursal/${sucursalId}`
+  )
   return data
 }

@@ -14,6 +14,7 @@ import {
  *
  * - NO contiene reglas de negocio
  * - Solo coordina estado + lógica pura
+ * - API estable para evitar renders innecesarios
  */
 export const useVenta = () => {
   /* =========================
@@ -22,13 +23,9 @@ export const useVenta = () => {
   const [cart, setCart] = useState<CartItem[]>([])
 
   /* =========================
-     ACTIONS
+     ACTIONS (ESTABLES)
   ========================= */
 
-  /**
-   * Agregar producto
-   * - delega 100% a venta.logic
-   */
   const addProduct = useCallback(
     (producto: ProductoVendible) => {
       setCart(prev =>
@@ -56,6 +53,10 @@ export const useVenta = () => {
     []
   )
 
+  const clear = useCallback(() => {
+    setCart([])
+  }, [])
+
   /* =========================
      DERIVED STATE
   ========================= */
@@ -79,6 +80,6 @@ export const useVenta = () => {
     increase,
     decrease,
     hayStockInsuficiente,
-    clear: () => setCart([]),
+    clear,
   }
 }
