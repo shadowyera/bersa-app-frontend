@@ -12,11 +12,14 @@ interface Props {
 }
 
 /**
+ * =====================================================
  * ProductGrid
  *
- * - SIEMPRE renderiza el grid (nunca se desmonta)
+ * - Renderiza SIEMPRE el grid (nunca se desmonta)
  * - loading es SOLO visual / UX
- * - evita parpadeos post-cobro
+ * - Evita parpadeos post-cobro
+ * - Optimizado para muchos productos
+ * =====================================================
  */
 function ProductGrid({
   productos,
@@ -26,8 +29,9 @@ function ProductGrid({
   onAnyClick,
 }: Props) {
   /**
-   * Handler estable
-   * - mantiene memo de ProductCard
+   * Handler estable:
+   * - no se recrea por producto
+   * - mantiene memoización de ProductCard
    */
   const handleAdd = useCallback(
     (producto: ProductoPOS) => {
@@ -55,24 +59,24 @@ function ProductGrid({
           </div>
         )}
 
-        {productos.map(p => {
-          const stock = stockMap[p._id] ?? 0
+        {productos.map(producto => {
+          const stock = stockMap[producto._id] ?? 0
 
           return (
             <ProductCard
-              key={p._id}
-              nombre={p.nombre}
-              precio={p.precio}
-              activo={p.activo}
+              key={producto._id}
+              nombre={producto.nombre}
+              precio={producto.precio}
+              activo={producto.activo}
               stock={stock}
-              onAdd={() => handleAdd(p)}
+              onAdd={() => handleAdd(producto)}
             />
           )
         })}
       </div>
 
       {/* ===============================
-          Loading silencioso (opcional)
+          Loading silencioso (UX)
       =============================== */}
       {loading && (
         <div className="absolute inset-0 pointer-events-none" />

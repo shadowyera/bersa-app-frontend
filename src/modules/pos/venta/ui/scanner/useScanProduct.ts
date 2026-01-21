@@ -1,5 +1,4 @@
-import { buscarProductoPorCodigo } from '@/modules/pos/pos.api'
-
+import { buscarProductoPorCodigo } from "@/modules/pos/api/pos.api"
 export interface ProductoEscaneado {
   _id: string
   nombre: string

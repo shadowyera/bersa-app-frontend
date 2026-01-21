@@ -21,7 +21,29 @@ import SeleccionarTipoPagoModal from '../../Cobro/ui/SeleccionarTipoPagoModal'
 /* =====================================================
    Types
 ===================================================== */
-import type { CartItem, ProductoPOS } from '../../pos.types'
+import type {
+  CartItem,
+  ProductoPOS,
+  TipoPago,
+} from '../../pos.types'
+import type { EstadoCobro } from '../../Cobro/domain/cobro.types'
+
+/**
+ * Controller de cobro esperado por la UI.
+ * (derivado de useCobroPOS)
+ */
+interface CobroUIController {
+  showTipoPago: boolean
+  showPayment: boolean
+  modoPago: TipoPago | null
+  estado: EstadoCobro | null
+  loading: boolean
+  setEfectivo: (value: string) => void
+  setDebito: (value: string) => void
+  confirm: () => void
+  closeAll: () => void
+  selectTipoPago: (tipo: TipoPago) => void
+}
 
 export interface PosVentaViewProps {
   /* ===============================
@@ -58,33 +80,21 @@ export interface PosVentaViewProps {
   /* ===============================
      Cobro
   =============================== */
-  cobro: {
-    showTipoPago: boolean
-    showPayment: boolean
-    modoPago: any
-    estado: any
-    loading: boolean
-    setEfectivo: (value: string) => void
-    setDebito: (value: string) => void
-    confirm: () => void
-    closeAll: () => void
-    selectTipoPago: (tipo: any) => void
-  }
+  cobro: CobroUIController
 }
 
 /**
+ * =====================================================
  * PosVentaView
  *
  * Vista principal del POS.
  *
- * REGLAS IMPORTANTES:
+ * REGLAS:
+ * - UI pura (sin lógica de dominio)
  * - El input de búsqueda es CONTROLADO por el POS
- * - El POS decide cuándo se limpia el input
- * - Al hacer click en una card:
- *    → se agrega el producto
- *    → se limpia la búsqueda
- * - El scanner no se toca
- * - El grid no se desmonta nunca
+ * - El grid no se desmonta
+ * - El scanner mantiene foco
+ * =====================================================
  */
 function PosVentaView({
   scannerRef,
@@ -109,15 +119,15 @@ function PosVentaView({
   cobro,
 }: PosVentaViewProps) {
   /* =====================================================
-     Handler INTERMEDIO para agregar producto desde el grid
-     - Agrega el producto
-     - Limpia la búsqueda
-     - Devuelve el foco al scanner
+     Handler intermedio:
+     - agrega producto
+     - limpia búsqueda
+     - devuelve foco al scanner
   ===================================================== */
   const handleAddProductFromGrid = useCallback(
     (producto: ProductoPOS) => {
       onAddProduct(producto)
-      onChangeQuery('') // ← LIMPIA EL INPUT
+      onChangeQuery('')
       onFocusScanner()
     },
     [onAddProduct, onChangeQuery, onFocusScanner]
@@ -149,7 +159,7 @@ function PosVentaView({
                 Productos
             =============================== */}
             <div className="col-span-2 space-y-4">
-              {/* ---------- Búsqueda ---------- */}
+              {/* Búsqueda */}
               <ProductoSearchInput
                 autoFocus
                 placeholder="Buscar producto..."
@@ -158,12 +168,14 @@ function PosVentaView({
                 className="w-full px-4 py-3 text-base"
               />
 
-              {/* ---------- Grid ---------- */}
+              {/* Grid */}
               <ProductGrid
                 productos={productos}
                 stockMap={stockMap}
                 loading={loadingProductos}
-                onAddProduct={handleAddProductFromGrid}
+                onAddProduct={
+                  handleAddProductFromGrid
+                }
               />
             </div>
 
@@ -186,10 +198,11 @@ function PosVentaView({
                     if (bloqueado) return
                     onCobrar()
                   }}
-                  className={`mt-4 w-full py-2 rounded text-white transition ${bloqueado
+                  className={`mt-4 w-full py-2 rounded text-white transition ${
+                    bloqueado
                       ? 'bg-gray-500 cursor-not-allowed'
                       : 'bg-emerald-600 hover:bg-emerald-700'
-                    }`}
+                  }`}
                 >
                   {cargandoCaja
                     ? 'Validando caja…'

@@ -4,25 +4,42 @@ import { useQueryClient } from '@tanstack/react-query'
 /* ===============================
    Dominio POS
 =============================== */
-import { crearVentaPOS } from './pos.api'
-import { useVenta } from './venta/useVenta'
-import { useCobroPOS } from './Cobro/hooks/useCobroPOS'
-import { useCaja } from './Caja/context/CajaProvider'
+import { crearVentaPOS } from '../api/pos.api'
+import { useVenta } from '../venta/useVenta'
+import { useCobroPOS } from '../Cobro/hooks/useCobroPOS'
+import { useCaja } from '../Caja/context/CajaProvider'
 
 /* ===============================
    Auth + Productos
 =============================== */
-import { useAuth } from '../auth/useAuth'
-import { usePosProductos } from './productos/usePosProductos'
+import { useAuth } from '../../auth/useAuth'
+import { usePosProductos } from './usePosProductos'
 
 /* ===============================
    Scanner (infra UI)
 =============================== */
-import { useScannerFocus } from './venta/hooks/useScannerFocus'
+import { useScannerFocus } from '../venta/hooks/useScannerFocus'
 
+/**
+ * =====================================================
+ * usePosController
+ *
+ * Orquestador principal del POS.
+ *
+ * Responsabilidades:
+ * - Coordinar Venta, Caja, Productos y Cobro
+ * - Exponer una API estable para la UI (PosPage)
+ * - Aplicar bloqueos UX
+ *
+ * ❌ No renderiza UI
+ * ❌ No maneja conexión realtime
+ *
+ * ⚠️ Hook grande a propósito (controller)
+ * =====================================================
+ */
 export function usePosController() {
   /* ===============================
-     Auth
+     Auth (fuente única de sucursal)
   =============================== */
   const { user } = useAuth()
   if (!user) {
@@ -44,7 +61,7 @@ export function usePosController() {
   const [query, setQuery] = useState('')
 
   /* ===============================
-     Scanner
+     Scanner (infra)
   =============================== */
   const { scannerRef, focusScanner } = useScannerFocus()
 
@@ -63,13 +80,14 @@ export function usePosController() {
   } = useCaja()
 
   /* ===============================
-     Productos
+     Productos + Stock (POS)
+     ⚠️ sucursal ya NO se pasa como arg
   =============================== */
   const {
     productos,
     stockMap,
     loading: loadingProductos,
-  } = usePosProductos(SUCURSAL_ID, query)
+  } = usePosProductos(query)
 
   /* ===============================
      Bloqueos UX
@@ -80,7 +98,8 @@ export function usePosController() {
     !aperturaActiva
 
   /* ===============================
-     Agregar producto (ESTABLE)
+     Agregar producto al carrito
+     (callback estable)
   =============================== */
   const onAddProduct = useCallback(
     (p: {
@@ -105,7 +124,7 @@ export function usePosController() {
   )
 
   /* ===============================
-     Confirmar venta (ESTABLE)
+     Confirmar venta
   =============================== */
   const onConfirmVenta = useCallback(
     async ({
@@ -115,8 +134,9 @@ export function usePosController() {
       pagos: any[]
       ajusteRedondeo: number
     }) => {
-      if (!cajaSeleccionada || !aperturaActiva)
+      if (!cajaSeleccionada || !aperturaActiva) {
         return
+      }
 
       await crearVentaPOS({
         cajaId: cajaSeleccionada.id,
@@ -130,6 +150,10 @@ export function usePosController() {
         })),
       })
 
+      /**
+       * Invalida stock de la sucursal
+       * (realtime + seguridad por si acaso)
+       */
       queryClient.invalidateQueries({
         queryKey: ['stock-sucursal', SUCURSAL_ID],
       })
@@ -148,7 +172,8 @@ export function usePosController() {
   )
 
   /* ===============================
-     Cobro (REFERENCIA ESTABLE)
+     Cobro
+     (referencia estable)
   =============================== */
   const cobro = useCobroPOS({
     totalVenta: venta.total,
@@ -158,7 +183,7 @@ export function usePosController() {
   const cobroStable = useMemo(() => cobro, [cobro])
 
   /* ===============================
-     API pública
+     API pública del controller
   =============================== */
   return {
     /* Scanner */

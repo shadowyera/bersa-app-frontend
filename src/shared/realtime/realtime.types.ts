@@ -1,5 +1,5 @@
 /* ======================================================
-   Tipos base SSE (genérico)
+   Tipos base SSE (shared frontend / backend)
 ====================================================== */
 
 export type RealtimeEventType =
@@ -17,26 +17,18 @@ export type RealtimeEventType =
 
 /**
  * Evento SSE genérico
- * Campos opcionales según dominio
  */
 export interface RealtimeEvent {
   type: RealtimeEventType
   sucursalId: string
 
-  /* ======================
-     Identidad del origen
-     (para ignorar self-events)
-  ====================== */
+  /* Identidad del origen (para self-ignore) */
   origenUsuarioId?: string
 
-  /* ======================
-     Caja
-  ====================== */
+  /* Caja */
   cajaId?: string
   aperturaCajaId?: string
 
-  /* ======================
-     Productos / Stock
-  ====================== */
+  /* Productos / Stock */
   productoId?: string
 }

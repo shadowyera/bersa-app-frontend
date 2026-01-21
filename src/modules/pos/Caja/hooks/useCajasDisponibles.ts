@@ -10,7 +10,7 @@ import { useAuth } from '@/modules/auth/useAuth'
 /* ===============================
    Realtime (SSE global)
    - NO conecta
-   - SOLO se suscribe
+   - SOLO se suscribe por evento
 =============================== */
 import { realtimeClient } from '@/shared/realtime/realtime.client'
 import type { RealtimeEvent } from '@/shared/realtime/realtime.events'
@@ -74,28 +74,43 @@ export function useCajasDisponibles() {
 
   /* =====================================================
      Realtime
-     - Escucha eventos de caja
-     - SOLO invalida cache
-     - NO abre conexión
+     - Escucha SOLO eventos de Caja
+     - Invalida cache por sucursal
+     - NO maneja estado local
   ===================================================== */
   useEffect(() => {
     if (!sucursalId) return
 
-    return realtimeClient.registerHandler(
-      (event: RealtimeEvent) => {
-        if (
-          event.type !== 'CAJA_ABIERTA' &&
-          event.type !== 'CAJA_CERRADA'
-        ) {
-          return
-        }
-
-        queryClient.invalidateQueries({
-          queryKey:
-            CAJAS_DISPONIBLES_QUERY_KEY(sucursalId),
-        })
+    /**
+     * Handler único: cualquier cambio de estado
+     * de caja afecta la lista disponible
+     */
+    const handleCajaEvent = (event: RealtimeEvent) => {
+      // Seguridad: solo reaccionar a la misma sucursal
+      if (event.sucursalId !== sucursalId) {
+        return
       }
-    )
+
+      queryClient.invalidateQueries({
+        queryKey:
+          CAJAS_DISPONIBLES_QUERY_KEY(sucursalId),
+      })
+    }
+
+    const unsubscribers = [
+      realtimeClient.on(
+        'CAJA_ABIERTA',
+        handleCajaEvent
+      ),
+      realtimeClient.on(
+        'CAJA_CERRADA',
+        handleCajaEvent
+      ),
+    ]
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub())
+    }
   }, [sucursalId, queryClient])
 
   return {

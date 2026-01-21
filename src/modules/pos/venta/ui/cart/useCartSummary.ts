@@ -2,14 +2,17 @@ import { useMemo } from 'react'
 import type { CartItem } from '@/modules/pos/pos.types'
 
 /**
+ * =====================================================
+ * useCartSummary
+ *
  * Hook de lectura del carrito.
  *
  * - No muta estado
- * - Solo calcula valores derivados
- * - Pensado para componentes presentacionales
+ * - Calcula valores derivados
+ * - Pensado para UI presentacional
+ * =====================================================
  */
 export function useCartSummary(items: CartItem[]) {
-  // Total del carrito (suma de subtotales)
   const total = useMemo(
     () =>
       items.reduce(
@@ -19,7 +22,6 @@ export function useCartSummary(items: CartItem[]) {
     [items]
   )
 
-  // Indica si hay algún item con stock insuficiente
   const hayStockInsuficiente = useMemo(
     () => items.some(i => i.stockInsuficiente),
     [items]

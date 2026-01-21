@@ -1,19 +1,31 @@
 import { useMemo, useDeferredValue } from 'react'
+
 import { useProductosPOS } from '@/shared/queries/useProductos'
 import { useStockSucursal } from '@/shared/hooks/useStockSucursal'
+import { useAuth } from '@/modules/auth/useAuth'
+
 import type { ProductoPOS } from '../pos.types'
 
 /**
+ * =====================================================
+ * usePosProductos
+ *
  * Hook de lectura de productos para el POS.
  *
- * - Combina catálogo + stock
- * - Aplica búsqueda (solo UI)
- * - No muta estado ni conoce venta
+ * Responsabilidades:
+ * - Obtener catálogo de productos
+ * - Obtener stock de la sucursal activa
+ * - Aplicar búsqueda (solo UI)
+ *
+ * ✔ No muta estado
+ * ✔ No conoce venta
+ * ✔ No recibe sucursal por parámetro
+ * =====================================================
  */
-export function usePosProductos(
-  sucursalId: string,
-  query: string
-) {
+export function usePosProductos(query: string) {
+  const { user } = useAuth()
+  const sucursalId = user?.sucursalId
+
   /* ===============================
      Catálogo de productos
   =============================== */
@@ -22,11 +34,11 @@ export function usePosProductos(
     isLoading: loadingProductos,
   } = useProductosPOS()
 
-  const productosTyped =
+  const productos =
     productosCatalogo as ProductoPOS[]
 
   /* ===============================
-     Stock por sucursal
+     Stock por sucursal activa
   =============================== */
   const {
     stock: stockMap,
@@ -38,15 +50,29 @@ export function usePosProductos(
   =============================== */
   const deferredQuery = useDeferredValue(query)
 
+  /* ===============================
+     Filtrado optimizado
+  =============================== */
   const productosFiltrados = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase()
-    if (!q) return productosTyped
 
-    return productosTyped.filter(p =>
-      p.nombre.toLowerCase().includes(q) ||
-      p.codigo?.includes(deferredQuery)
-    )
-  }, [productosTyped, deferredQuery])
+    if (!q) return productos
+
+    return productos.filter(p => {
+      if (p.nombre.toLowerCase().includes(q)) {
+        return true
+      }
+
+      if (
+        p.codigo &&
+        p.codigo.toLowerCase().includes(q)
+      ) {
+        return true
+      }
+
+      return false
+    })
+  }, [productos, deferredQuery])
 
   return {
     productos: productosFiltrados,

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+
 import type { TipoPago } from '../../pos.types'
 import type {
   EstadoCobro,
@@ -17,36 +18,50 @@ interface UseCobroPOSProps {
 }
 
 /**
+ * =====================================================
+ * useCobroPOS
+ *
  * Hook orquestador del flujo de cobro POS.
  *
- * - Maneja estado UI (inputs y modales)
- * - Normaliza valores numéricos
- * - Consume dominio puro de cobro
- * - Construye el payload final
+ * Responsabilidades:
+ * - Orquestar el flujo UI del cobro
+ * - Normalizar inputs numéricos
+ * - Consumir dominio puro (cálculo / pagos)
+ * - Construir el payload final
  *
- * No renderiza UI ni conoce backend.
+ * ❌ No renderiza UI
+ * ❌ No conoce backend
+ * =====================================================
  */
 export function useCobroPOS({
   totalVenta,
   onConfirmVenta,
 }: UseCobroPOSProps) {
   /* ===============================
-     Estado UI
+     Estado UI (modales)
   =============================== */
   const [showTipoPago, setShowTipoPago] =
     useState(false)
   const [showPayment, setShowPayment] =
     useState(false)
 
+  /* ===============================
+     Modo de pago seleccionado
+  =============================== */
   const [modoPago, setModoPago] =
     useState<TipoPago | null>(null)
 
-  // Inputs como strings (UX)
+  /* ===============================
+     Inputs (strings por UX)
+  =============================== */
   const [efectivoRaw, setEfectivo] =
     useState('')
   const [debitoRaw, setDebito] =
     useState('')
 
+  /* ===============================
+     Estado de confirmación
+  =============================== */
   const [loading, setLoading] =
     useState(false)
 
@@ -64,7 +79,7 @@ export function useCobroPOS({
   )
 
   /* ===============================
-     Estado de dominio
+     Estado de dominio (cobro)
   =============================== */
   const estado: EstadoCobro | null =
     useMemo(() => {
@@ -81,11 +96,20 @@ export function useCobroPOS({
   /* ===============================
      Flujo UI
   =============================== */
+
+  /**
+   * Abre el flujo de cobro
+   * (guardia de venta vacía)
+   */
   const openCobro = useCallback(() => {
     if (totalVenta <= 0) return
     setShowTipoPago(true)
   }, [totalVenta])
 
+  /**
+   * Selección de tipo de pago
+   * Reinicia inputs y avanza flujo
+   */
   const selectTipoPago = useCallback(
     (tipo: TipoPago) => {
       setModoPago(tipo)
@@ -97,6 +121,10 @@ export function useCobroPOS({
     []
   )
 
+  /**
+   * Cierre total del flujo de cobro
+   * (cancelación o post-confirmación)
+   */
   const closeAll = useCallback(() => {
     setShowTipoPago(false)
     setShowPayment(false)
@@ -112,6 +140,7 @@ export function useCobroPOS({
   const confirm = useCallback(async () => {
     if (!estado || !modoPago) return
     if (!estado.puedeConfirmar) return
+    if (loading) return
 
     try {
       setLoading(true)
@@ -143,6 +172,7 @@ export function useCobroPOS({
     modoPago,
     efectivo,
     debito,
+    loading,
     onConfirmVenta,
     closeAll,
   ])
@@ -151,18 +181,23 @@ export function useCobroPOS({
      API pública
   =============================== */
   return {
+    /* Estado */
     estado,
-
-    showTipoPago,
-    showPayment,
     loading,
 
+    /* UI */
+    showTipoPago,
+    showPayment,
+
+    /* Selección */
     modoPago,
     selectTipoPago,
 
+    /* Inputs */
     setEfectivo,
     setDebito,
 
+    /* Acciones */
     openCobro,
     confirm,
     closeAll,

@@ -11,11 +11,15 @@ interface Props {
 }
 
 /**
+ * =====================================================
  * Cart
  *
  * Componente presentacional del carrito.
+ *
  * - Compone filas, totales y alertas
  * - No maneja reglas de negocio
+ * - Todo estado es derivado
+ * =====================================================
  */
 function Cart({
   items,
@@ -23,7 +27,6 @@ function Cart({
   onDecrease,
   onUserAction,
 }: Props) {
-  // Estado derivado del carrito
   const {
     total,
     hayStockInsuficiente,
@@ -32,7 +35,9 @@ function Cart({
 
   return (
     <div className="bg-slate-800 rounded-lg p-4 flex flex-col h-full">
-      {/* Header */}
+      {/* ===============================
+          Header
+      =============================== */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-slate-100">
           Carrito
@@ -44,7 +49,9 @@ function Cart({
         </span>
       </div>
 
-      {/* Advertencia de stock */}
+      {/* ===============================
+          Advertencia de stock
+      =============================== */}
       {hayStockInsuficiente && (
         <div className="mb-3 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1">
           ⚠ El stock del sistema puede no reflejar la
@@ -52,7 +59,9 @@ function Cart({
         </div>
       )}
 
-      {/* Lista de items */}
+      {/* ===============================
+          Lista de items
+      =============================== */}
       <div className="flex-1 overflow-auto space-y-2">
         {items.length === 0 && (
           <div className="text-sm text-slate-400 text-center mt-6">
@@ -71,13 +80,15 @@ function Cart({
         ))}
       </div>
 
-      {/* Total */}
+      {/* ===============================
+          Total
+      =============================== */}
       <div className="border-t border-slate-700 pt-3 mt-3 flex justify-between items-center">
         <span className="text-sm text-slate-300">
           Total
         </span>
         <span className="text-xl font-bold text-emerald-400">
-          ${total.toLocaleString()}
+          ${total.toLocaleString('es-CL')}
         </span>
       </div>
     </div>

@@ -8,12 +8,21 @@ interface Props {
 
   /**
    * Acción pura:
-   * - agregar producto
-   * - NO sabe nada del scanner
+   * - agrega producto
+   * - NO conoce scanner ni estado global
    */
   onAdd: () => void
 }
 
+/**
+ * =====================================================
+ * ProductCard
+ *
+ * - UI pura
+ * - Sin estado propio
+ * - Optimizada para render masivo
+ * =====================================================
+ */
 function ProductCard({
   nombre,
   precio,
@@ -28,7 +37,8 @@ function ProductCard({
   const agotado = activo && stock <= 0
 
   /* ===============================
-     Handlers (ESTABLES)
+     Handler estable
+     - onMouseDown para compatibilidad scanner
   =============================== */
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -39,13 +49,12 @@ function ProductCard({
     [bloqueado, onAdd]
   )
 
-  /* ===============================
-     Render
-  =============================== */
   return (
     <button
+      type="button"
       disabled={bloqueado}
       onMouseDown={handleMouseDown}
+      aria-disabled={bloqueado}
       className={`
         p-3 rounded text-left transition
         ${
@@ -82,6 +91,6 @@ function ProductCard({
 
 /**
  * Memo:
- * - rerenderiza solo si cambian props reales
+ * - Re-renderiza solo si cambian props reales
  */
 export default memo(ProductCard)

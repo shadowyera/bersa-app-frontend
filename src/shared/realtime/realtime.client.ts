@@ -1,28 +1,29 @@
-import type { RealtimeEvent } from './realtime.events'
+import type {
+  RealtimeEvent,
+  RealtimeEventType,
+} from '@/shared/realtime/realtime.types'
 
 type EventHandler = (event: RealtimeEvent) => void
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ??
-  'http://localhost:5000'
+  import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
 
 class RealtimeClient {
   private eventSource: EventSource | null = null
   private isConnecting = false
-  private handlers = new Set<EventHandler>()
 
-  /* =====================================================
-     Conexión (UNA sola por app)
-  ===================================================== */
+  private handlers = new Map<
+    RealtimeEventType,
+    Set<EventHandler>
+  >()
+
   connect() {
-    if (this.eventSource || this.isConnecting) {
-      return
-    }
+    if (this.eventSource || this.isConnecting) return
 
     this.isConnecting = true
 
     this.eventSource = new EventSource(
-      `${API_BASE_URL}/api/realtime/`,
+      `${API_BASE_URL}/api/realtime`,
       { withCredentials: true }
     )
 
@@ -34,9 +35,7 @@ class RealtimeClient {
     this.eventSource.onmessage = (event) => {
       try {
         const data: RealtimeEvent = JSON.parse(event.data)
-        this.handlers.forEach((handler) =>
-          handler(data)
-        )
+        this.dispatch(data)
       } catch {
         // ignore
       }
@@ -46,31 +45,44 @@ class RealtimeClient {
       console.warn('[SSE] desconectado, reintentando...')
       this.disconnect()
 
-      setTimeout(() => {
-        this.connect()
-      }, 3000)
+      setTimeout(() => this.connect(), 3000)
     }
   }
 
-  /* =====================================================
-     Registro de handlers
-  ===================================================== */
-  registerHandler(handler: EventHandler) {
-    this.handlers.add(handler)
+  private dispatch(event: RealtimeEvent) {
+    const handlers = this.handlers.get(event.type)
+    if (!handlers) return
 
-    // cleanup automático
+    handlers.forEach(handler => {
+      try {
+        handler(event)
+      } catch {
+        // no-op
+      }
+    })
+  }
+
+  on(type: RealtimeEventType, handler: EventHandler) {
+    if (!this.handlers.has(type)) {
+      this.handlers.set(type, new Set())
+    }
+
+    const set = this.handlers.get(type)!
+    set.add(handler)
+
     return () => {
-      this.handlers.delete(handler)
+      set.delete(handler)
+      if (set.size === 0) {
+        this.handlers.delete(type)
+      }
     }
   }
 
-  /* =====================================================
-     Desconexión
-  ===================================================== */
   disconnect() {
     this.eventSource?.close()
     this.eventSource = null
     this.isConnecting = false
+    this.handlers.clear()
   }
 }
 

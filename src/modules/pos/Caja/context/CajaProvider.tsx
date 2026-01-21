@@ -21,10 +21,14 @@ import {
 } from '../domain/caja.api'
 
 /* =====================================================
-   Realtime (SSE global)
+   Realtime (SSE – solo suscripción)
 ===================================================== */
 import { realtimeClient } from '@/shared/realtime/realtime.client'
-import type { RealtimeEvent } from '@/shared/realtime/realtime.events'
+import type { RealtimeEvent } from '@/shared/realtime/realtime.types'
+
+/* =====================================================
+   Auth
+===================================================== */
 import { useAuth } from '@/modules/auth/useAuth'
 
 /* =====================================================
@@ -90,7 +94,9 @@ export function CajaProvider({ children }: { children: ReactNode }) {
   const [validandoCaja, setValidandoCaja] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [closingCaja, setClosingCaja] = useState(false)
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<string | undefined>(
+    undefined
+  )
 
   /* -------------------- UI cierre -------------------- */
   const [showCierreModal, setShowCierreModal] =
@@ -99,7 +105,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     useState<ResumenPrevioCaja | null>(null)
   const [montoFinal, setMontoFinal] = useState('')
 
-  /* -------------------- Ref segura -------------------- */
+  /* -------------------- Ref segura (evita closures viejos) -------------------- */
   const cajaRef = useRef<Caja | null>(null)
 
   useEffect(() => {
@@ -110,9 +116,13 @@ export function CajaProvider({ children }: { children: ReactNode }) {
      Helpers
   ===================================================== */
   const persistCaja = (caja: Caja) => {
+    const payload: CajaPersistida = {
+      id: caja.id,
+      nombre: caja.nombre,
+    }
     localStorage.setItem(
       CAJA_STORAGE_KEY,
-      JSON.stringify({ id: caja.id, nombre: caja.nombre })
+      JSON.stringify(payload)
     )
   }
 
@@ -133,15 +143,20 @@ export function CajaProvider({ children }: { children: ReactNode }) {
   }, [])
 
   /* =====================================================
-     SSE – solo suscripción (NO conexión)
+     SSE – suscripción por evento (NO conexión)
   ===================================================== */
   useEffect(() => {
-    return realtimeClient.registerHandler(
+    /**
+     * Cierre remoto de la caja actualmente seleccionada
+     * (ej: otro cajero la cerró)
+     */
+    const unsubscribe = realtimeClient.on(
+      'CAJA_CERRADA',
       (event: RealtimeEvent) => {
-        const caja = cajaRef.current
-        if (!caja) return
+        const cajaActual = cajaRef.current
+        if (!cajaActual) return
 
-        // Ignorar eventos propios
+        // Ignorar self-events
         if (
           event.origenUsuarioId &&
           event.origenUsuarioId === user?._id
@@ -149,15 +164,16 @@ export function CajaProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        // Cierre remoto de caja
-        if (
-          event.type === 'CAJA_CERRADA' &&
-          event.cajaId === caja.id
-        ) {
+        // Si se cerró la caja activa → reset completo
+        if (event.cajaId === cajaActual.id) {
           resetCajaLocal()
         }
       }
     )
+
+    return () => {
+      unsubscribe()
+    }
   }, [resetCajaLocal, user?._id])
 
   /* =====================================================
@@ -168,12 +184,16 @@ export function CajaProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(CAJA_STORAGE_KEY)
       if (!raw) return
 
-      const persisted: CajaPersistida = JSON.parse(raw)
-
       setValidandoCaja(true)
 
       try {
-        const apertura = await getAperturaActiva(persisted.id)
+        const persisted: CajaPersistida = JSON.parse(raw)
+
+        const apertura = await getAperturaActiva(
+          persisted.id
+        )
+
+        // Si no hay apertura activa, limpiar estado
         if (!apertura) {
           resetCajaLocal()
           return
@@ -185,6 +205,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
           sucursalId: apertura.sucursalId,
           activa: true,
         })
+
         setAperturaActiva(apertura)
       } catch {
         resetCajaLocal()
@@ -327,6 +348,12 @@ export function CajaProvider({ children }: { children: ReactNode }) {
       showCierreModal,
       resumenPrevio,
       montoFinal,
+      seleccionarCaja,
+      deseleccionarCaja,
+      abrirCaja,
+      iniciarCierre,
+      confirmarCierre,
+      cancelarCierre,
     ]
   )
 
