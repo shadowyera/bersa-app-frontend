@@ -37,8 +37,9 @@ function ProductoAutocomplete({
           INPUT DE BÚSQUEDA
       =============================== */}
       <ProductoSearchInput
+        value={query}
         autoFocus
-        onChangeQuery={(q: string) => {
+        onChange={(q: string) => {
           setQuery(q)
         }}
       />

@@ -7,6 +7,8 @@ import ProductosPage from "./productos/ProductosPage";
 import StockPage from "./stock/ui/StockPage";
 import ProveedoresPage from "./proveedores/ProveedoresPage";
 import AbastecimientoPage from "./abastecimiento/AbastecimientoPage";
+import { DespachoPage } from "./despacho/ui/DespachoPage";
+
 
 export const AdminRoutes = (
   <Route
@@ -22,5 +24,6 @@ export const AdminRoutes = (
     <Route path="proveedores" element={<ProveedoresPage />} />
     <Route path="stock" element={<StockPage />} />
     <Route path="abastecimiento" element={<AbastecimientoPage />} />
+    <Route path="despachos" element={<DespachoPage />} />
   </Route>
 );
