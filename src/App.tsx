@@ -7,7 +7,7 @@ import { LoginPage } from '@/modules/auth/LoginPage'
 import { PosRoutes } from '@/modules/pos/pos.routes'
 import { AdminRoutes } from '@/modules/admin/admin.routes'
 
-import { RealtimeProvider } from './providers/RealtimeProvider'
+import { RealtimeProvider } from '@/shared/realtime/RealtimeProvider'
 import { ToastProvider } from '@/shared/ui/toast/ToastProvider'
 
 /**

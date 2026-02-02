@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { realtimeClient } from '@/shared/realtime/realtime.client'
+import { sseClient } from '@/shared/realtime/sse.client'
 import type { RealtimeEvent } from '@/shared/realtime/realtime.types'
 import { useAuth } from '@/modules/auth/useAuth'
 
@@ -13,9 +13,9 @@ import { useAuth } from '@/modules/auth/useAuth'
  * - Escuchar eventos SSE del dominio Productos / Stock
  * - Invalidar cache de React Query de forma precisa
  *
- * ✔ No crea conexión SSE
- * ✔ No maneja estado local
- * ✔ No decide UI
+ * ✔ NO crea conexión SSE
+ * ✔ NO maneja estado local
+ * ✔ Infraestructura ya conectada por RealtimeProvider
  * =====================================================
  */
 export function useCatalogoRealtime() {
@@ -24,18 +24,17 @@ export function useCatalogoRealtime() {
 
   useEffect(() => {
     /**
-     * Invalida todas las queries relacionadas a productos
-     * Mantiene la lógica centralizada y reutilizable
+     * Invalida queries relacionadas a productos
      */
     const invalidateProductos = (productoId?: string) => {
-      // Listado general de productos (POS, Admin, selectores)
+      // Listados de productos (POS / Admin)
       queryClient.invalidateQueries({
         predicate: query =>
           Array.isArray(query.queryKey) &&
           query.queryKey[0] === 'productos',
       })
 
-      // Producto individual (detalle / edición)
+      // Producto individual
       if (productoId) {
         queryClient.invalidateQueries({
           queryKey: ['producto', productoId],
@@ -44,23 +43,7 @@ export function useCatalogoRealtime() {
     }
 
     /**
-     * Handler genérico para eventos de producto / stock
-     * Incluye protección contra self-events
-     */
-    const handleProductoEvent = (event: RealtimeEvent) => {
-      const origenUsuarioId = event.origenUsuarioId
-
-      // Ignorar eventos originados por el mismo usuario
-      if (origenUsuarioId && origenUsuarioId === user?._id) {
-        return
-      }
-
-      invalidateProductos(event.productoId)
-    }
-
-    /**
-     * Tipos de eventos que afectan el catálogo
-     * Declarativo y fácil de extender
+     * Eventos que afectan el catálogo
      */
     const PRODUCTO_EVENTS: RealtimeEvent['type'][] = [
       'PRODUCTO_CREATED',
@@ -70,18 +53,34 @@ export function useCatalogoRealtime() {
     ]
 
     /**
-     * Registro de listeners SSE
-     * Cada dominio escucha SOLO lo que le compete
+     * Handler global SSE
+     * - Filtra por tipo
+     * - Ignora self-events
      */
-    const unsubscribers = PRODUCTO_EVENTS.map(type =>
-      realtimeClient.on(type, handleProductoEvent)
-    )
+    const handler = (event: RealtimeEvent) => {
+      // Solo eventos de catálogo
+      if (!PRODUCTO_EVENTS.includes(event.type)) {
+        return
+      }
+
+      // Ignorar eventos propios
+      if (
+        event.origenUsuarioId &&
+        event.origenUsuarioId === user?._id
+      ) {
+        return
+      }
+
+      invalidateProductos(event.productoId)
+    }
 
     /**
-     * Cleanup automático
+     * Suscripción SSE
      */
+    const unsubscribe = sseClient.subscribe(handler)
+
     return () => {
-      unsubscribers.forEach(unsub => unsub())
+      unsubscribe()
     }
   }, [queryClient, user?._id])
 }

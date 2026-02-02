@@ -1,0 +1,107 @@
+import { useMemo, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
+
+/* =====================================================
+   Auth
+===================================================== */
+import { useAuth } from '@/modules/auth/useAuth'
+
+/* =====================================================
+   Context
+===================================================== */
+import { useCaja } from '../context/CajaProvider'
+
+/* =====================================================
+   API
+===================================================== */
+import {
+  getCajasSucursal,
+  getAperturasActivasSucursal,
+} from '../api/caja.api'
+
+/* =====================================================
+   Domain
+===================================================== */
+import {
+  buildCajasVisuales,
+} from '../domain/caja.selectors'
+
+import type { CajaVisual } from '../domain/caja.types'
+
+export function useSeleccionarCaja() {
+  const { user } = useAuth()
+  const sucursalId = user?.sucursalId
+
+  const { seleccionarCaja, validandoCaja } = useCaja()
+
+  /* =====================================================
+     Snapshot (fuente de verdad)
+  ===================================================== */
+
+  const cajasQuery = useQuery({
+    queryKey: ['cajas', sucursalId],
+    queryFn: () => getCajasSucursal(sucursalId!),
+    enabled: Boolean(sucursalId),
+    staleTime: 30_000,
+  })
+
+  const aperturasQuery = useQuery({
+    queryKey: ['aperturas-activas', sucursalId],
+    queryFn: () => getAperturasActivasSucursal(sucursalId!),
+    enabled: Boolean(sucursalId),
+    staleTime: 5_000,
+  })
+
+  /* =====================================================
+     Estado derivado (selector puro)
+  ===================================================== */
+
+  const cajas: CajaVisual[] = useMemo(() => {
+    if (!cajasQuery.data || !aperturasQuery.data) {
+      return []
+    }
+
+    return buildCajasVisuales(
+      cajasQuery.data,
+      aperturasQuery.data
+    )
+  }, [cajasQuery.data, aperturasQuery.data])
+
+  /* =====================================================
+     Acción UI
+  ===================================================== */
+
+  const onSelectCaja = useCallback(
+    async (caja: CajaVisual) => {
+      if (!sucursalId) return
+
+      await seleccionarCaja({
+        id: caja.id,
+        nombre: caja.nombre,
+        sucursalId,
+        activa: true,
+      })
+    },
+    [seleccionarCaja, sucursalId]
+  )
+
+  /* =====================================================
+     Estado UI
+  ===================================================== */
+
+  const loading =
+    cajasQuery.isLoading || aperturasQuery.isLoading
+
+  const error =
+    cajasQuery.error || aperturasQuery.error
+      ? 'No se pudieron cargar las cajas'
+      : null
+
+  return {
+    cajas,
+    loading,
+    error,
+    validandoCaja,
+    onSelectCaja,
+  }
+}

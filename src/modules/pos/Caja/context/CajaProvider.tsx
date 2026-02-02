@@ -1,11 +1,9 @@
 import {
   createContext,
   useContext,
-  useState,
-  useMemo,
-  useCallback,
+  useReducer,
   useEffect,
-  useRef,
+  useState,
 } from 'react'
 import type { ReactNode } from 'react'
 
@@ -13,18 +11,18 @@ import type { ReactNode } from 'react'
    Domain
 ===================================================== */
 import type { Caja, AperturaCaja } from '../domain/caja.types'
+import { initialCajaState } from '../domain/caja.state'
+import { cajaReducer } from '../domain/caja.reducer'
+
+/* =====================================================
+   API
+===================================================== */
 import {
   getAperturaActiva,
   abrirCaja as apiAbrirCaja,
   getResumenPrevioCaja,
   cerrarCajaAutomatico,
-} from '../domain/caja.api'
-
-/* =====================================================
-   Realtime (SSE – solo suscripción)
-===================================================== */
-import { realtimeClient } from '@/shared/realtime/realtime.client'
-import type { RealtimeEvent } from '@/shared/realtime/realtime.types'
+} from '../api/caja.api'
 
 /* =====================================================
    Auth
@@ -79,203 +77,152 @@ const CajaContext = createContext<CajaContextValue | null>(null)
 const CAJA_STORAGE_KEY = 'bersa:cajaSeleccionada'
 
 /* =====================================================
+   Helpers
+===================================================== */
+function persistCaja(caja: Caja) {
+  localStorage.setItem(
+    CAJA_STORAGE_KEY,
+    JSON.stringify({ id: caja.id, nombre: caja.nombre })
+  )
+}
+
+function clearCajaPersistida() {
+  localStorage.removeItem(CAJA_STORAGE_KEY)
+}
+
+function getCajaPersistida(): CajaPersistida | null {
+  const raw = localStorage.getItem(CAJA_STORAGE_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+/* =====================================================
    Provider
 ===================================================== */
 export function CajaProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
 
-  /* -------------------- Estado base -------------------- */
-  const [cajaSeleccionada, setCajaSeleccionada] =
-    useState<Caja | null>(null)
-  const [aperturaActiva, setAperturaActiva] =
-    useState<AperturaCaja | null>(null)
+  const [state, dispatch] = useReducer(
+    cajaReducer,
+    initialCajaState
+  )
 
-  /* -------------------- Flags -------------------- */
+  /* -------------------- Estado proceso -------------------- */
   const [validandoCaja, setValidandoCaja] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [closingCaja, setClosingCaja] = useState(false)
-  const [error, setError] = useState<string | undefined>(
-    undefined
-  )
+  const [error, setError] = useState<string | undefined>()
 
-  /* -------------------- UI cierre -------------------- */
-  const [showCierreModal, setShowCierreModal] =
-    useState(false)
+  /* -------------------- Estado UI cierre -------------------- */
+  const [showCierreModal, setShowCierreModal] = useState(false)
   const [resumenPrevio, setResumenPrevio] =
     useState<ResumenPrevioCaja | null>(null)
   const [montoFinal, setMontoFinal] = useState('')
 
-  /* -------------------- Ref segura (evita closures viejos) -------------------- */
-  const cajaRef = useRef<Caja | null>(null)
-
+  /* =====================================================
+     Restore sesión
+  ===================================================== */
   useEffect(() => {
-    cajaRef.current = cajaSeleccionada
-  }, [cajaSeleccionada])
+    if (!user) return
+
+    const persisted = getCajaPersistida()
+    if (!persisted) return
+
+    setValidandoCaja(true)
+
+    getAperturaActiva(persisted.id)
+      .then(apertura => {
+        dispatch({
+          type: 'SELECCIONAR_CAJA',
+          caja: {
+            id: persisted.id,
+            nombre: persisted.nombre,
+            sucursalId: user.sucursalId,
+            activa: true,
+          },
+        })
+
+        dispatch({
+          type: 'SET_APERTURA_ACTIVA',
+          apertura,
+        })
+      })
+      .catch(() => clearCajaPersistida())
+      .finally(() => setValidandoCaja(false))
+  }, [user])
 
   /* =====================================================
-     Helpers
+     Acciones públicas
   ===================================================== */
-  const persistCaja = (caja: Caja) => {
-    const payload: CajaPersistida = {
-      id: caja.id,
-      nombre: caja.nombre,
+  const seleccionarCaja = async (caja: Caja) => {
+    setValidandoCaja(true)
+    setError(undefined)
+
+    try {
+      const apertura = await getAperturaActiva(caja.id)
+
+      // 🔥 LIMPIAR UI DE CIERRE AL CAMBIAR DE CAJA
+      setShowCierreModal(false)
+      setResumenPrevio(null)
+      setMontoFinal('')
+
+      dispatch({ type: 'SELECCIONAR_CAJA', caja })
+      dispatch({ type: 'SET_APERTURA_ACTIVA', apertura })
+
+      persistCaja(caja)
+    } catch {
+      setError('No se pudo seleccionar la caja')
+    } finally {
+      setValidandoCaja(false)
     }
-    localStorage.setItem(
-      CAJA_STORAGE_KEY,
-      JSON.stringify(payload)
-    )
   }
 
-  const resetCajaLocal = useCallback(() => {
-    localStorage.removeItem(CAJA_STORAGE_KEY)
+  const deseleccionarCaja = () => {
+    clearCajaPersistida()
+    dispatch({ type: 'RESET' })
 
-    setCajaSeleccionada(null)
-    setAperturaActiva(null)
-
+    // 🔥 LIMPIAR UI DE CIERRE
     setShowCierreModal(false)
     setResumenPrevio(null)
     setMontoFinal('')
+  }
 
+  const abrirCaja = async (montoInicial: number) => {
+    if (!state.cajaSeleccionada) return
+
+    setCargando(true)
     setError(undefined)
-    setCargando(false)
-    setClosingCaja(false)
-    setValidandoCaja(false)
-  }, [])
 
-  /* =====================================================
-     SSE – suscripción por evento (NO conexión)
-  ===================================================== */
-  useEffect(() => {
-    /**
-     * Cierre remoto de la caja actualmente seleccionada
-     * (ej: otro cajero la cerró)
-     */
-    const unsubscribe = realtimeClient.on(
-      'CAJA_CERRADA',
-      (event: RealtimeEvent) => {
-        const cajaActual = cajaRef.current
-        if (!cajaActual) return
+    try {
+      const apertura = await apiAbrirCaja({
+        cajaId: state.cajaSeleccionada.id,
+        montoInicial,
+      })
 
-        // Ignorar self-events
-        if (
-          event.origenUsuarioId &&
-          event.origenUsuarioId === user?._id
-        ) {
-          return
-        }
-
-        // Si se cerró la caja activa → reset completo
-        if (event.cajaId === cajaActual.id) {
-          resetCajaLocal()
-        }
-      }
-    )
-
-    return () => {
-      unsubscribe()
+      dispatch({
+        type: 'APERTURA_CAJA',
+        apertura,
+      })
+    } catch {
+      setError('No se pudo abrir la caja')
+    } finally {
+      setCargando(false)
     }
-  }, [resetCajaLocal, user?._id])
+  }
 
-  /* =====================================================
-     RESTORE DESDE LOCALSTORAGE
-  ===================================================== */
-  useEffect(() => {
-    const restore = async () => {
-      const raw = localStorage.getItem(CAJA_STORAGE_KEY)
-      if (!raw) return
-
-      setValidandoCaja(true)
-
-      try {
-        const persisted: CajaPersistida = JSON.parse(raw)
-
-        const apertura = await getAperturaActiva(
-          persisted.id
-        )
-
-        // Si no hay apertura activa, limpiar estado
-        if (!apertura) {
-          resetCajaLocal()
-          return
-        }
-
-        setCajaSeleccionada({
-          id: persisted.id,
-          nombre: persisted.nombre,
-          sucursalId: apertura.sucursalId,
-          activa: true,
-        })
-
-        setAperturaActiva(apertura)
-      } catch {
-        resetCajaLocal()
-      } finally {
-        setValidandoCaja(false)
-      }
-    }
-
-    restore()
-  }, [resetCajaLocal])
-
-  /* =====================================================
-     Acciones
-  ===================================================== */
-  const seleccionarCaja = useCallback(
-    async (caja: Caja) => {
-      setValidandoCaja(true)
-      setError(undefined)
-
-      try {
-        const apertura = await getAperturaActiva(caja.id)
-
-        setCajaSeleccionada(caja)
-        setAperturaActiva(apertura)
-        persistCaja(caja)
-      } catch {
-        resetCajaLocal()
-        setError('No se pudo seleccionar la caja')
-      } finally {
-        setValidandoCaja(false)
-      }
-    },
-    [resetCajaLocal]
-  )
-
-  const deseleccionarCaja = useCallback(() => {
-    resetCajaLocal()
-  }, [resetCajaLocal])
-
-  const abrirCaja = useCallback(
-    async (montoInicial: number) => {
-      if (!cajaSeleccionada) return
-
-      setCargando(true)
-      setError(undefined)
-
-      try {
-        const apertura = await apiAbrirCaja({
-          cajaId: cajaSeleccionada.id,
-          montoInicial,
-        })
-        setAperturaActiva(apertura)
-      } catch {
-        setError('No se pudo abrir la caja')
-      } finally {
-        setCargando(false)
-      }
-    },
-    [cajaSeleccionada]
-  )
-
-  const iniciarCierre = useCallback(async () => {
-    if (!cajaSeleccionada) return
+  const iniciarCierre = async () => {
+    if (!state.cajaSeleccionada) return
 
     setCargando(true)
     setError(undefined)
 
     try {
       const resumen = await getResumenPrevioCaja(
-        cajaSeleccionada.id
+        state.cajaSeleccionada.id
       )
       setResumenPrevio(resumen)
       setMontoFinal(String(resumen.efectivoEsperado))
@@ -285,87 +232,72 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     } finally {
       setCargando(false)
     }
-  }, [cajaSeleccionada])
+  }
 
-  const confirmarCierre = useCallback(async () => {
-    if (!cajaSeleccionada) return
+  const confirmarCierre = async () => {
+    if (!state.cajaSeleccionada) return
 
     setClosingCaja(true)
     setError(undefined)
 
     try {
       await cerrarCajaAutomatico({
-        cajaId: cajaSeleccionada.id,
+        cajaId: state.cajaSeleccionada.id,
         montoFinal: Number(montoFinal),
       })
-      resetCajaLocal()
+
+      dispatch({ type: 'CIERRE_CAJA' })
+      clearCajaPersistida()
+
+      // 🔥 LIMPIAR UI DE CIERRE
+      setShowCierreModal(false)
+      setResumenPrevio(null)
+      setMontoFinal('')
     } catch {
       setError('No se pudo cerrar la caja')
     } finally {
       setClosingCaja(false)
     }
-  }, [cajaSeleccionada, montoFinal, resetCajaLocal])
+  }
 
-  const cancelarCierre = useCallback(() => {
+  const cancelarCierre = () => {
     setShowCierreModal(false)
     setResumenPrevio(null)
     setMontoFinal('')
-  }, [])
-
-  /* =====================================================
-     Context value
-  ===================================================== */
-  const value = useMemo<CajaContextValue>(
-    () => ({
-      cajaSeleccionada,
-      aperturaActiva,
-
-      validandoCaja,
-      cargando,
-      closingCaja,
-      error,
-
-      seleccionarCaja,
-      deseleccionarCaja,
-      abrirCaja,
-
-      iniciarCierre,
-      confirmarCierre,
-      cancelarCierre,
-
-      showCierreModal,
-      resumenPrevio,
-      montoFinal,
-      setMontoFinal,
-    }),
-    [
-      cajaSeleccionada,
-      aperturaActiva,
-      validandoCaja,
-      cargando,
-      closingCaja,
-      error,
-      showCierreModal,
-      resumenPrevio,
-      montoFinal,
-      seleccionarCaja,
-      deseleccionarCaja,
-      abrirCaja,
-      iniciarCierre,
-      confirmarCierre,
-      cancelarCierre,
-    ]
-  )
+  }
 
   return (
-    <CajaContext.Provider value={value}>
+    <CajaContext.Provider
+      value={{
+        cajaSeleccionada: state.cajaSeleccionada,
+        aperturaActiva: state.aperturaActiva,
+
+        validandoCaja,
+        cargando,
+        closingCaja,
+        error,
+
+        seleccionarCaja,
+        deseleccionarCaja,
+        abrirCaja,
+
+        iniciarCierre,
+        confirmarCierre,
+        cancelarCierre,
+
+        showCierreModal,
+        resumenPrevio,
+        montoFinal,
+        setMontoFinal,
+      }}
+    >
       {children}
     </CajaContext.Provider>
   )
 }
 
 /* =====================================================
-   Hook
+   Hook público
 ===================================================== */
 export function useCaja() {
   const ctx = useContext(CajaContext)

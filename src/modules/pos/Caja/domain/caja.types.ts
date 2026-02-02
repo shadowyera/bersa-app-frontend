@@ -15,7 +15,7 @@ export type EstadoAperturaCaja =
   typeof ESTADO_APERTURA_CAJA[keyof typeof ESTADO_APERTURA_CAJA]
 
 /* =====================================================
-   Modelos base
+   Modelos de dominio
 ===================================================== */
 
 /**
@@ -40,6 +40,7 @@ export interface AperturaCaja {
   sucursalId: string
 
   usuarioAperturaId: string
+  usuarioAperturaNombre?: string
   usuarioCierreId?: string
 
   fechaApertura: string
@@ -50,4 +51,14 @@ export interface AperturaCaja {
   diferencia?: number
 
   estado: EstadoAperturaCaja
+}
+
+/**
+ * Proyección visual (derivada, NO persistente)
+ */
+export interface CajaVisual {
+  id: string
+  nombre: string
+  abierta: boolean
+  abiertaPor?: string
 }

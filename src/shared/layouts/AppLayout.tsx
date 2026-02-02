@@ -1,20 +1,18 @@
-import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 
-import { realtimeClient } from '@/shared/realtime/realtime.client'
-
+/**
+ * =====================================================
+ * AppLayout
+ *
+ * - Layout visual
+ * - NO maneja infraestructura
+ * - NO conecta SSE
+ * =====================================================
+ */
 export default function AppLayout() {
-  useEffect(() => {
-    realtimeClient.connect()
-
-    return () => {
-      realtimeClient.disconnect()
-    }
-  }, [])
-
   return (
     <div className="flex h-screen bg-slate-900 text-slate-100">
       <Sidebar />
