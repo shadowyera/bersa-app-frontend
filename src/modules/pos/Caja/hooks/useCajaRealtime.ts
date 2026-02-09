@@ -6,48 +6,46 @@ import type { RealtimeEvent } from '@/shared/realtime/realtime.types'
 
 import type { AperturaCaja } from '../domain/caja.types'
 
-/* =====================================================
-   Helpers – React Query updates
-===================================================== */
+const aperturasActivasKey = (sucursalId: string) => [
+  'aperturas-activas',
+  sucursalId,
+]
 
 function handleCajaAbierta(
   event: RealtimeEvent,
   sucursalId: string,
   queryClient: ReturnType<typeof useQueryClient>
 ) {
-  const {
-    aperturaCajaId,
-    cajaId,
-    origenUsuarioId,
-    origenUsuarioNombre,
-  } = event
+  const aperturaId =
+    event.aperturaCajaId ?? event.aperturaId
 
-  if (!aperturaCajaId || !cajaId || !origenUsuarioId) {
-    return
-  }
+  const { cajaId, origenUsuarioId, origenUsuarioNombre } =
+    event
+
+  if (!aperturaId || !cajaId || !origenUsuarioId) return
 
   queryClient.setQueryData<AperturaCaja[]>(
-    ['aperturas-activas', sucursalId],
+    aperturasActivasKey(sucursalId),
     old => {
       const current = old ?? []
 
-      // Evitar duplicados
-      if (current.some(a => a.id === aperturaCajaId)) {
+      if (current.some(a => a.id === aperturaId)) {
         return current
       }
 
-      const nuevaApertura: AperturaCaja = {
-        id: aperturaCajaId,
-        cajaId,
-        sucursalId,
-        usuarioAperturaId: origenUsuarioId,
-        usuarioAperturaNombre: origenUsuarioNombre,
-        fechaApertura: new Date().toISOString(),
-        montoInicial: 0,
-        estado: 'ABIERTA',
-      }
-
-      return [...current, nuevaApertura]
+      return [
+        ...current,
+        {
+          id: aperturaId,
+          cajaId,
+          sucursalId,
+          usuarioAperturaId: origenUsuarioId,
+          usuarioAperturaNombre: origenUsuarioNombre,
+          fechaApertura: new Date().toISOString(),
+          montoInicial: 0,
+          estado: 'ABIERTA',
+        },
+      ]
     }
   )
 }
@@ -61,14 +59,10 @@ function handleCajaCerrada(
   if (!cajaId) return
 
   queryClient.setQueryData<AperturaCaja[]>(
-    ['aperturas-activas', sucursalId],
+    aperturasActivasKey(sucursalId),
     old => (old ?? []).filter(a => a.cajaId !== cajaId)
   )
 }
-
-/* =====================================================
-   Hook
-===================================================== */
 
 export function useCajaRealtime(sucursalId?: string) {
   const queryClient = useQueryClient()
@@ -78,10 +72,12 @@ export function useCajaRealtime(sucursalId?: string) {
 
     const unsubscribe = sseClient.subscribe(
       (event: RealtimeEvent) => {
-        // =============================
-        // Filtro por sucursal
-        // =============================
-        if (event.sucursalId !== sucursalId) return
+        if (
+          event.sucursalId !== 'GLOBAL' &&
+          String(event.sucursalId) !== String(sucursalId)
+        ) {
+          return
+        }
 
         switch (event.type) {
           case 'CAJA_ABIERTA':
@@ -98,9 +94,6 @@ export function useCajaRealtime(sucursalId?: string) {
               sucursalId,
               queryClient
             )
-            break
-
-          default:
             break
         }
       }

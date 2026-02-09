@@ -1,8 +1,34 @@
-import type { TipoPago } from '../../pos.types'
+import type { TipoPago } from '../../domain/pos.types'
 import type { EstadoCobro } from './cobro.types'
-import { calcularRedondeoCLP } from './redondeo'
 
-interface CalcularEstadoCobroInput {
+/* =====================================================
+   Helpers
+===================================================== */
+
+/**
+ * Redondeo CLP legal:
+ * siempre hacia arriba al múltiplo de 10.
+ * SOLO para efectivo puro.
+ */
+function calcularRedondeoCLP(base: number): number {
+  const resto = base % 10
+  if (resto === 0) return 0
+  return 10 - resto
+}
+
+/**
+ * Normaliza montos para evitar NaN o negativos
+ */
+function normalizarMonto(valor: number): number {
+  if (!Number.isFinite(valor)) return 0
+  return Math.max(0, valor)
+}
+
+/* =====================================================
+   Dominio Cobro
+===================================================== */
+
+interface Input {
   totalVenta: number
   modo: TipoPago
   efectivo: number
@@ -10,41 +36,57 @@ interface CalcularEstadoCobroInput {
 }
 
 /**
- * Calcula el estado financiero de un cobro.
- *
- * - Aplica redondeo legal CLP
- * - Calcula totales, vuelto y falta
- * - Determina si el cobro puede confirmarse
- *
- * Dominio puro (sin efectos secundarios)
+ * Calcula el estado financiero del cobro.
  */
 export function calcularEstadoCobro({
   totalVenta,
   modo,
   efectivo,
   debito,
-}: CalcularEstadoCobroInput): EstadoCobro {
-  /* ===============================
-     Redondeo CLP
-  =============================== */
-  const {
-    totalCobrado,
-    ajusteRedondeo,
-  } = calcularRedondeoCLP(totalVenta)
+}: Input): EstadoCobro {
 
-  /* ===============================
-     Total pagado según modo
-  =============================== */
+  const efectivoSeguro = normalizarMonto(efectivo)
+  const debitoSeguro = normalizarMonto(debito)
+
+  /* -----------------------------
+     TOTAL BASE
+  ----------------------------- */
+
+  const baseTotal = totalVenta
+
+  /* -----------------------------
+     REDONDEO (solo efectivo puro)
+  ----------------------------- */
+
+  const ajusteRedondeo =
+    modo === 'EFECTIVO'
+      ? calcularRedondeoCLP(baseTotal)
+      : 0
+
+  /* -----------------------------
+     TOTAL A COBRAR
+  ----------------------------- */
+
+  const totalCobrado =
+    modo === 'EFECTIVO'
+      ? baseTotal + ajusteRedondeo
+      : baseTotal
+
+  /* -----------------------------
+     TOTAL PAGADO
+  ----------------------------- */
+
   const totalPagado =
     modo === 'EFECTIVO'
-      ? efectivo
+      ? efectivoSeguro
       : modo === 'MIXTO'
-      ? efectivo + debito
-      : totalCobrado
+        ? efectivoSeguro + debitoSeguro
+        : totalCobrado
 
-  /* ===============================
-     Diferencias
-  =============================== */
+  /* -----------------------------
+     DIFERENCIAS
+  ----------------------------- */
+
   const vuelto = Math.max(
     0,
     totalPagado - totalCobrado
@@ -55,20 +97,26 @@ export function calcularEstadoCobro({
     totalCobrado - totalPagado
   )
 
-  /* ===============================
-     Regla de confirmación
-  =============================== */
+  /* -----------------------------
+     VALIDACIÓN
+  ----------------------------- */
+
   const puedeConfirmar =
     modo === 'EFECTIVO'
-      ? efectivo >= totalCobrado
+      ? efectivoSeguro >= totalCobrado
       : modo === 'MIXTO'
-      ? totalPagado === totalCobrado
-      : true
+        ? totalPagado >= totalCobrado
+        : true
+
+  /* -----------------------------
+     RESULTADO
+  ----------------------------- */
 
   return {
-    totalVenta,
-    totalCobrado,
+    modo,
+    totalVenta: baseTotal,
     ajusteRedondeo,
+    totalCobrado,
     totalPagado,
     vuelto,
     falta,

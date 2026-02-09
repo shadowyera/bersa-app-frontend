@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { useCaja } from '../context/CajaProvider'
 
 /**
@@ -20,15 +20,26 @@ function AbrirCajaContenido() {
   const [montoInicial, setMontoInicial] =
     useState('')
 
+  // Guard: solo mostrar si corresponde
   if (!cajaSeleccionada || aperturaActiva)
     return null
 
-  const handleConfirmar = useCallback(async () => {
+  /* =====================================================
+     Validaciones UI (NO dominio)
+  ===================================================== */
+  const montoValido = useMemo(() => {
+    if (montoInicial === '') return false
     const monto = Number(montoInicial)
-    if (Number.isNaN(monto) || monto < 0) return
+    return !Number.isNaN(monto) && monto >= 0
+  }, [montoInicial])
 
-    await abrirCaja(monto)
-  }, [montoInicial, abrirCaja])
+  /* =====================================================
+     Handlers
+  ===================================================== */
+  const handleConfirmar = useCallback(async () => {
+    if (!montoValido) return
+    await abrirCaja(Number(montoInicial))
+  }, [montoInicial, montoValido, abrirCaja])
 
   const handleChangeMonto = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,8 +49,13 @@ function AbrirCajaContenido() {
   )
 
   return (
-    <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-
+    <form
+      onSubmit={e => {
+        e.preventDefault()
+        handleConfirmar()
+      }}
+      className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden"
+    >
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-800 text-center">
         <h2 className="text-xl font-semibold text-slate-100">
@@ -52,7 +68,6 @@ function AbrirCajaContenido() {
 
       {/* Body */}
       <div className="px-6 py-6 space-y-6">
-
         {/* Caja seleccionada */}
         <div className="rounded-xl bg-slate-800/60 border border-slate-700 p-4 text-center">
           <div className="text-xs uppercase tracking-wide text-slate-400">
@@ -99,10 +114,9 @@ function AbrirCajaContenido() {
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-slate-800 bg-slate-900 flex flex-col gap-3">
-
         <button
-          onClick={handleConfirmar}
-          disabled={cargando}
+          type="submit"
+          disabled={cargando || !montoValido}
           className="
             w-full py-3 rounded-xl font-semibold
             bg-emerald-600 hover:bg-emerald-500
@@ -128,7 +142,7 @@ function AbrirCajaContenido() {
           ← Cambiar caja seleccionada
         </button>
       </div>
-    </div>
+    </form>
   )
 }
 

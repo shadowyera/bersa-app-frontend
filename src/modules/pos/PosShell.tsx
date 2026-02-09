@@ -1,32 +1,26 @@
 import { Outlet } from 'react-router-dom'
 import BarraCajaActiva from './Caja/ui/modals/BarraCajaActiva'
-import SeleccionarCajaModal from './Caja/ui/SeleccionarCajaContenido'
 import CerrarCajaModal from './Caja/ui/modals/CerrarCajaModal'
-import { useAuth } from '../auth/useAuth';
+
+import { useAuth } from '@/modules/auth/useAuth'
+import { useCajaRealtime } from './Caja/hooks/useCajaRealtime'
 
 /**
  * PosShell
  *
  * Layout raíz del módulo POS.
- *
- * Responsabilidades:
- * - Validar usuario autenticado
- * - Proveer contexto de Caja
- * - Renderizar barra global
- * - Montar modales globales
- * - Renderizar rutas hijas (Outlet)
  */
 export default function PosShell() {
   const { user } = useAuth()
-  if (!user) return null
+
+  // 🔥 AQUÍ MISMO
+  useCajaRealtime(user?.sucursalId)
 
   return (
-    
-      <div className="relative h-full">
-        <BarraCajaActiva />
-        <Outlet />
-        <SeleccionarCajaModal />
-        <CerrarCajaModal />
-      </div>
+    <div className="relative h-full">
+      <BarraCajaActiva />
+      <Outlet />
+      <CerrarCajaModal />
+    </div>
   )
 }

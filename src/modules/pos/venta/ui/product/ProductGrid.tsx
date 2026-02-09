@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react'
 import ProductCard from './ProductCard'
-import type { ProductoPOS } from '@/modules/pos/pos.types'
+import type { ProductoPOS } from '@/modules/pos/domain/pos.types'
 
 interface Props {
   productos: ProductoPOS[]

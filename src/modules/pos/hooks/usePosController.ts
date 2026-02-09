@@ -1,88 +1,50 @@
-import { useCallback, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useState, useCallback, useMemo } from 'react'
 
-/* ===============================
-   Dominio POS
-=============================== */
-import { crearVentaPOS } from '../api/pos.api'
-import { useVenta } from '../venta/useVenta'
-import { useCobroPOS } from '../Cobro/hooks/useCobroPOS'
 import { useCaja } from '../Caja/context/CajaProvider'
-
-/* ===============================
-   Auth + Productos
-=============================== */
-import { useAuth } from '../../auth/useAuth'
 import { usePosProductos } from './usePosProductos'
+import { usePosScanner } from './usePosScanner'
+import { usePosVentaFlow } from './usePosVentaFlow'
+import { usePosCobroFlow } from './usePosCobroFlow'
 
-/* ===============================
-   Scanner (infra UI)
-=============================== */
-import { useScannerFocus } from '../venta/hooks/useScannerFocus'
+/* =======================================================
+   POS CONTROLLER
+======================================================= */
 
-/**
- * =====================================================
- * usePosController
- *
- * Orquestador principal del POS.
- *
- * Responsabilidades:
- * - Coordinar Venta, Caja, Productos y Cobro
- * - Exponer una API estable para la UI (PosPage)
- * - Aplicar bloqueos UX
- *
- * ❌ No renderiza UI
- * ❌ No maneja conexión realtime
- *
- * ⚠️ Hook grande a propósito (controller)
- * =====================================================
- */
 export function usePosController() {
-  /* ===============================
-     Auth (fuente única de sucursal)
-  =============================== */
-  const { user } = useAuth()
-  if (!user) {
-    throw new Error(
-      'usePosController debe usarse con usuario autenticado'
-    )
-  }
-
-  const SUCURSAL_ID = user.sucursalId
 
   /* ===============================
-     React Query
+     STATE LOCAL
   =============================== */
-  const queryClient = useQueryClient()
 
-  /* ===============================
-     Estado UI mínimo
-  =============================== */
   const [query, setQuery] = useState('')
+  const [highlightedId, setHighlightedId] =
+    useState<string | null>(null)
 
   /* ===============================
-     Scanner (infra)
+     SCANNER
   =============================== */
-  const { scannerRef, focusScanner } = useScannerFocus()
+
+  const { scannerRef, focusScanner } =
+    usePosScanner()
 
   /* ===============================
-     Dominio Venta
+     FLOWS
   =============================== */
-  const venta = useVenta()
+
+  const { venta, postVenta, onConfirmVenta } =
+    usePosVentaFlow()
+
+  const cobro = usePosCobroFlow({
+    totalVenta: venta.total,
+    onConfirmVenta,
+  })
+
+  const cobroStable = useMemo(() => cobro, [cobro])
 
   /* ===============================
-     Caja
+     PRODUCTOS
   =============================== */
-  const {
-    cajaSeleccionada,
-    aperturaActiva,
-    cargando: cargandoCaja,
-  } = useCaja()
 
-  /* ===============================
-     Productos + Stock (POS)
-     ⚠️ sucursal ya NO se pasa como arg
-  =============================== */
   const {
     productos,
     stockMap,
@@ -90,17 +52,39 @@ export function usePosController() {
   } = usePosProductos(query)
 
   /* ===============================
-     Bloqueos UX
+     CAJA
   =============================== */
+
+  const {
+    cajaSeleccionada,
+    aperturaActiva,
+    cargando: cargandoCaja,
+  } = useCaja()
+
   const bloqueado =
     cargandoCaja ||
     !cajaSeleccionada ||
-    !aperturaActiva
+    !aperturaActiva ||
+    postVenta.open
 
   /* ===============================
-     Agregar producto al carrito
-     (callback estable)
+     HELPERS
   =============================== */
+
+  const flashHighlight = useCallback(
+    (id: string) => {
+      setHighlightedId(id)
+      setTimeout(() => {
+        setHighlightedId(null)
+      }, 200)
+    },
+    []
+  )
+
+  /* ===============================
+     ADD PRODUCT
+  =============================== */
+
   const onAddProduct = useCallback(
     (p: {
       _id: string
@@ -108,8 +92,8 @@ export function usePosController() {
       precio: number
       activo: boolean
     }) => {
-      if (bloqueado) return
-      if (!p.activo) return
+
+      if (bloqueado || !p.activo) return
 
       venta.addProduct({
         productoId: p._id,
@@ -118,100 +102,121 @@ export function usePosController() {
         stockDisponible: stockMap[p._id] ?? 0,
       })
 
+      flashHighlight(p._id)
       focusScanner()
+
     },
-    [bloqueado, venta, stockMap, focusScanner]
+    [bloqueado, venta, stockMap, focusScanner, flashHighlight]
   )
 
   /* ===============================
-     Confirmar venta
+     CLEAR
   =============================== */
-  const onConfirmVenta = useCallback(
-    async ({
-      pagos,
-      ajusteRedondeo,
-    }: {
-      pagos: any[]
-      ajusteRedondeo: number
-    }) => {
-      if (!cajaSeleccionada || !aperturaActiva) {
-        return
-      }
 
-      await crearVentaPOS({
-        cajaId: cajaSeleccionada.id,
-        aperturaCajaId: aperturaActiva.id,
-        pagos,
-        ajusteRedondeo,
-        items: venta.cart.map(item => ({
-          productoId: item.productoId,
-          cantidad: item.cantidad,
-          precioUnitario: item.precioUnitario,
-        })),
-      })
+  const clearCart = useCallback(() => {
+    venta.clear()
+  }, [venta])
 
-      /**
-       * Invalida stock de la sucursal
-       * (realtime + seguridad por si acaso)
-       */
-      queryClient.invalidateQueries({
-        queryKey: ['stock-sucursal', SUCURSAL_ID],
-      })
+  /* ===============================
+     INCREASE / DECREASE DIRECTO
+  =============================== */
 
-      venta.clear()
-      focusScanner()
+  const increase = useCallback(
+    (productoId: string) => {
+      venta.increase(productoId)
+      flashHighlight(productoId)
     },
-    [
-      cajaSeleccionada,
-      aperturaActiva,
-      venta,
-      queryClient,
-      SUCURSAL_ID,
-      focusScanner,
-    ]
+    [venta, flashHighlight]
+  )
+
+  const decrease = useCallback(
+    (productoId: string) => {
+      venta.decrease(productoId)
+      flashHighlight(productoId)
+    },
+    [venta, flashHighlight]
   )
 
   /* ===============================
-     Cobro
-     (referencia estable)
+     SHORTCUT TARGET
   =============================== */
-  const cobro = useCobroPOS({
-    totalVenta: venta.total,
-    onConfirmVenta,
-  })
 
-  const cobroStable = useMemo(() => cobro, [cobro])
+  const resolveTargetId = useCallback(() => {
+
+    if (highlightedId) return highlightedId
+
+    const last = venta.cart.at(-1)
+    if (!last) return null
+
+    return last.productoId
+
+  }, [highlightedId, venta.cart])
 
   /* ===============================
-     API pública del controller
+     SHORTCUT ACTIONS
   =============================== */
+
+  const increaseLast = useCallback(() => {
+
+    const targetId = resolveTargetId()
+    if (!targetId) return
+
+    venta.increase(targetId)
+    flashHighlight(targetId)
+
+  }, [resolveTargetId, venta, flashHighlight])
+
+  const decreaseLast = useCallback(() => {
+
+    const targetId = resolveTargetId()
+    if (!targetId) return
+
+    venta.decrease(targetId)
+    flashHighlight(targetId)
+
+  }, [resolveTargetId, venta, flashHighlight])
+
+  /* ===============================
+     RETURN
+  =============================== */
+
   return {
-    /* Scanner */
+
+    /* scanner */
     scannerRef,
     focusScanner,
 
-    /* Productos */
+    /* productos */
     productos,
     stockMap,
     loadingProductos,
+
     query,
     setQuery,
 
-    /* Venta */
+    /* cart */
     cart: venta.cart,
     total: venta.total,
-    increase: venta.increase,
-    decrease: venta.decrease,
 
-    /* Caja */
+    increase,
+    decrease,
+
+    increaseLast,
+    decreaseLast,
+
+    clearCart,
+
+    highlightedId,
+
+    /* caja */
     cargandoCaja,
     bloqueado,
 
-    /* Acciones */
+    /* flows */
     onAddProduct,
     onCobrar: cobroStable.openCobro,
 
-    /* Cobro */
     cobro: cobroStable,
+    postVenta,
   }
 }

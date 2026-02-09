@@ -1,12 +1,13 @@
-import { memo, useEffect, useState, useCallback } from 'react'
-import type { TipoPago } from '../../pos.types'
+import { memo, useEffect, useState, useCallback, useRef } from 'react'
+import type { TipoPago } from '../../domain/pos.types'
 import type { EstadoCobro } from '../domain/cobro.types'
 import { normalizarNumero } from './utils/normalizarNumero'
 import PaymentSummary from './PaymentSummary'
+import { useCobroShortcuts } from '../hooks/useCobroShortcuts'
 
-/* ===============================
-   Constantes UI
-=============================== */
+/* =====================================================
+   Constantes
+===================================================== */
 
 const TITULOS: Record<TipoPago, string> = {
   EFECTIVO: 'Pago en efectivo',
@@ -17,32 +18,27 @@ const TITULOS: Record<TipoPago, string> = {
 }
 
 const ATAJOS = [1000, 2000, 5000, 10000, 20000]
+const ATAJOS_KEYS = ['F1', 'F2', 'F3', 'F4', 'F5']
 
-/* ===============================
+/* =====================================================
    Props
-=============================== */
+===================================================== */
 
 interface Props {
   totalVenta: number
   modo: TipoPago
   estado: EstadoCobro | null
   loading?: boolean
-
   setEfectivo: (value: string) => void
   setDebito: (value: string) => void
-
   onConfirm: () => void
   onClose: () => void
 }
 
-/**
- * Modal de cobro del POS.
- *
- * UI pura:
- * - Maneja inputs como strings
- * - No conoce reglas de negocio
- * - No construye pagos
- */
+/* =====================================================
+   Component
+===================================================== */
+
 function PaymentModal({
   totalVenta,
   modo,
@@ -53,15 +49,53 @@ function PaymentModal({
   onConfirm,
   onClose,
 }: Props) {
-  /* ===============================
-     Estado local UI
-  =============================== */
+
   const [efectivoRaw, setEfectivoRaw] = useState('')
-  const [debitoRaw, setDebitoRaw] = useState('')
+  const [, setDebitoRaw] = useState('')
+
+  const efectivoRef = useRef<HTMLInputElement | null>(null)
 
   /* ===============================
-     Reset al cambiar contexto
+     Shortcuts
   =============================== */
+
+  const sumarEfectivo = useCallback(
+    (monto: number) => {
+      const actual = normalizarNumero(efectivoRaw)
+      handleEfectivoChange(String(actual + monto))
+    },
+    [efectivoRaw]
+  )
+
+  useCobroShortcuts({
+    enabled: true,
+    onConfirm,
+    onCancel: onClose,
+    onAddMontoRapido: sumarEfectivo,
+  })
+
+  /* ===============================
+     Autofocus seguro
+  =============================== */
+
+  useEffect(() => {
+    if (modo !== 'EFECTIVO') return
+
+    const id = requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (!efectivoRef.current) return
+        efectivoRef.current.focus()
+        efectivoRef.current.select()
+      }, 0)
+    })
+
+    return () => cancelAnimationFrame(id)
+  }, [modo, totalVenta])
+
+  /* ===============================
+     Reset
+  =============================== */
+
   useEffect(() => {
     setEfectivoRaw('')
     setDebitoRaw('')
@@ -78,45 +112,16 @@ function PaymentModal({
       setEfectivoRaw(raw)
       setEfectivo(raw)
 
-      // En modo MIXTO, el débito es el resto (solo UI)
       if (modo === 'MIXTO' && estado) {
         const num = normalizarNumero(raw)
-        const resto = Math.max(
-          0,
-          estado.totalCobrado - num
-        )
-        const restoStr = resto ? String(resto) : ''
-        setDebito(restoStr)
+        const resto = Math.max(0, estado.totalCobrado - num)
+        const restoStr = resto > 0 ? String(resto) : ''
+
         setDebitoRaw(restoStr)
+        setDebito(restoStr)
       }
     },
     [modo, estado, setEfectivo, setDebito]
-  )
-
-  const sumarEfectivo = useCallback(
-    (monto: number) => {
-      const actual = normalizarNumero(efectivoRaw)
-      handleEfectivoChange(
-        String(actual + monto)
-      )
-    },
-    [efectivoRaw, handleEfectivoChange]
-  )
-
-  const handleConfirm = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      onConfirm()
-    },
-    [onConfirm]
-  )
-
-  const handleClose = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      onClose()
-    },
-    [onClose]
   )
 
   /* ===============================
@@ -126,106 +131,93 @@ function PaymentModal({
   if (!estado) return null
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-slate-800 p-6 rounded-xl w-[420px] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
 
-        <h2 className="text-xl font-bold mb-3 text-white">
+      <div className="w-[420px] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
+
+        <h2 className="text-xl font-semibold mb-3">
           {TITULOS[modo]}
         </h2>
 
+        <div className="text-center mb-4">
+          <p className="text-xs text-slate-400">TOTAL A COBRAR</p>
+          <p className="text-3xl font-bold text-emerald-400">
+            ${estado.totalCobrado.toLocaleString('es-CL')}
+          </p>
+        </div>
+
         <PaymentSummary estado={estado} />
 
-        {/* ===============================
-            Inputs según modo
-        =============================== */}
-
+        {/* EFECTIVO */}
         {modo === 'EFECTIVO' && (
-          <>
+
+          <div className="mt-4 space-y-3">
+
+            <label className="text-sm">
+              Efectivo recibido
+            </label>
+
             <input
-              autoFocus
+              ref={efectivoRef}
               value={efectivoRaw}
-              onChange={e =>
-                handleEfectivoChange(
-                  e.target.value
-                )
-              }
+              onChange={e => handleEfectivoChange(e.target.value)}
               inputMode="numeric"
-              className="w-full bg-slate-700 p-3 rounded-lg text-3xl text-center mt-4"
               placeholder="0"
+              className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-3xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
 
-            <div className="grid grid-cols-5 gap-2 mt-3">
-              {ATAJOS.map(v => (
+            <div className="grid grid-cols-5 gap-2">
+              {ATAJOS.map((v, i) => (
                 <button
                   key={v}
                   onMouseDown={e => {
                     e.preventDefault()
                     sumarEfectivo(v)
                   }}
-                  className="bg-slate-700 hover:bg-slate-600 p-2 rounded text-sm"
+                  className="rounded-lg bg-slate-800 hover:bg-slate-700 py-2 text-sm flex flex-col items-center"
                 >
-                  +${v / 1000}k
+                  <span>+${v / 1000}k</span>
+                  <span className="text-[10px] text-slate-400">
+                    ({ATAJOS_KEYS[i]})
+                  </span>
                 </button>
               ))}
             </div>
-          </>
-        )}
 
-        {modo === 'MIXTO' && (
-          <div className="mt-4 space-y-2">
-            <input
-              value={efectivoRaw}
-              onChange={e =>
-                handleEfectivoChange(
-                  e.target.value
-                )
-              }
-              className="w-full bg-slate-700 p-2 rounded"
-              placeholder="Efectivo"
-              inputMode="numeric"
-            />
-
-            <input
-              readOnly
-              value={debitoRaw}
-              className="w-full bg-slate-700 p-2 rounded opacity-60"
-              placeholder="Débito"
-            />
           </div>
         )}
 
-        {modo !== 'EFECTIVO' &&
-          modo !== 'MIXTO' && (
-            <div className="mt-6 text-center text-emerald-400 text-3xl">
-              $
-              {estado.totalCobrado.toLocaleString(
-                'es-CL'
-              )}
-            </div>
-          )}
+        {estado.vuelto > 0 && (
+          <p className="mt-3 text-emerald-400">
+            CAMBIO: ${estado.vuelto.toLocaleString('es-CL')}
+          </p>
+        )}
 
-        {/* ===============================
-            Acciones
-        =============================== */}
-        <div className="flex gap-3 mt-6">
+        {estado.falta > 0 && (
+          <p className="mt-3 text-red-400">
+            FALTA: ${estado.falta.toLocaleString('es-CL')}
+          </p>
+        )}
+
+        {/* Acciones */}
+
+        <div className="mt-6 flex gap-3">
+
           <button
-            onMouseDown={handleClose}
-            className="flex-1 bg-slate-600 p-2 rounded-lg"
+            onMouseDown={onClose}
+            className="flex-1 rounded-xl bg-slate-700 hover:bg-slate-600 py-3 text-sm"
           >
-            Cancelar
+            Cancelar (ESC)
           </button>
 
           <button
-            disabled={
-              !estado.puedeConfirmar || loading
-            }
-            onMouseDown={handleConfirm}
-            className="flex-1 bg-emerald-600 p-2 rounded-lg font-semibold disabled:opacity-50"
+            disabled={!estado.puedeConfirmar || loading}
+            onMouseDown={onConfirm}
+            className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 text-sm font-semibold disabled:opacity-50"
           >
-            {loading
-              ? 'Procesando…'
-              : 'Cobrar'}
+            {loading ? 'Procesando…' : 'Cobrar (Enter)'}
           </button>
+
         </div>
 
       </div>

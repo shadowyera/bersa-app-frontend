@@ -102,11 +102,11 @@ function CerrarCajaModal() {
               onChange={handleChangeMonto}
               disabled={closingCaja}
               className="
-                w-full rounded-lg
-                bg-slate-800 border border-slate-700
-                px-3 py-2
-                focus:outline-none focus:ring-2 focus:ring-red-500
-              "
+    w-full rounded-lg
+    bg-slate-900 border border-slate-700
+    px-3 py-2 text-sm
+    focus:outline-none focus:ring-2 focus:ring-red-500
+  "
             />
           </div>
         </div>
@@ -134,10 +134,9 @@ const ResumenItem = memo(function ResumenItem({
     <div
       className={`
         rounded-lg p-3 border
-        ${
-          highlight
-            ? 'border-emerald-500 bg-emerald-500/10'
-            : 'border-slate-700 bg-slate-800'
+        ${highlight
+          ? 'border-emerald-500 bg-emerald-500/10'
+          : 'border-slate-700 bg-slate-800'
         }
       `}
     >

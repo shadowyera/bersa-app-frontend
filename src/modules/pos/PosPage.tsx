@@ -1,45 +1,76 @@
-import PosVentaView from './venta/ui/PosVentaView'
+/* ===============================
+   Infra
+=============================== */
+import { useCatalogoRealtime } from './realtime/catalogo.realtime'
+
+/* ===============================
+   Controllers
+=============================== */
 import { usePosController } from './hooks/usePosController'
 import { useCaja } from './Caja/context/CajaProvider'
+import { usePosShortcuts } from './hooks/usePosShortcuts'
 
+/* ===============================
+   UI Venta
+=============================== */
+import PosVentaView from './venta/ui/PosVentaView'
+import PostVentaModal from './venta/ui/postventa/PostVentaModal'
+
+/* ===============================
+   UI Caja
+=============================== */
 import PosLock from './Caja/ui/PosLock'
 import SeleccionarCajaContenido from './Caja/ui/SeleccionarCajaContenido'
 import AbrirCajaContenido from './Caja/ui/AbrirCajaContenido'
 
-import { useCatalogoRealtime } from './realtime/catalogo.realtime'
+/* =======================================================
+   POS PAGE
+======================================================= */
 
-/**
- * =====================================================
- * PosPage
- *
- * Página principal del POS.
- *
- * Responsabilidades:
- * - Inicializar realtime del catálogo
- * - Orquestar estados globales (Caja + POS)
- * - Renderizar la vista de venta
- *
- * ❌ No maneja lógica de negocio
- * =====================================================
- */
 export default function PosPage() {
-  // Infra: invalida catálogo vía SSE
+
+  /* ===============================
+     Realtime catálogo
+  =============================== */
   useCatalogoRealtime()
 
-  // Controller principal del POS
+  /* ===============================
+     Controller principal POS
+  =============================== */
   const pos = usePosController()
 
-  // Estado de caja (para lock UX)
+  /* ===============================
+     Estado de Caja
+  =============================== */
   const { cajaSeleccionada, aperturaActiva } = useCaja()
 
-  const showLock = !cajaSeleccionada || !aperturaActiva
+  const showLock =
+    !cajaSeleccionada || !aperturaActiva
+
+  /* =======================================================
+     SHORTCUTS TECLADO
+  ======================================================= */
+
+  usePosShortcuts({
+    enabled: true, // SIEMPRE ACTIVO
+    onCobrar: pos.onCobrar,
+    onIncreaseLast: pos.increaseLast,
+    onDecreaseLast: pos.decreaseLast,
+  })
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
     <div className="relative h-full">
+
       {/* ===============================
-          Lock de Caja
+          LOCK CAJA
       =============================== */}
+
       <PosLock open={showLock}>
+
         {!cajaSeleccionada && (
           <SeleccionarCajaContenido />
         )}
@@ -47,38 +78,51 @@ export default function PosPage() {
         {cajaSeleccionada && !aperturaActiva && (
           <AbrirCajaContenido />
         )}
+
       </PosLock>
 
       {/* ===============================
-          Vista principal POS
+          POS
       =============================== */}
+
       <PosVentaView
-        /* Scanner */
         scannerRef={pos.scannerRef}
         onAddProduct={pos.onAddProduct}
         onFocusScanner={pos.focusScanner}
 
-        /* Búsqueda / Productos */
         query={pos.query}
         onChangeQuery={pos.setQuery}
         productos={pos.productos}
         stockMap={pos.stockMap}
         loadingProductos={pos.loadingProductos}
 
-        /* Carrito */
         cart={pos.cart}
+        highlightedId={pos.highlightedId}
+
         onIncrease={pos.increase}
         onDecrease={pos.decrease}
         total={pos.total}
 
-        /* Caja / UX */
         bloqueado={pos.bloqueado}
         cargandoCaja={pos.cargandoCaja}
         onCobrar={pos.onCobrar}
 
-        /* Cobro */
+        onClearCart={pos.clearCart}
+
         cobro={pos.cobro}
       />
+
+      {/* ===============================
+          POST VENTA
+      =============================== */}
+
+      <PostVentaModal
+        open={pos.postVenta.open}
+        venta={pos.postVenta.venta}
+        onClose={pos.postVenta.closePostVenta}
+        onPrint={() => window.print()}
+      />
+
     </div>
   )
 }

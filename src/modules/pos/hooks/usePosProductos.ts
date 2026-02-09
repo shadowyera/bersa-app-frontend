@@ -4,7 +4,7 @@ import { useProductosPOS } from '@/shared/queries/useProductos'
 import { useStockSucursal } from '@/shared/hooks/useStockSucursal'
 import { useAuth } from '@/modules/auth/useAuth'
 
-import type { ProductoPOS } from '../pos.types'
+import type { ProductoPOS } from '../domain/pos.types'
 
 /**
  * =====================================================

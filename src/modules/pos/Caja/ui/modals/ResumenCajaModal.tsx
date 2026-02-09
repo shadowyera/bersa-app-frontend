@@ -66,14 +66,21 @@ function ResumenCajaModal({
           <div className="mt-6 flex justify-center gap-4">
             <button
               onClick={handleRefresh}
-              className="px-6 py-2 bg-slate-700 rounded"
+              className="
+    px-5 py-2 text-sm rounded-lg
+    bg-slate-800 hover:bg-slate-700
+    border border-slate-700
+  "
             >
               Actualizar
             </button>
 
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-emerald-600 rounded"
+              className="
+    px-5 py-2 text-sm rounded-lg font-medium
+    bg-emerald-600 hover:bg-emerald-500
+  "
             >
               Cerrar
             </button>
@@ -106,9 +113,8 @@ const Fila = memo(function Fila({
 }: FilaProps) {
   return (
     <div
-      className={`flex justify-between ${
-        bold ? 'text-lg font-bold' : ''
-      }`}
+      className={`flex justify-between ${bold ? 'text-lg font-bold' : ''
+        }`}
     >
       <span>{label}</span>
       <span>${value.toLocaleString()}</span>

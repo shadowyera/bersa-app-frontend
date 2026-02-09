@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { api } from '@/shared/api/api'
 
 /**
@@ -20,34 +20,26 @@ export interface ResumenCajaResponse {
 
 /**
  * Hook de lectura del resumen de caja.
+ *
+ * Mantiene la MISMA interfaz pública que antes.
  */
-export function useResumenCaja(cajaId: string) {
-  const [data, setData] =
-    useState<ResumenCajaResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const fetchResumen = useCallback(async () => {
-    if (!cajaId) return
-
-    setLoading(true)
-    try {
+export function useResumenCaja(cajaId?: string) {
+  const query = useQuery({
+    queryKey: ['resumen-caja', cajaId],
+    queryFn: async () => {
       const { data } =
         await api.get<ResumenCajaResponse>(
           `/cajas/${cajaId}/resumen-previo`
         )
-      setData(data)
-    } finally {
-      setLoading(false)
-    }
-  }, [cajaId])
-
-  useEffect(() => {
-    fetchResumen()
-  }, [fetchResumen])
+      return data
+    },
+    enabled: Boolean(cajaId),
+    staleTime: 30_000,
+  })
 
   return {
-    data,
-    loading,
-    refresh: fetchResumen,
+    data: query.data ?? null,
+    loading: query.isLoading,
+    refresh: query.refetch,
   }
 }

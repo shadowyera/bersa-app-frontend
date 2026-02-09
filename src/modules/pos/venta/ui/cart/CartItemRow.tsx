@@ -1,53 +1,45 @@
 import { memo, useCallback } from 'react'
-import type { CartItem } from '@/modules/pos/pos.types'
+import type { CartItem } from '@/modules/pos/domain/pos.types'
 
 interface Props {
   item: CartItem
+  highlighted?: boolean
   onIncrease: (productoId: string) => void
   onDecrease: (productoId: string) => void
   onUserAction?: () => void
 }
 
-/**
- * =====================================================
- * CartItemRow
- *
- * Fila individual del carrito.
- *
- * - UI pura
- * - Memoizada
- * - Compatible con scanner / mouse
- * =====================================================
- */
 function CartItemRow({
   item,
+  highlighted = false,
   onIncrease,
   onDecrease,
   onUserAction,
 }: Props) {
-  const handleDecrease = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      onDecrease(item.productoId)
-      onUserAction?.()
-    },
-    [item.productoId, onDecrease, onUserAction]
-  )
 
-  const handleIncrease = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      onIncrease(item.productoId)
-      onUserAction?.()
-    },
-    [item.productoId, onIncrease, onUserAction]
-  )
+  const handleDecrease = useCallback(() => {
+    onDecrease(item.productoId)
+    onUserAction?.()
+  }, [item.productoId, onDecrease, onUserAction])
+
+  const handleIncrease = useCallback(() => {
+    onIncrease(item.productoId)
+    onUserAction?.()
+  }, [item.productoId, onIncrease, onUserAction])
 
   return (
-    <div className="flex justify-between items-center bg-slate-700/60 hover:bg-slate-700 transition rounded px-3 py-2">
-      {/* ===============================
-          Info producto
-      =============================== */}
+    <div
+      className={`
+        flex justify-between items-center
+        rounded px-3 py-2
+        transition-all
+        ${highlighted
+          ? 'bg-emerald-500/20 border border-emerald-400 shadow-[0_0_0_1px_rgba(52,211,153,0.6)]'
+          : 'bg-slate-700/60 hover:bg-slate-700'
+        }
+      `}
+    >
+
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-slate-100 truncate">
           {item.nombre}
@@ -57,13 +49,10 @@ function CartItemRow({
         </div>
       </div>
 
-      {/* ===============================
-          Controles
-      =============================== */}
       <div className="flex items-center gap-2 ml-3">
         <button
           type="button"
-          onMouseDown={handleDecrease}
+          onClick={handleDecrease}
           className="w-8 h-8 rounded bg-slate-600 hover:bg-slate-500 text-slate-100 text-lg leading-none"
         >
           −
@@ -75,12 +64,13 @@ function CartItemRow({
 
         <button
           type="button"
-          onMouseDown={handleIncrease}
+          onClick={handleIncrease}
           className="w-8 h-8 rounded bg-slate-600 hover:bg-slate-500 text-slate-100 text-lg leading-none"
         >
           +
         </button>
       </div>
+
     </div>
   )
 }

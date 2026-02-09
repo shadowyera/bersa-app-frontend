@@ -3,7 +3,7 @@ import { api } from '@/shared/api/api'
 /* =====================================================
    Tipos POS
 ===================================================== */
-import type { PagoPOS } from '../pos.types'
+import type { PagoPOS } from '../domain/pos.types'
 import type { Producto } from '@/shared/producto/producto.types'
 import type { StockProducto } from '@/shared/types/stock.types'
 
@@ -25,9 +25,6 @@ export interface CrearVentaPOSPayload {
   }[]
 
   pagos: PagoPOS[]
-
-  // Ajuste por redondeo de efectivo (CLP)
-  ajusteRedondeo: number
 }
 
 /**
@@ -36,7 +33,10 @@ export interface CrearVentaPOSPayload {
 export async function crearVentaPOS(
   payload: CrearVentaPOSPayload
 ) {
-  const { data } = await api.post('/ventas/pos', payload)
+  const { data } = await api.post(
+    '/ventas/pos',
+    payload
+  )
   return data
 }
 
@@ -55,7 +55,9 @@ export async function buscarProductoPorCodigo(
 ): Promise<Producto | null> {
   try {
     const { data } = await api.get(
-      `/productos/buscar/${encodeURIComponent(codigo)}`
+      `/productos/buscar/${encodeURIComponent(
+        codigo
+      )}`
     )
     return data
   } catch (error: any) {
@@ -68,7 +70,6 @@ export async function buscarProductoPorCodigo(
 
 /* =====================================================
    Caja (POS-facing)
-   ⚠️ Wrapper del dominio Caja
 ===================================================== */
 
 export interface AperturaCajaDTO {
@@ -93,7 +94,9 @@ export interface CajaDTO {
 /**
  * Obtiene las cajas de la sucursal del usuario autenticado
  */
-export async function getCajasBySucursal(): Promise<CajaDTO[]> {
+export async function getCajasBySucursal(): Promise<
+  CajaDTO[]
+> {
   const { data } = await api.get('/cajas')
   return data
 }
@@ -175,9 +178,6 @@ export async function getCorteCajeros(
 
 /**
  * Obtiene stock por sucursal.
- *
- * ⚠️ No es POS-specific.
- * Se mantiene aquí SOLO como wrapper de conveniencia.
  */
 export async function getStockBySucursal(
   sucursalId: string

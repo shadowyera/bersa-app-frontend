@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from 'react'
-import type { CartItem } from '../pos.types'
-import type { ProductoVendible } from './venta.types'
+import type { CartItem } from '../../domain/pos.types'
+import type { ProductoVendible } from '../domain/venta.types'
 
 import {
   agregarProducto,
   aumentarCantidad,
   disminuirCantidad,
   calcularTotal,
-} from './venta.logic'
+} from '../domain/venta.logic'
 
 /**
  * Hook de estado de venta

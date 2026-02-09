@@ -25,13 +25,12 @@ import type {
   CartItem,
   ProductoPOS,
   TipoPago,
-} from '../../pos.types'
+} from '../../domain/pos.types'
 import type { EstadoCobro } from '../../Cobro/domain/cobro.types'
 
-/**
- * Controller de cobro esperado por la UI.
- * (derivado de useCobroPOS)
- */
+/* =====================================================
+   Controller de cobro esperado por la UI
+===================================================== */
 interface CobroUIController {
   showTipoPago: boolean
   showPayment: boolean
@@ -45,57 +44,39 @@ interface CobroUIController {
   selectTipoPago: (tipo: TipoPago) => void
 }
 
+/* =====================================================
+   Props
+===================================================== */
 export interface PosVentaViewProps {
-  /* ===============================
-     Scanner
-  =============================== */
   scannerRef: React.RefObject<HTMLInputElement | null>
   onAddProduct: (producto: ProductoPOS) => void
   onFocusScanner: () => void
 
-  /* ===============================
-     Productos / Búsqueda
-  =============================== */
   query: string
   onChangeQuery: (value: string) => void
   productos: ProductoPOS[]
   stockMap: Record<string, number>
   loadingProductos: boolean
 
-  /* ===============================
-     Venta / Carrito
-  =============================== */
   cart: CartItem[]
+  highlightedId?: string | null
+
   onIncrease: (productoId: string) => void
   onDecrease: (productoId: string) => void
   total: number
 
-  /* ===============================
-     Caja / UX
-  =============================== */
   bloqueado: boolean
   cargandoCaja: boolean
   onCobrar: () => void
 
-  /* ===============================
-     Cobro
-  =============================== */
+  onClearCart: () => void
+
   cobro: CobroUIController
 }
 
-/**
- * =====================================================
- * PosVentaView
- *
- * Vista principal del POS.
- *
- * REGLAS:
- * - UI pura (sin lógica de dominio)
- * - El input de búsqueda es CONTROLADO por el POS
- * - El grid no se desmonta
- * - El scanner mantiene foco
- * =====================================================
- */
+/* =====================================================
+   PosVentaView
+===================================================== */
 function PosVentaView({
   scannerRef,
   onAddProduct,
@@ -108,6 +89,8 @@ function PosVentaView({
   loadingProductos,
 
   cart,
+  highlightedId,
+
   onIncrease,
   onDecrease,
   total,
@@ -116,13 +99,13 @@ function PosVentaView({
   cargandoCaja,
   onCobrar,
 
+  onClearCart,
+
   cobro,
 }: PosVentaViewProps) {
+
   /* =====================================================
-     Handler intermedio:
-     - agrega producto
-     - limpia búsqueda
-     - devuelve foco al scanner
+     Add desde grid
   ===================================================== */
   const handleAddProductFromGrid = useCallback(
     (producto: ProductoPOS) => {
@@ -144,22 +127,25 @@ function PosVentaView({
       />
 
       {/* ===============================
-          Contenido POS
+          Contenedor principal
       =============================== */}
-      <div className="pt-3">
+      <div className="pt-3 h-[calc(100vh-7rem)]">
+
         <div
           className={
             bloqueado
-              ? 'pointer-events-none opacity-40'
-              : ''
+              ? 'pointer-events-none opacity-40 h-full'
+              : 'h-full'
           }
         >
-          <div className="grid grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-3 gap-4 h-full min-h-0">
+
             {/* ===============================
-                Productos
+                PRODUCTOS
             =============================== */}
-            <div className="col-span-2 space-y-4">
-              {/* Búsqueda */}
+            <div className="col-span-2 flex flex-col space-y-4 min-h-0">
+
               <ProductoSearchInput
                 autoFocus
                 placeholder="Buscar producto..."
@@ -168,54 +154,66 @@ function PosVentaView({
                 className="w-full px-4 py-3 text-base"
               />
 
-              {/* Grid */}
-              <ProductGrid
-                productos={productos}
-                stockMap={stockMap}
-                loading={loadingProductos}
-                onAddProduct={
-                  handleAddProductFromGrid
-                }
-              />
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <ProductGrid
+                  productos={productos}
+                  stockMap={stockMap}
+                  loading={loadingProductos}
+                  onAddProduct={handleAddProductFromGrid}
+                />
+              </div>
+
             </div>
 
             {/* ===============================
-                Carrito
+                CARRITO
             =============================== */}
-            <div>
-              <Cart
-                items={cart}
-                onIncrease={onIncrease}
-                onDecrease={onDecrease}
-                onUserAction={onFocusScanner}
-              />
+            <div className="flex flex-col h-full min-h-0">
 
+              <div className="flex-1 overflow-hidden min-h-0">
+                <Cart
+                  items={cart}
+                  highlightedId={highlightedId}
+                  onIncrease={onIncrease}
+                  onDecrease={onDecrease}
+                  onUserAction={onFocusScanner}
+                  onClear={onClearCart}
+                />
+              </div>
+
+              {/* ===============================
+                  BOTÓN COBRAR
+              =============================== */}
               {cart.length > 0 && (
-                <button
-                  disabled={bloqueado}
-                  onMouseDown={e => {
-                    e.preventDefault()
-                    if (bloqueado) return
-                    onCobrar()
-                  }}
-                  className={`mt-4 w-full py-2 rounded text-white transition ${
-                    bloqueado
-                      ? 'bg-gray-500 cursor-not-allowed'
-                      : 'bg-emerald-600 hover:bg-emerald-700'
-                  }`}
-                >
-                  {cargandoCaja
-                    ? 'Validando caja…'
-                    : 'Cobrar'}
-                </button>
+                <div className="pt-3 pb-4">
+                  <button
+                    disabled={bloqueado}
+                    onMouseDown={e => {
+                      e.preventDefault()
+                      if (bloqueado) return
+                      onCobrar()
+                    }}
+                    className={`w-full py-3 rounded text-white font-semibold transition ${
+                      bloqueado
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700'
+                    }`}
+                  >
+                    {cargandoCaja
+                      ? 'Validando caja…'
+                      : 'Cobrar'}
+                  </button>
+                </div>
               )}
+
             </div>
+
           </div>
         </div>
       </div>
 
       {/* ===============================
-          Modales de Cobro
+          MODALES
       =============================== */}
       {cobro.showTipoPago && (
         <SeleccionarTipoPagoModal

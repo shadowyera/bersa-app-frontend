@@ -18,8 +18,10 @@ function PosLock({ open, children }: PosLockProps) {
   if (!open) return null
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      {children}
+    <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-sm pointer-events-none">
+      <div className="w-full h-full flex items-center justify-center pointer-events-auto">
+        {children}
+      </div>
     </div>
   )
 }

@@ -32,13 +32,8 @@ class SSEClient {
   private connected = false
   private reconnectTimer: number | null = null
 
-  /* ===============================
-     Conexión GLOBAL (singleton real)
-  =============================== */
   connect() {
     if (this.connected || this.source) return
-
-    console.log('[SSE] conectando…')
 
     const source = new EventSource(
       `${API_BASE_URL}/api/realtime`,
@@ -48,13 +43,8 @@ class SSEClient {
     source.onopen = () => {
       this.connected = true
       this.source = source
-      console.log('[SSE] conectado')
     }
 
-    /* ==================================================
-       Escucha eventos CON NOMBRE (event:)
-       onmessage NO funciona para este backend
-    ================================================== */
     EVENT_TYPES.forEach(type => {
       source.addEventListener(type, e => {
         try {
@@ -63,22 +53,19 @@ class SSEClient {
           ) as RealtimeEvent
 
           this.handlers.forEach(handler => handler(event))
-        } catch (err) {
-          console.error('[SSE] payload inválido', err)
+        } catch {
+          // ignore
         }
       })
     })
 
     source.onerror = () => {
-      console.warn('[SSE] error de conexión')
       this.scheduleReconnect()
     }
   }
 
-  /* ===============================
-     Suscripción
-  =============================== */
   subscribe(handler: Handler) {
+    this.connect() // 🔥 CLAVE
     this.handlers.add(handler)
 
     return () => {
@@ -86,13 +73,8 @@ class SSEClient {
     }
   }
 
-  /* ===============================
-     Desconexión limpia
-  =============================== */
   disconnect() {
     if (!this.source) return
-
-    console.log('[SSE] desconectado')
 
     this.source.close()
     this.source = null
@@ -105,9 +87,6 @@ class SSEClient {
     }
   }
 
-  /* ===============================
-     Reintento controlado
-  =============================== */
   private scheduleReconnect() {
     if (this.reconnectTimer) return
 

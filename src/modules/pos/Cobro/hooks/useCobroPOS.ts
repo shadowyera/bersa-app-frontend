@@ -1,73 +1,55 @@
 import { useState, useMemo, useCallback } from 'react'
 
-import type { TipoPago } from '../../pos.types'
-import type {
-  EstadoCobro,
-  ConfirmacionCobro,
-} from '../domain/cobro.types'
+import type { TipoPago, PagoPOS } from '../../domain/pos.types'
+import type { EstadoCobro } from '../domain/cobro.types'
+import type { ConfirmVentaPayload } from '../../domain/pos.contracts'
 
 import { calcularEstadoCobro } from '../domain/cobro.logic'
 import { buildPagos } from '../domain/pagos.factory'
 import { normalizarNumero } from '../ui/utils/normalizarNumero'
 
+/* =====================================================
+   Props
+===================================================== */
+
 interface UseCobroPOSProps {
   totalVenta: number
   onConfirmVenta: (
-    data: ConfirmacionCobro
+    data: ConfirmVentaPayload
   ) => Promise<void>
 }
 
-/**
- * =====================================================
- * useCobroPOS
- *
- * Hook orquestador del flujo de cobro POS.
- *
- * Responsabilidades:
- * - Orquestar el flujo UI del cobro
- * - Normalizar inputs numéricos
- * - Consumir dominio puro (cálculo / pagos)
- * - Construir el payload final
- *
- * ❌ No renderiza UI
- * ❌ No conoce backend
- * =====================================================
- */
+/* =====================================================
+   Hook
+===================================================== */
+
 export function useCobroPOS({
   totalVenta,
   onConfirmVenta,
 }: UseCobroPOSProps) {
-  /* ===============================
-     Estado UI (modales)
-  =============================== */
+
   const [showTipoPago, setShowTipoPago] =
     useState(false)
+
   const [showPayment, setShowPayment] =
     useState(false)
 
-  /* ===============================
-     Modo de pago seleccionado
-  =============================== */
   const [modoPago, setModoPago] =
     useState<TipoPago | null>(null)
 
-  /* ===============================
-     Inputs (strings por UX)
-  =============================== */
   const [efectivoRaw, setEfectivo] =
     useState('')
+
   const [debitoRaw, setDebito] =
     useState('')
 
-  /* ===============================
-     Estado de confirmación
-  =============================== */
   const [loading, setLoading] =
     useState(false)
 
   /* ===============================
-     Normalización numérica
+     Normalización
   =============================== */
+
   const efectivo = useMemo(
     () => normalizarNumero(efectivoRaw),
     [efectivoRaw]
@@ -79,8 +61,9 @@ export function useCobroPOS({
   )
 
   /* ===============================
-     Estado de dominio (cobro)
+     Estado de cobro
   =============================== */
+
   const estado: EstadoCobro | null =
     useMemo(() => {
       if (!modoPago) return null
@@ -97,19 +80,11 @@ export function useCobroPOS({
      Flujo UI
   =============================== */
 
-  /**
-   * Abre el flujo de cobro
-   * (guardia de venta vacía)
-   */
   const openCobro = useCallback(() => {
     if (totalVenta <= 0) return
     setShowTipoPago(true)
   }, [totalVenta])
 
-  /**
-   * Selección de tipo de pago
-   * Reinicia inputs y avanza flujo
-   */
   const selectTipoPago = useCallback(
     (tipo: TipoPago) => {
       setModoPago(tipo)
@@ -121,10 +96,6 @@ export function useCobroPOS({
     []
   )
 
-  /**
-   * Cierre total del flujo de cobro
-   * (cancelación o post-confirmación)
-   */
   const closeAll = useCallback(() => {
     setShowTipoPago(false)
     setShowPayment(false)
@@ -135,33 +106,26 @@ export function useCobroPOS({
   }, [])
 
   /* ===============================
-     Confirmar cobro
+     Confirmar
   =============================== */
+
   const confirm = useCallback(async () => {
-    if (!estado || !modoPago) return
+    if (!estado) return
+    if (!modoPago) return
     if (!estado.puedeConfirmar) return
     if (loading) return
 
     try {
       setLoading(true)
 
-      const pagos = buildPagos({
-        totalCobrado: estado.totalCobrado,
+      const pagos: PagoPOS[] = buildPagos({
+        totalCobrado: totalVenta,
         modo: modoPago,
         efectivo,
         debito,
       })
 
-      const payload: ConfirmacionCobro = {
-        pagos,
-        ajusteRedondeo:
-          estado.ajusteRedondeo,
-        totalCobrado:
-          estado.totalCobrado,
-        modo: modoPago,
-      }
-
-      await onConfirmVenta(payload)
+      await onConfirmVenta({ pagos })
 
       closeAll()
     } finally {
@@ -173,39 +137,29 @@ export function useCobroPOS({
     efectivo,
     debito,
     loading,
+    totalVenta,
     onConfirmVenta,
     closeAll,
   ])
 
-  /* ===============================
-     API pública
-  =============================== */
   return {
-    /* Estado */
     estado,
     loading,
 
-    /* UI */
     showTipoPago,
     showPayment,
 
-    /* Selección */
     modoPago,
     selectTipoPago,
 
-    /* Inputs */
     setEfectivo,
     setDebito,
 
-    /* Acciones */
     openCobro,
     confirm,
     closeAll,
   }
 }
 
-/**
- * Tipo del controller de cobro expuesto a la UI.
- */
 export type CobroController =
   ReturnType<typeof useCobroPOS>

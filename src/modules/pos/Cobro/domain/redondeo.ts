@@ -1,40 +1,52 @@
+/* =====================================================
+   Tipos
+===================================================== */
+
 /**
- * Resultado del cálculo de redondeo
+ * Resultado del cálculo de redondeo CLP.
  */
 export interface ResultadoRedondeo {
-  /** Total original de la venta */
+  /**
+   * Total original de la venta
+   * (antes de aplicar redondeo)
+   */
   totalOriginal: number
 
-  /** Ajuste aplicado (positivo o negativo) */
+  /**
+   * Ajuste aplicado por redondeo.
+   * Puede ser positivo o negativo.
+   */
   ajusteRedondeo: number
 
-  /** Total final a cobrar */
+  /**
+   * Total final a cobrar
+   * (totalOriginal + ajusteRedondeo)
+   */
   totalCobrado: number
 }
 
-/**
- * Regla oficial de redondeo CLP (Chile):
- *
- * - Se eliminan monedas de $1 y $5
- * - Pagos en efectivo se redondean
- *   al múltiplo de $10 más cercano
- *
- * ⚠️ NO usar Math.round
- * ⚠️ Regla legal, no matemática
- */
-export function calcularRedondeoCLP(
-  total: number
-): ResultadoRedondeo {
-  const resto = total % 10
+/* =====================================================
+   Helpers internos
+===================================================== */
 
-  /**
-   * Tabla explícita de ajuste por resto
-   * (más legible y mantenible)
-   */
-  const AJUSTE_POR_RESTO: Record<
-    number,
-    number
-  > = {
+/**
+ * Normaliza montos para evitar
+ * NaN, undefined o negativos.
+ */
+function normalizarTotal(total: number): number {
+  if (!total || Number.isNaN(total)) return 0
+  return Math.max(0, total)
+}
+
+/**
+ * Tabla oficial de ajuste por resto.
+ *
+ * Regla chilena:
+ * - Se eliminan monedas de $1 y $5
+ * - Se redondea al múltiplo de $10 más cercano
+ */
+const AJUSTE_POR_RESTO: Record<number, number> =
+  {
     0: 0,
     1: -1,
     2: -2,
@@ -47,13 +59,51 @@ export function calcularRedondeoCLP(
     9: 1,
   }
 
+/* =====================================================
+   Dominio principal
+===================================================== */
+
+/**
+ * Calcula el redondeo legal CLP.
+ *
+ * ⚠️ NO usar Math.round
+ * ⚠️ Regla legal, no matemática
+ *
+ * Características:
+ * - Función pura
+ * - Sin efectos secundarios
+ * - Determinística
+ */
+export function calcularRedondeoCLP(
+  total: number
+): ResultadoRedondeo {
+  /* -----------------------------
+     Normalización defensiva
+  ----------------------------- */
+  const totalSeguro = normalizarTotal(total)
+
+  /* -----------------------------
+     Resto respecto a 10
+  ----------------------------- */
+  const resto = totalSeguro % 10
+
+  /* -----------------------------
+     Ajuste
+  ----------------------------- */
   const ajusteRedondeo =
     AJUSTE_POR_RESTO[resto] ?? 0
 
-  const totalCobrado = total + ajusteRedondeo
+  /* -----------------------------
+     Total final
+  ----------------------------- */
+  const totalCobrado =
+    totalSeguro + ajusteRedondeo
 
+  /* -----------------------------
+     Resultado
+  ----------------------------- */
   return {
-    totalOriginal: total,
+    totalOriginal: totalSeguro,
     ajusteRedondeo,
     totalCobrado,
   }

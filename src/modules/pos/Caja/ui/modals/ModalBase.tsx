@@ -9,13 +9,6 @@ interface ModalBaseProps {
   maxWidth?: 'sm' | 'md' | 'lg'
 }
 
-/**
- * Modal base con Portal.
- *
- * - Renderiza en document.body
- * - Aísla el modal de cualquier layout
- * - Maneja overlay, header, body y footer
- */
 export default function ModalBase({
   title,
   children,
@@ -31,24 +24,22 @@ export default function ModalBase({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div
         className={`
           relative w-full mx-4
           ${maxWidthClass}
           rounded-2xl
           bg-slate-900 text-slate-100
-          shadow-2xl border border-slate-700
+          border border-slate-700 shadow-2xl
         `}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-700 flex justify-between">
           <h2 className="text-lg font-semibold">
             {title}
           </h2>
@@ -56,7 +47,7 @@ export default function ModalBase({
           {onClose && (
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 transition"
+              className="text-slate-400 hover:text-slate-200"
             >
               ✕
             </button>
