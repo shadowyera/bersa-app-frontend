@@ -4,6 +4,7 @@ interface Props {
   enabled: boolean
   onConfirm: () => void
   onCancel: () => void
+  onDeleteDigit: () => void
   onAddMontoRapido: (monto: number) => void
 }
 
@@ -11,6 +12,7 @@ export function useCobroShortcuts({
   enabled,
   onConfirm,
   onCancel,
+  onDeleteDigit,
   onAddMontoRapido,
 }: Props) {
 
@@ -21,51 +23,75 @@ export function useCobroShortcuts({
 
       switch (e.key) {
 
+        /* ===============================
+           MONTOS RÁPIDOS
+        =============================== */
+
         case 'F1':
           e.preventDefault()
           onAddMontoRapido(1000)
-          break
+          return
 
         case 'F2':
           e.preventDefault()
           onAddMontoRapido(2000)
-          break
+          return
 
         case 'F3':
           e.preventDefault()
           onAddMontoRapido(5000)
-          break
+          return
 
         case 'F4':
           e.preventDefault()
           onAddMontoRapido(10000)
-          break
+          return
 
         case 'F5':
           e.preventDefault()
           onAddMontoRapido(20000)
-          break
+          return
+
+        /* ===============================
+           CONFIRMAR
+        =============================== */
 
         case 'Enter':
           e.preventDefault()
           onConfirm()
-          break
+          return
+
+        /* ===============================
+           BORRAR (solo efectivo / mixto)
+        =============================== */
+
+        case 'Backspace':
+          e.preventDefault()
+          onDeleteDigit()
+          return
+
+        /* ===============================
+           CANCELAR
+        =============================== */
 
         case 'Escape':
           e.preventDefault()
           onCancel()
-          break
+          return
       }
     }
 
-    window.addEventListener('keydown', handler)
-    return () =>
-      window.removeEventListener('keydown', handler)
+    document.addEventListener('keydown', handler)
+
+    return () => {
+      document.removeEventListener('keydown', handler)
+    }
 
   }, [
     enabled,
     onConfirm,
     onCancel,
+    onDeleteDigit,
     onAddMontoRapido,
   ])
 }

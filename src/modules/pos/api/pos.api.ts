@@ -3,9 +3,14 @@ import { api } from '@/shared/api/api'
 /* =====================================================
    Tipos POS
 ===================================================== */
+
 import type { PagoPOS } from '../domain/pos.types'
 import type { Producto } from '@/shared/producto/producto.types'
 import type { StockProducto } from '@/shared/types/stock.types'
+import type {
+  VentaDetalle,
+  DocumentoTributario,
+} from '../venta/domain/venta.types'
 
 /* =====================================================
    Ventas POS
@@ -25,6 +30,8 @@ export interface CrearVentaPOSPayload {
   }[]
 
   pagos: PagoPOS[]
+
+  documentoTributario: DocumentoTributario
 }
 
 /**
@@ -34,8 +41,50 @@ export async function crearVentaPOS(
   payload: CrearVentaPOSPayload
 ) {
   const { data } = await api.post(
-    '/ventas/pos',
+    '/ventas',
     payload
+  )
+  return data
+}
+
+/**
+ * Anula una venta POS
+ */
+export async function anularVentaPOSApi(
+  ventaId: string
+) {
+  const { data } = await api.post(
+    `/ventas/${ventaId}/anular`
+  )
+  return data
+}
+
+/**
+ * Obtiene el detalle completo de una venta
+ * (items + pagos)
+ */
+export async function getVentaDetalle(
+  ventaId: string
+): Promise<VentaDetalle> {
+  const { data } = await api.get(
+    `/ventas/${ventaId}/detalle`
+  )
+  return data
+}
+
+/* =====================================================
+   Ventas por Apertura (Resumen de Caja)
+===================================================== */
+
+/**
+ * Obtiene todas las ventas del turno activo
+ * de una caja
+ */
+export async function getVentasApertura(
+  cajaId: string
+) {
+  const { data } = await api.get(
+    `/cajas/${cajaId}/ventas-apertura`
   )
   return data
 }
@@ -46,9 +95,6 @@ export async function crearVentaPOS(
 
 /**
  * Busca un producto por código de barras.
- *
- * - Retorna null si no existe
- * - Lanza error para otros casos
  */
 export async function buscarProductoPorCodigo(
   codigo: string

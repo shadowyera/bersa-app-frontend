@@ -1,6 +1,10 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { CartItem } from '../../domain/pos.types'
-import type { ProductoVendible } from '../domain/venta.types'
+import type {
+  ProductoVendible,
+  DocumentoTributario,
+  DocumentoReceptor,
+} from '../domain/venta.types'
 
 import {
   agregarProducto,
@@ -20,7 +24,14 @@ export const useVenta = () => {
   /* =========================
      STATE
   ========================= */
+
   const [cart, setCart] = useState<CartItem[]>([])
+
+  const [documentoTributario, setDocumentoTributario] =
+    useState<DocumentoTributario>({
+      tipo: 'BOLETA',
+      requiereEmisionSii: false,
+    })
 
   /* =========================
      ACTIONS (ESTABLES)
@@ -55,11 +66,51 @@ export const useVenta = () => {
 
   const clear = useCallback(() => {
     setCart([])
+    setDocumentoTributario({
+      tipo: 'BOLETA',
+      requiereEmisionSii: false,
+    })
   }, [])
+
+  /* =========================
+     DOCUMENTO ACTIONS
+  ========================= */
+
+  const setTipoDocumento = useCallback(
+    (tipo: 'BOLETA' | 'FACTURA') => {
+      setDocumentoTributario(prev => {
+        if (tipo === 'BOLETA') {
+          return {
+            tipo: 'BOLETA',
+            requiereEmisionSii: false,
+          }
+        }
+
+        return {
+          tipo: 'FACTURA',
+          receptor: prev.receptor,
+          requiereEmisionSii: true,
+        }
+      })
+    },
+    []
+  )
+
+  const setReceptor = useCallback(
+    (receptor: DocumentoReceptor) => {
+      setDocumentoTributario({
+        tipo: 'FACTURA',
+        receptor,
+        requiereEmisionSii: true,
+      })
+    },
+    []
+  )
 
   /* =========================
      DERIVED STATE
   ========================= */
+
   const hayStockInsuficiente = useMemo(
     () => cart.some(i => i.stockInsuficiente),
     [cart]
@@ -73,12 +124,20 @@ export const useVenta = () => {
   /* =========================
      PUBLIC API
   ========================= */
+
   return {
     cart,
     total,
+
+    documentoTributario,
+
     addProduct,
     increase,
     decrease,
+
+    setTipoDocumento,
+    setReceptor,
+
     hayStockInsuficiente,
     clear,
   }

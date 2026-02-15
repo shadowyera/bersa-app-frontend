@@ -51,57 +51,7 @@ function PaymentModal({
 }: Props) {
 
   const [efectivoRaw, setEfectivoRaw] = useState('')
-  const [, setDebitoRaw] = useState('')
-
   const efectivoRef = useRef<HTMLInputElement | null>(null)
-
-  /* ===============================
-     Shortcuts
-  =============================== */
-
-  const sumarEfectivo = useCallback(
-    (monto: number) => {
-      const actual = normalizarNumero(efectivoRaw)
-      handleEfectivoChange(String(actual + monto))
-    },
-    [efectivoRaw]
-  )
-
-  useCobroShortcuts({
-    enabled: true,
-    onConfirm,
-    onCancel: onClose,
-    onAddMontoRapido: sumarEfectivo,
-  })
-
-  /* ===============================
-     Autofocus seguro
-  =============================== */
-
-  useEffect(() => {
-    if (modo !== 'EFECTIVO') return
-
-    const id = requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (!efectivoRef.current) return
-        efectivoRef.current.focus()
-        efectivoRef.current.select()
-      }, 0)
-    })
-
-    return () => cancelAnimationFrame(id)
-  }, [modo, totalVenta])
-
-  /* ===============================
-     Reset
-  =============================== */
-
-  useEffect(() => {
-    setEfectivoRaw('')
-    setDebitoRaw('')
-    setEfectivo('')
-    setDebito('')
-  }, [modo, totalVenta, setEfectivo, setDebito])
 
   /* ===============================
      Handlers
@@ -109,20 +59,76 @@ function PaymentModal({
 
   const handleEfectivoChange = useCallback(
     (raw: string) => {
+      const efectivoNum = normalizarNumero(raw)
+
       setEfectivoRaw(raw)
       setEfectivo(raw)
 
       if (modo === 'MIXTO' && estado) {
-        const num = normalizarNumero(raw)
-        const resto = Math.max(0, estado.totalCobrado - num)
-        const restoStr = resto > 0 ? String(resto) : ''
-
-        setDebitoRaw(restoStr)
-        setDebito(restoStr)
+        const resto = Math.max(
+          0,
+          estado.totalCobrado - efectivoNum
+        )
+        setDebito(String(resto))
       }
     },
     [modo, estado, setEfectivo, setDebito]
   )
+
+  const sumarEfectivo = useCallback(
+    (monto: number) => {
+      const actual = normalizarNumero(efectivoRaw)
+      handleEfectivoChange(String(actual + monto))
+    },
+    [efectivoRaw, handleEfectivoChange]
+  )
+
+  const borrarUltimoDigito = useCallback(() => {
+    if (modo !== 'EFECTIVO' && modo !== 'MIXTO') return
+
+    setEfectivoRaw(prev => {
+      const nuevo = prev.slice(0, -1)
+      setEfectivo(nuevo)
+      return nuevo
+    })
+  }, [modo, setEfectivo])
+
+  /* ===============================
+     Shortcuts
+  =============================== */
+
+  useCobroShortcuts({
+    enabled: true,
+    onConfirm,
+    onCancel: onClose,
+    onDeleteDigit: borrarUltimoDigito,
+    onAddMontoRapido: sumarEfectivo,
+  })
+
+  /* ===============================
+     Autofocus
+  =============================== */
+
+  useEffect(() => {
+    if (modo !== 'EFECTIVO' && modo !== 'MIXTO') return
+
+    const id = setTimeout(() => {
+      efectivoRef.current?.focus()
+      efectivoRef.current?.select()
+    }, 0)
+
+    return () => clearTimeout(id)
+  }, [modo, totalVenta])
+
+  /* ===============================
+     Reset al cambiar modo
+  =============================== */
+
+  useEffect(() => {
+    setEfectivoRaw('')
+    setEfectivo('')
+    setDebito('')
+  }, [modo, totalVenta, setEfectivo, setDebito])
 
   /* ===============================
      Render
@@ -132,7 +138,6 @@ function PaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-
       <div className="w-[420px] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
 
         <h2 className="text-xl font-semibold mb-3">
@@ -148,23 +153,48 @@ function PaymentModal({
 
         <PaymentSummary estado={estado} />
 
-        {/* EFECTIVO */}
-        {modo === 'EFECTIVO' && (
-
+        {/* EFECTIVO / MIXTO */}
+        {(modo === 'EFECTIVO' || modo === 'MIXTO') && (
           <div className="mt-4 space-y-3">
 
-            <label className="text-sm">
-              Efectivo recibido
-            </label>
+            <div>
+              <label className="text-sm">
+                Efectivo recibido
+              </label>
 
-            <input
-              ref={efectivoRef}
-              value={efectivoRaw}
-              onChange={e => handleEfectivoChange(e.target.value)}
-              inputMode="numeric"
-              placeholder="0"
-              className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-3xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+              <input
+                ref={efectivoRef}
+                value={efectivoRaw}
+                onChange={e =>
+                  handleEfectivoChange(e.target.value)
+                }
+                inputMode="numeric"
+                placeholder="0"
+                className="w-full mt-1 rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-3xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            {modo === 'MIXTO' && (
+              <div>
+                <label className="text-sm">
+                  Débito
+                </label>
+
+                <input
+                  value={estado.totalPagado > 0
+                    ? String(
+                      Math.max(
+                        0,
+                        estado.totalCobrado -
+                        normalizarNumero(efectivoRaw)
+                      )
+                    )
+                    : ''}
+                  disabled
+                  className="w-full mt-1 rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 text-xl text-center text-slate-300"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-5 gap-2">
               {ATAJOS.map((v, i) => (
@@ -187,20 +217,7 @@ function PaymentModal({
           </div>
         )}
 
-        {estado.vuelto > 0 && (
-          <p className="mt-3 text-emerald-400">
-            CAMBIO: ${estado.vuelto.toLocaleString('es-CL')}
-          </p>
-        )}
-
-        {estado.falta > 0 && (
-          <p className="mt-3 text-red-400">
-            FALTA: ${estado.falta.toLocaleString('es-CL')}
-          </p>
-        )}
-
         {/* Acciones */}
-
         <div className="mt-6 flex gap-3">
 
           <button
@@ -219,6 +236,12 @@ function PaymentModal({
           </button>
 
         </div>
+
+        <p className="mt-3 text-xs text-slate-500 text-center">
+          {modo === 'EFECTIVO' || modo === 'MIXTO'
+            ? 'Backspace → borrar · ESC → cancelar'
+            : 'ESC → cancelar'}
+        </p>
 
       </div>
     </div>

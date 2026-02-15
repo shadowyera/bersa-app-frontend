@@ -62,3 +62,26 @@ export interface CajaVisual {
   abierta: boolean
   abiertaPor?: string
 }
+
+/* =====================================================
+   Resumen de Caja
+===================================================== */
+
+export interface ResumenCajaResponse {
+
+  cajaId: string
+  aperturaId: string
+
+  montoInicial: number
+  totalVentas: number
+
+  efectivoVentas: number
+  efectivoEsperado: number
+
+  pagosPorTipo: {
+    EFECTIVO: number
+    DEBITO: number
+    CREDITO: number
+    TRANSFERENCIA: number
+  }
+}

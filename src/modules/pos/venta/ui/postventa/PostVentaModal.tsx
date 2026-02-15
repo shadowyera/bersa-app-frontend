@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import type { PostVenta } from '../../domain/postventa.types'
+import type { PostVenta } from '../../hooks/postventa.types'
 import TicketPreview from './TicketPreview'
 import { useModalShortcuts } from '@/shared/hooks/useModalShortcuts'
 

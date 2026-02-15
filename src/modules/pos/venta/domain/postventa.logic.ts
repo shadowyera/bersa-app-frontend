@@ -12,6 +12,10 @@ import { buildPosProductName } from '../../utils/productName'
 
 export interface VentaCreadaBackend {
   _id: string
+
+  /** 🔢 Número correlativo por turno */
+  numeroVenta?: number
+
   folio?: string
   createdAt?: string
 
@@ -73,6 +77,9 @@ export function mapVentaCreadaToPostVenta(
 
   return {
     ventaId: venta._id,
+
+    /** 🔢 NUMERO DE VENTA */
+    numeroVenta: venta.numeroVenta,
 
     folio:
       venta.folio ??

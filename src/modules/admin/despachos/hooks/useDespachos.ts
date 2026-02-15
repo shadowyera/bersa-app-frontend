@@ -34,7 +34,7 @@ export function useDespachos() {
     queryKey: ['despachos-internos', page],
     queryFn: async () => {
       const { data } = await api.get<DespachosResponseRaw>(
-        '/api/despachos-internos',
+        '/despachos-internos',
         {
           params: { page, limit },
         }

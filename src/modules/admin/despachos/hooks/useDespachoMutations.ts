@@ -5,7 +5,7 @@ export function useDespachoMutations() {
   const crearDespachoMutation = useMutation({
     mutationFn: async (payload: any) => {
       const { data } = await api.post(
-        '/api/despachos-internos',
+        '/despachos-internos',
         payload
       )
       return data

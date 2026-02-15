@@ -38,10 +38,19 @@ import { useAuth } from '@/modules/auth/useAuth'
 export interface ResumenPrevioCaja {
   cajaId: string
   aperturaId: string
+
   montoInicial: number
   totalVentas: number
+
   efectivoVentas: number
   efectivoEsperado: number
+
+  pagosPorTipo: {
+    EFECTIVO: number
+    DEBITO: number
+    CREDITO: number
+    TRANSFERENCIA: number
+  }
 }
 
 interface CajaPersistida {
@@ -66,7 +75,7 @@ interface CajaContextValue {
   abrirCaja: (montoInicial: number) => Promise<void>
 
   iniciarCierre: () => Promise<void>
-  confirmarCierre: () => Promise<void>
+  confirmarCierre: (motivo?: string) => Promise<void>
   cancelarCierre: () => void
 
   showCierreModal: boolean
@@ -106,6 +115,7 @@ function getCajaPersistida(): CajaPersistida | null {
    Provider
 ===================================================== */
 export function CajaProvider({ children }: { children: ReactNode }) {
+
   const { user } = useAuth()
   const sucursalId = user?.sucursalId
 
@@ -114,21 +124,18 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     initialCajaState
   )
 
-  /* -------------------- Estado proceso -------------------- */
   const [validandoCaja, setValidandoCaja] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [closingCaja, setClosingCaja] = useState(false)
   const [error, setError] = useState<string | undefined>()
 
-  /* -------------------- Estado UI cierre -------------------- */
   const [showCierreModal, setShowCierreModal] = useState(false)
   const [resumenPrevio, setResumenPrevio] =
     useState<ResumenPrevioCaja | null>(null)
   const [montoFinal, setMontoFinal] = useState('')
 
-  /* =====================================================
-     Snapshot global (React Query + SSE)
-  ===================================================== */
+  /* ================= Snapshot ================= */
+
   const { data: aperturasActivas } = useQuery({
     queryKey: ['aperturas-activas', sucursalId],
     queryFn: () =>
@@ -136,17 +143,15 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     enabled: Boolean(sucursalId),
   })
 
-  /* =====================================================
-     Sync React Query → Context
-  ===================================================== */
+  /* ================= Sync ================= */
+
   useEffect(() => {
     if (!state.cajaSeleccionada || !aperturasActivas) return
 
-    const cajaId = state.cajaSeleccionada.id
-
     const apertura =
-      aperturasActivas.find(a => a.cajaId === cajaId) ??
-      null
+      aperturasActivas.find(
+        a => a.cajaId === state.cajaSeleccionada!.id
+      ) ?? null
 
     dispatch({
       type: 'SET_APERTURA_ACTIVA',
@@ -154,9 +159,8 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     })
   }, [aperturasActivas, state.cajaSeleccionada?.id])
 
-  /* =====================================================
-     Restore sesión
-  ===================================================== */
+  /* ================= Restore ================= */
+
   useEffect(() => {
     if (!user) return
 
@@ -167,6 +171,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
 
     getAperturaActiva(persisted.id)
       .then(apertura => {
+
         dispatch({
           type: 'SELECCIONAR_CAJA',
           caja: {
@@ -181,48 +186,44 @@ export function CajaProvider({ children }: { children: ReactNode }) {
           type: 'SET_APERTURA_ACTIVA',
           apertura,
         })
+
       })
       .catch(clearCajaPersistida)
       .finally(() => setValidandoCaja(false))
+
   }, [user])
 
-  /* =====================================================
-     Helpers UI
-  ===================================================== */
+  /* ================= Helpers ================= */
+
   const resetCierreUI = useCallback(() => {
     setShowCierreModal(false)
     setResumenPrevio(null)
     setMontoFinal('')
   }, [])
 
-  /* =====================================================
-     Acciones públicas
-  ===================================================== */
-  const seleccionarCaja = useCallback(
-    async (caja: Caja) => {
-      setValidandoCaja(true)
-      setError(undefined)
+  /* ================= Actions ================= */
 
-      try {
-        const apertura = await getAperturaActiva(caja.id)
+  const seleccionarCaja = useCallback(async (caja: Caja) => {
+    setValidandoCaja(true)
+    setError(undefined)
 
-        resetCierreUI()
+    try {
 
-        dispatch({ type: 'SELECCIONAR_CAJA', caja })
-        dispatch({
-          type: 'SET_APERTURA_ACTIVA',
-          apertura,
-        })
+      const apertura = await getAperturaActiva(caja.id)
 
-        persistCaja(caja)
-      } catch {
-        setError('No se pudo seleccionar la caja')
-      } finally {
-        setValidandoCaja(false)
-      }
-    },
-    [resetCierreUI]
-  )
+      resetCierreUI()
+
+      dispatch({ type: 'SELECCIONAR_CAJA', caja })
+      dispatch({ type: 'SET_APERTURA_ACTIVA', apertura })
+
+      persistCaja(caja)
+
+    } catch {
+      setError('No se pudo seleccionar la caja')
+    } finally {
+      setValidandoCaja(false)
+    }
+  }, [resetCierreUI])
 
   const deseleccionarCaja = useCallback(() => {
     clearCajaPersistida()
@@ -230,31 +231,27 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     resetCierreUI()
   }, [resetCierreUI])
 
-  const abrirCaja = useCallback(
-    async (montoInicial: number) => {
-      if (!state.cajaSeleccionada) return
+  const abrirCaja = useCallback(async (montoInicial: number) => {
+    if (!state.cajaSeleccionada) return
 
-      setCargando(true)
-      setError(undefined)
+    setCargando(true)
+    setError(undefined)
 
-      try {
-        const apertura = await apiAbrirCaja({
-          cajaId: state.cajaSeleccionada.id,
-          montoInicial,
-        })
+    try {
 
-        dispatch({
-          type: 'APERTURA_CAJA',
-          apertura,
-        })
-      } catch {
-        setError('No se pudo abrir la caja')
-      } finally {
-        setCargando(false)
-      }
-    },
-    [state.cajaSeleccionada]
-  )
+      const apertura = await apiAbrirCaja({
+        cajaId: state.cajaSeleccionada.id,
+        montoInicial,
+      })
+
+      dispatch({ type: 'APERTURA_CAJA', apertura })
+
+    } catch {
+      setError('No se pudo abrir la caja')
+    } finally {
+      setCargando(false)
+    }
+  }, [state.cajaSeleccionada])
 
   const iniciarCierre = useCallback(async () => {
     if (!state.cajaSeleccionada) return
@@ -263,6 +260,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     setError(undefined)
 
     try {
+
       const resumen = await getResumenPrevioCaja(
         state.cajaSeleccionada.id
       )
@@ -270,6 +268,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
       setResumenPrevio(resumen)
       setMontoFinal(String(resumen.efectivoEsperado))
       setShowCierreModal(true)
+
     } catch {
       setError('No se pudo obtener el resumen')
     } finally {
@@ -277,27 +276,34 @@ export function CajaProvider({ children }: { children: ReactNode }) {
     }
   }, [state.cajaSeleccionada])
 
-  const confirmarCierre = useCallback(async () => {
-    if (!state.cajaSeleccionada) return
+  const confirmarCierre = useCallback(
+    async (motivo?: string) => {
 
-    setClosingCaja(true)
-    setError(undefined)
+      if (!state.cajaSeleccionada) return
 
-    try {
-      await cerrarCajaAutomatico({
-        cajaId: state.cajaSeleccionada.id,
-        montoFinal: Number(montoFinal),
-      })
+      setClosingCaja(true)
+      setError(undefined)
 
-      dispatch({ type: 'CIERRE_CAJA' })
-      clearCajaPersistida()
-      resetCierreUI()
-    } catch {
-      setError('No se pudo cerrar la caja')
-    } finally {
-      setClosingCaja(false)
-    }
-  }, [state.cajaSeleccionada, montoFinal, resetCierreUI])
+      try {
+
+        await cerrarCajaAutomatico({
+          cajaId: state.cajaSeleccionada.id,
+          montoFinal: Number(montoFinal),
+          motivoDiferencia: motivo,
+        })
+
+        dispatch({ type: 'CIERRE_CAJA' })
+        clearCajaPersistida()
+        resetCierreUI()
+
+      } catch {
+        setError('No se pudo cerrar la caja')
+      } finally {
+        setClosingCaja(false)
+      }
+    },
+    [state.cajaSeleccionada, montoFinal, resetCierreUI]
+  )
 
   const cancelarCierre = useCallback(() => {
     resetCierreUI()
@@ -334,7 +340,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
 }
 
 /* =====================================================
-   Hook público
+   Hook
 ===================================================== */
 export function useCaja() {
   const ctx = useContext(CajaContext)

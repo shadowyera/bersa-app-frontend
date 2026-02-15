@@ -6,6 +6,8 @@ import { usePosScanner } from './usePosScanner'
 import { usePosVentaFlow } from './usePosVentaFlow'
 import { usePosCobroFlow } from './usePosCobroFlow'
 
+import type { DocumentoReceptor } from '../venta/domain/venta.types'
+
 /* =======================================================
    POS CONTROLLER
 ======================================================= */
@@ -13,7 +15,7 @@ import { usePosCobroFlow } from './usePosCobroFlow'
 export function usePosController() {
 
   /* ===============================
-     STATE LOCAL
+     LOCAL UI
   =============================== */
 
   const [query, setQuery] = useState('')
@@ -31,8 +33,16 @@ export function usePosController() {
      FLOWS
   =============================== */
 
-  const { venta, postVenta, onConfirmVenta } =
-    usePosVentaFlow()
+  const {
+    venta,
+    postVenta,
+
+    showReceptor,
+    openReceptor,
+    closeReceptor,
+
+    onConfirmVenta,
+  } = usePosVentaFlow()
 
   const cobro = usePosCobroFlow({
     totalVenta: venta.total,
@@ -65,7 +75,10 @@ export function usePosController() {
     cargandoCaja ||
     !cajaSeleccionada ||
     !aperturaActiva ||
-    postVenta.open
+    postVenta.open ||
+    showReceptor ||
+    cobroStable.showTipoPago ||
+    cobroStable.showPayment
 
   /* ===============================
      HELPERS
@@ -79,6 +92,25 @@ export function usePosController() {
       }, 200)
     },
     []
+  )
+
+  /* ===============================
+     DOCUMENTO
+  =============================== */
+
+  const documentoTributario =
+    venta.documentoTributario
+
+  const setTipoDocumento =
+    venta.setTipoDocumento
+
+  const setReceptor = useCallback(
+    (receptor: DocumentoReceptor) => {
+      venta.setReceptor(receptor)
+      closeReceptor()
+      cobroStable.openCobro()
+    },
+    [venta, closeReceptor, cobroStable]
   )
 
   /* ===============================
@@ -106,20 +138,22 @@ export function usePosController() {
       focusScanner()
 
     },
-    [bloqueado, venta, stockMap, focusScanner, flashHighlight]
+    [
+      bloqueado,
+      venta,
+      stockMap,
+      focusScanner,
+      flashHighlight,
+    ]
   )
 
   /* ===============================
-     CLEAR
+     CART ACTIONS
   =============================== */
 
   const clearCart = useCallback(() => {
     venta.clear()
   }, [venta])
-
-  /* ===============================
-     INCREASE / DECREASE DIRECTO
-  =============================== */
 
   const increase = useCallback(
     (productoId: string) => {
@@ -152,11 +186,9 @@ export function usePosController() {
 
   }, [highlightedId, venta.cart])
 
-  /* ===============================
-     SHORTCUT ACTIONS
-  =============================== */
-
   const increaseLast = useCallback(() => {
+
+    if (bloqueado) return
 
     const targetId = resolveTargetId()
     if (!targetId) return
@@ -164,9 +196,11 @@ export function usePosController() {
     venta.increase(targetId)
     flashHighlight(targetId)
 
-  }, [resolveTargetId, venta, flashHighlight])
+  }, [bloqueado, resolveTargetId, venta, flashHighlight])
 
   const decreaseLast = useCallback(() => {
+
+    if (bloqueado) return
 
     const targetId = resolveTargetId()
     if (!targetId) return
@@ -174,7 +208,32 @@ export function usePosController() {
     venta.decrease(targetId)
     flashHighlight(targetId)
 
-  }, [resolveTargetId, venta, flashHighlight])
+  }, [bloqueado, resolveTargetId, venta, flashHighlight])
+
+  /* ===============================
+     COBRAR
+  =============================== */
+
+  const onCobrar = useCallback(() => {
+
+    if (bloqueado) return
+
+    if (
+      documentoTributario.tipo === 'FACTURA' &&
+      !documentoTributario.receptor
+    ) {
+      openReceptor()
+      return
+    }
+
+    cobroStable.openCobro()
+
+  }, [
+    bloqueado,
+    documentoTributario,
+    openReceptor,
+    cobroStable,
+  ])
 
   /* ===============================
      RETURN
@@ -200,7 +259,6 @@ export function usePosController() {
 
     increase,
     decrease,
-
     increaseLast,
     decreaseLast,
 
@@ -208,15 +266,24 @@ export function usePosController() {
 
     highlightedId,
 
+    /* documento */
+    documentoTributario,
+    setTipoDocumento,
+    setReceptor,
+
     /* caja */
     cargandoCaja,
     bloqueado,
 
     /* flows */
     onAddProduct,
-    onCobrar: cobroStable.openCobro,
+    onCobrar,
 
     cobro: cobroStable,
     postVenta,
+
+    /* receptor */
+    showReceptor,
+    closeReceptor,
   }
 }

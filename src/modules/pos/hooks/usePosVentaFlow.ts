@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { crearVentaPOS } from '../api/pos.api'
@@ -9,6 +9,7 @@ import { useCaja } from '../Caja/context/CajaProvider'
 import type { ConfirmVentaPayload } from '../domain/pos.contracts'
 
 export function usePosVentaFlow() {
+
   const venta = useVenta()
   const postVenta = usePostVenta()
   const queryClient = useQueryClient()
@@ -16,8 +17,28 @@ export function usePosVentaFlow() {
   const { cajaSeleccionada, aperturaActiva } =
     useCaja()
 
+  /* ===============================
+     UI STATE
+  =============================== */
+
+  const [showReceptor, setShowReceptor] =
+    useState(false)
+
+  const openReceptor = useCallback(() => {
+    setShowReceptor(true)
+  }, [])
+
+  const closeReceptor = useCallback(() => {
+    setShowReceptor(false)
+  }, [])
+
+  /* ===============================
+     CONFIRM VENTA
+  =============================== */
+
   const onConfirmVenta = useCallback(
     async ({ pagos }: ConfirmVentaPayload) => {
+
       if (!cajaSeleccionada || !aperturaActiva) {
         return
       }
@@ -25,12 +46,16 @@ export function usePosVentaFlow() {
       const ventaCreada = await crearVentaPOS({
         cajaId: cajaSeleccionada.id,
         aperturaCajaId: aperturaActiva.id,
+
         pagos,
+
         items: venta.cart.map(item => ({
           productoId: item.productoId,
           cantidad: item.cantidad,
           precioUnitario: item.precioUnitario,
         })),
+
+        documentoTributario: venta.documentoTributario,
       })
 
       postVenta.openPostVenta(
@@ -43,6 +68,8 @@ export function usePosVentaFlow() {
       })
 
       venta.clear()
+      closeReceptor()
+
     },
     [
       cajaSeleccionada,
@@ -50,12 +77,18 @@ export function usePosVentaFlow() {
       venta,
       postVenta,
       queryClient,
+      closeReceptor,
     ]
   )
 
   return {
     venta,
     postVenta,
+
+    showReceptor,
+    openReceptor,
+    closeReceptor,
+
     onConfirmVenta,
   }
 }

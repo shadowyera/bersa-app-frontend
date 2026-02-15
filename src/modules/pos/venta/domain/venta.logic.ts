@@ -1,4 +1,4 @@
-import type { CartItem } from "../../domain/pos.types"
+import type { CartItem } from '../../domain/pos.types'
 import type { ProductoVendible } from './venta.types'
 
 /* ===============================
@@ -16,21 +16,22 @@ function hayStockInsuficiente(
   cantidad: number,
   stock?: number
 ) {
-  return (
-    stock !== undefined && cantidad > stock
-  )
+  return stock !== undefined && cantidad > stock
 }
 
 /* ===============================
-   Agregar producto al carrito
+   Agregar producto
 =============================== */
+
 export function agregarProducto(
   cart: CartItem[],
   producto: ProductoVendible
 ): CartItem[] {
+
   let encontrado = false
 
   const nuevoCart = cart.map(item => {
+
     if (item.productoId !== producto.productoId)
       return item
 
@@ -52,9 +53,7 @@ export function agregarProducto(
     }
   })
 
-  if (encontrado) {
-    return nuevoCart
-  }
+  if (encontrado) return nuevoCart
 
   return [
     ...cart,
@@ -75,11 +74,14 @@ export function agregarProducto(
 /* ===============================
    Aumentar cantidad
 =============================== */
+
 export function aumentarCantidad(
   cart: CartItem[],
   productoId: string
 ): CartItem[] {
+
   return cart.map(item => {
+
     if (item.productoId !== productoId)
       return item
 
@@ -103,12 +105,15 @@ export function aumentarCantidad(
 /* ===============================
    Disminuir cantidad
 =============================== */
+
 export function disminuirCantidad(
   cart: CartItem[],
   productoId: string
 ): CartItem[] {
+
   return cart
     .map(item => {
+
       if (item.productoId !== productoId)
         return item
 
@@ -128,8 +133,9 @@ export function disminuirCantidad(
 }
 
 /* ===============================
-   Total del carrito
+   Total carrito
 =============================== */
+
 export function calcularTotal(
   cart: CartItem[]
 ) {

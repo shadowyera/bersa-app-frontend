@@ -6,7 +6,11 @@ interface ModalBaseProps {
   children: ReactNode
   onClose?: () => void
   footer?: ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg'
+
+  /**
+   * Controla ancho máximo del modal
+   */
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 }
 
 export default function ModalBase({
@@ -16,19 +20,24 @@ export default function ModalBase({
   footer,
   maxWidth = 'sm',
 }: ModalBaseProps) {
+
   const maxWidthClass = {
-    sm: 'max-w-md',
+    sm: 'max-w-md',   // dialogs pequeños
     md: 'max-w-lg',
     lg: 'max-w-xl',
+    xl: 'max-w-4xl',  // 🔥 ideal para resumen
+    '2xl': 'max-w-5xl',
   }[maxWidth]
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
+      {/* Modal */}
       <div
         className={`
           relative w-full mx-4

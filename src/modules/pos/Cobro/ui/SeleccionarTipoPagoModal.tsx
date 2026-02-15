@@ -1,6 +1,7 @@
 import { memo, useCallback } from 'react'
 import { PAYMENT_METHODS } from '../../domain/payments.logic'
 import type { TipoPago } from '../../domain/pos.types'
+import { useTipoPagoShortcuts } from '../hooks/useTipoPagoShortcuts'
 
 /* =====================================================
    Props
@@ -15,13 +16,6 @@ interface Props {
    Componente
 ===================================================== */
 
-/**
- * Modal para seleccionar el método de pago.
- *
- * - UI pura
- * - No conoce reglas de cobro
- * - No construye pagos
- */
 function SeleccionarTipoPagoModal({
   onSelect,
   onClose,
@@ -35,12 +29,21 @@ function SeleccionarTipoPagoModal({
   )
 
   const handleClose = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
+    () => {
       onClose()
     },
     [onClose]
   )
+
+  /* ===============================
+     Shortcuts teclado
+  =============================== */
+
+  useTipoPagoShortcuts({
+    enabled: true,
+    onSelect: handleSelect,
+    onCancel: handleClose,
+  })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -60,7 +63,7 @@ function SeleccionarTipoPagoModal({
         <div className="space-y-3">
           {(Object.keys(
             PAYMENT_METHODS
-          ) as TipoPago[]).map(tipo => {
+          ) as TipoPago[]).map((tipo, index) => {
 
             const metodo =
               PAYMENT_METHODS[tipo]
@@ -71,11 +74,6 @@ function SeleccionarTipoPagoModal({
                 onMouseDown={e => {
                   e.preventDefault()
                   handleSelect(tipo)
-                }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    handleSelect(tipo)
-                  }
                 }}
                 className="
                   w-full
@@ -93,11 +91,15 @@ function SeleccionarTipoPagoModal({
                   focus:ring-emerald-500
                 "
               >
-                <div className="text-base font-semibold text-slate-100">
+                <div className="text-base font-semibold text-slate-100 flex items-center gap-3">
+                  <span className="w-6 h-6 flex items-center justify-center rounded bg-slate-700 text-xs text-slate-300">
+                    {index + 1}
+                  </span>
+
                   {metodo.label}
                 </div>
 
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-slate-400 ml-9">
                   {metodo.description}
                 </div>
               </button>
@@ -107,7 +109,10 @@ function SeleccionarTipoPagoModal({
 
         {/* Footer */}
         <button
-          onMouseDown={handleClose}
+          onMouseDown={e => {
+            e.preventDefault()
+            handleClose()
+          }}
           className="
             mt-6
             w-full
@@ -120,7 +125,7 @@ function SeleccionarTipoPagoModal({
             transition
           "
         >
-          Cancelar
+          Cancelar (ESC)
         </button>
 
       </div>

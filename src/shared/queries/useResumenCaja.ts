@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getResumenPrevioCaja } from '@/modules/pos/api/pos.api'
 
-export function useResumenCaja(cajaId?: string) {
+export function useResumenPrevioCajaQuery(cajaId?: string) {
   return useQuery({
     queryKey: ['resumen-previo-caja', cajaId],
 
@@ -11,6 +11,6 @@ export function useResumenCaja(cajaId?: string) {
     },
 
     enabled: !!cajaId,
-    staleTime: 10_000,
+    staleTime: 15_000,
   })
 }

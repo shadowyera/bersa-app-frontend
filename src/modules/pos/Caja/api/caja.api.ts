@@ -138,9 +138,13 @@ export async function getResumenPrevioCaja(
 export async function cerrarCajaAutomatico(params: {
   cajaId: string
   montoFinal: number
+  motivoDiferencia?: string
 }) {
   await api.post(
     `/cajas/${params.cajaId}/cierre`,
-    { montoFinal: params.montoFinal }
+    {
+      montoFinal: params.montoFinal,
+      motivoDiferencia: params.motivoDiferencia,
+    }
   )
 }

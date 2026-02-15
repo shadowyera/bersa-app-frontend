@@ -51,12 +51,23 @@ export default function PosPage() {
      SHORTCUTS TECLADO
   ======================================================= */
 
-  usePosShortcuts({
-    enabled: true, // SIEMPRE ACTIVO
-    onCobrar: pos.onCobrar,
-    onIncreaseLast: pos.increaseLast,
-    onDecreaseLast: pos.decreaseLast,
-  })
+usePosShortcuts({
+  mode: pos.showReceptor
+    ? null
+    : pos.cobro.showPayment
+    ? 'PAGO'
+    : pos.cobro.showTipoPago
+    ? 'TIPO_PAGO'
+    : 'VENTA',
+
+  onCobrar: pos.onCobrar,
+  onIncreaseLast: pos.increaseLast,
+  onDecreaseLast: pos.decreaseLast,
+
+  onSelectTipoPago: pos.cobro.selectTipoPago,
+  onConfirmPago: pos.cobro.confirm,
+  onBack: pos.cobro.closeAll,
+})
 
   /* =======================================================
      RENDER
@@ -95,19 +106,30 @@ export default function PosPage() {
         productos={pos.productos}
         stockMap={pos.stockMap}
         loadingProductos={pos.loadingProductos}
-
+        showReceptor={pos.showReceptor}
+        onCloseReceptor={pos.closeReceptor}
         cart={pos.cart}
         highlightedId={pos.highlightedId}
 
         onIncrease={pos.increase}
         onDecrease={pos.decrease}
         total={pos.total}
+        onClearCart={pos.clearCart}
+
+        /* ===== DOCUMENTO ===== */
+        documentoTributario={
+          pos.documentoTributario
+        }
+        onSetTipoDocumento={
+          pos.setTipoDocumento
+        }
+        onSetReceptor={
+          pos.setReceptor
+        }
 
         bloqueado={pos.bloqueado}
         cargandoCaja={pos.cargandoCaja}
         onCobrar={pos.onCobrar}
-
-        onClearCart={pos.clearCart}
 
         cobro={pos.cobro}
       />

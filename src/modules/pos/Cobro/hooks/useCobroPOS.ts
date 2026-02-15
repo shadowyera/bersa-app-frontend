@@ -96,6 +96,15 @@ export function useCobroPOS({
     []
   )
 
+  // 👉 NUEVO
+  const backToTipoPago = useCallback(() => {
+    setShowPayment(false)
+    setShowTipoPago(true)
+    setModoPago(null)
+    setEfectivo('')
+    setDebito('')
+  }, [])
+
   const closeAll = useCallback(() => {
     setShowTipoPago(false)
     setShowPayment(false)
@@ -158,6 +167,8 @@ export function useCobroPOS({
     openCobro,
     confirm,
     closeAll,
+
+    backToTipoPago,
   }
 }
 
