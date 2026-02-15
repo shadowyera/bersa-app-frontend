@@ -1,10 +1,10 @@
-import type { CartItem } from '../../domain/pos.types'
+import type { CartItem } from '@/modules/pos/domain/pos.types'
 import type {
   PostVenta,
   PostVentaItem,
-} from './postventa.types'
+} from '../domain/postventa.types'
 
-import { buildPosProductName } from '../../utils/productName'
+import { buildPosProductName } from '@/modules/pos/utils/productName'
 
 /* =====================================================
    Tipos Backend
@@ -67,7 +67,6 @@ export function mapVentaCreadaToPostVenta(
       }
     })
 
-  // ✅ confiar solo en backend
   const ajusteRedondeo =
     venta.ajusteRedondeo ?? 0
 

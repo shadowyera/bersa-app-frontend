@@ -31,7 +31,7 @@ import type {
   TipoPago,
 } from '../../domain/pos.types'
 import type { EstadoCobro } from '../../Cobro/domain/cobro.types'
-import type { DocumentoReceptor, DocumentoTributario } from '../../../../domains/venta/domain/venta.types';
+import type { DocumentoReceptor, DocumentoTributario } from '../domain/venta.types';
 
 
 interface CobroUIController {

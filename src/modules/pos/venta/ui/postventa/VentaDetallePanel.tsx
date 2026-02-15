@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { VentaApertura } from '../../domain/venta.types'
-import type { PostVenta } from '../../domain/postventa.types'
+import type { PostVenta } from '@/domains/venta/domain/postventa.types'
 import TicketPreview from './TicketPreview'
 import { useVentaDetalle } from '@/modules/pos/hooks/useVentaDetalle'
 import ConfirmModal from '@/shared/ui/ConfirmModal'

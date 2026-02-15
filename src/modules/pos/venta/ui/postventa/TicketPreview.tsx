@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import type { PostVenta } from '../../domain/postventa.types'
+import type { PostVenta } from '@/domains/venta/domain/postventa.types'
 
 /* =====================================================
    Props

@@ -1,4 +1,4 @@
-import type { TipoPago } from '../../domain/pos.types'
+import type { TipoPago } from "@/modules/pos/domain/pos.types"
 
 /* =====================================================
    Item vendido (snapshot)

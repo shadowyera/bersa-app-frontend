@@ -1,9 +1,6 @@
+import { type VentaCreadaBackend, mapVentaCreadaToPostVenta } from '@/domains/venta/mappers/postventa.mapper'
 import { useCallback, useState } from 'react'
-import type { PostVenta } from '../domain/postventa.types'
-import {
-  mapVentaCreadaToPostVenta,
-  type VentaCreadaBackend,
-} from '../domain/postventa.logic'
+import type { PostVenta } from './postventa.types'
 import type { CartItem } from '../../domain/pos.types'
 
 /**

@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react'
 import ModalBase from './ModalBase'
 
 import { useResumenCaja } from '../../hooks/useResumenCaja'
-import { useVentasApertura } from '@/modules/pos/venta/hooks/useVentasApertura'
+import { useVentasApertura } from '@/domains/venta/hooks/useVentasApertura'
 
 import { VentasAperturaList } from '@/modules/pos/venta/ui/postventa/VentasAperturaList'
 import { VentaDetallePanel } from '@/modules/pos/venta/ui/postventa/VentaDetallePanel'
