@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { anularVentaPOSApi } from '../../api/pos.api'
+import { anularVentaPOSApi } from '../../../modules/pos/api/pos.api'
 
 export function useAnularVentaMutation() {
   const queryClient = useQueryClient()

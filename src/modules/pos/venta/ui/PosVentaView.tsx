@@ -9,10 +9,10 @@ import ProductGrid from './product/ProductGrid'
 import ProductoSearchInput from '@/shared/producto/ui/ProductoSearchInput'
 
 /* ---------- Carrito ---------- */
-import Cart from './cart/Cart'
+import Cart from '../../cart/ui/Cart'
 
 /* ---------- Scanner ---------- */
-import ProductScanner from './scanner/ProductScanner'
+import ProductScanner from '../../scanner/ui/ProductScanner'
 
 /* ---------- Cobro ---------- */
 import PaymentModal from '../../Cobro/ui/PaymentModal'

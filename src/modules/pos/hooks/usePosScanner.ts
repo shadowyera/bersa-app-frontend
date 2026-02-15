@@ -1,4 +1,4 @@
-import { useScannerFocus } from '../venta/hooks/useScannerFocus'
+import { useScannerFocus } from '../scanner/hooks/useScannerFocus'
 
 export function usePosScanner() {
   const { scannerRef, focusScanner } =

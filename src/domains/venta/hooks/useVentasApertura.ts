@@ -1,5 +1,5 @@
 import { useVentasAperturaQuery } from "@/shared/queries/useVentasApertura"
-import { useAnularVentaMutation } from '@/modules/pos/venta/hooks/useAnularVentaMutation'
+import { useAnularVentaMutation } from '@/domains/venta/hooks/useAnularVentaMutation'
 
 export function useVentasApertura(cajaId?: string) {
   const ventasQuery = useVentasAperturaQuery(cajaId)

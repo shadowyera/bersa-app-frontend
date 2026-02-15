@@ -1,8 +1,8 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import CartItemRow from './CartItemRow'
-import { useCartSummary } from './useCartSummary'
+import CartItemRow from './CartItemRow';
 import ConfirmModal from '@/shared/ui/ConfirmModal'
-import type { CartItem } from '../../../domain/pos.types'
+import type { CartItem } from '../../domain/pos.types'
+import { useCartSummary } from './useCartSummary';
 
 interface Props {
   items: CartItem[]
