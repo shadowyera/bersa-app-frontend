@@ -11,7 +11,7 @@ import {
   aumentarCantidad,
   disminuirCantidad,
   calcularTotal,
-} from '../../../modules/pos/venta/domain/venta.logic'
+} from '@/domains/venta/domain/cart/cart.logic'
 
 /**
  * Hook de estado de venta

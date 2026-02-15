@@ -1,5 +1,5 @@
-import type { CartItem } from '../../domain/pos.types'
-import type { ProductoVendible } from '../../../../domains/venta/domain/venta.types'
+import type { CartItem } from "@/modules/pos/domain/pos.types"
+import type { ProductoVendible } from '../venta.types'
 
 /* ===============================
    Helpers internos
