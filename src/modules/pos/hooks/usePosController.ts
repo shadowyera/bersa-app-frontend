@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 
-import { useCaja } from '../Caja/context/CajaProvider'
+import { useCaja } from '@/modules/pos/caja/context/CajaProvider'
 import { usePosProductos } from './usePosProductos'
 import { usePosScanner } from './usePosScanner'
 import { usePosVentaFlow } from './usePosVentaFlow'

@@ -17,16 +17,16 @@ import { useCaja } from '../context/CajaProvider'
 import {
   getCajasSucursal,
   getAperturasActivasSucursal,
-} from '../api/caja.api'
+} from '@/domains/caja/api/caja.api'
 
 /* =====================================================
    Domain
 ===================================================== */
 import {
   buildCajasVisuales,
-} from '../domain/caja.selectors'
+} from '../../../../domains/caja/domain/caja.selectors'
 
-import type { CajaVisual } from '../domain/caja.types'
+import type { CajaVisual } from '../../../../domains/caja/domain/caja.types'
 
 export function useSeleccionarCaja() {
   const { user } = useAuth()

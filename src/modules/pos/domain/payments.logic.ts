@@ -1,4 +1,4 @@
-import type { TipoPago } from './domain/pos.types'
+import type { TipoPago } from "./pos.types"
 
 export const PAYMENT_METHODS: Record<TipoPago, {
     label: string

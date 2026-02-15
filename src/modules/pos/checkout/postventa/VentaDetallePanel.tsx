@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import type { VentaApertura } from '../../../../../domains/venta/domain/venta.types'
+import type { VentaApertura } from '@/domains/venta/domain/venta.types'
 import type { PostVenta } from '@/domains/venta/domain/postventa.types'
 import TicketPreview from './TicketPreview'
 import { useVentaDetalle } from '@/modules/pos/hooks/useVentaDetalle'

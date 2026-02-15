@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router-dom'
-import BarraCajaActiva from './Caja/ui/modals/BarraCajaActiva'
-import CerrarCajaModal from './Caja/ui/modals/CerrarCajaModal'
+import BarraCajaActiva from './caja/ui/modals/BarraCajaActiva'
+import CerrarCajaModal from './caja/ui/modals/CerrarCajaModal'
 
 import { useAuth } from '@/modules/auth/useAuth'
-import { useCajaRealtime } from './Caja/hooks/useCajaRealtime'
+import { useCajaRealtime } from './caja/hooks/useCajaRealtime'
 
 /**
  * PosShell

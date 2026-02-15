@@ -1,11 +1,11 @@
 import { memo, useCallback, useState } from 'react'
 import ModalBase from './ModalBase'
 
-import { useResumenCaja } from '../../hooks/useResumenCaja'
+import { useResumenPrevioCajaQuery } from '@/domains/caja/hooks/useResumenPrevioCajaQuery'
 import { useVentasApertura } from '@/domains/venta/hooks/useVentasApertura'
 
-import { VentasAperturaList } from '@/modules/pos/venta/ui/postventa/VentasAperturaList'
-import { VentaDetallePanel } from '@/modules/pos/venta/ui/postventa/VentaDetallePanel'
+import { VentasAperturaList } from '@/modules/pos/checkout/postventa/VentasAperturaList'
+import { VentaDetallePanel } from '@/modules/pos/checkout/postventa/VentaDetallePanel'
 
 import type { VentaApertura } from '@/domains/venta/domain/venta.types'
 
@@ -35,7 +35,7 @@ function ResumenCajaModal({
     data,
     isLoading,
     refetch,
-  } = useResumenCaja(cajaId)
+  } = useResumenPrevioCajaQuery(cajaId)
 
   /* ================================
      Ventas del turno

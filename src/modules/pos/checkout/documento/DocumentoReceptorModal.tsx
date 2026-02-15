@@ -1,3 +1,4 @@
+import type { DocumentoReceptor } from '../../../../domains/venta/domain/venta.types';
 import {
   useState,
   useCallback,
@@ -6,9 +7,6 @@ import {
   memo,
 } from 'react'
 
-import type {
-  DocumentoReceptor,
-} from '../../../../../domains/venta/domain/venta.types'
 
 /* =====================================================
    Helpers RUT

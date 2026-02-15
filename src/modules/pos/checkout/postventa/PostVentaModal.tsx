@@ -1,7 +1,7 @@
 import { memo } from 'react'
-import type { PostVenta } from '../../hooks/postventa.types'
 import TicketPreview from './TicketPreview'
 import { useModalShortcuts } from '@/shared/hooks/useModalShortcuts'
+import type { PostVenta } from '@/domains/venta/domain/postventa.types'
 
 /* =====================================================
    Props

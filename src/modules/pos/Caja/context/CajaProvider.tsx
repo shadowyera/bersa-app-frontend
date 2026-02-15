@@ -12,9 +12,9 @@ import { useQuery } from '@tanstack/react-query'
 /* =====================================================
    Domain
 ===================================================== */
-import type { Caja, AperturaCaja } from '../domain/caja.types'
-import { initialCajaState } from '../domain/caja.state'
-import { cajaReducer } from '../domain/caja.reducer'
+import type { Caja, AperturaCaja } from '@/domains/caja/domain/caja.types'
+import { initialCajaState } from '@/domains/caja/domain/caja.state'
+import { cajaReducer } from '@/domains/caja/domain/caja.reducer'
 
 /* =====================================================
    API
@@ -25,7 +25,7 @@ import {
   getResumenPrevioCaja,
   cerrarCajaAutomatico,
   getAperturasActivasSucursal,
-} from '../api/caja.api'
+} from '@/domains/caja/api/caja.api'
 
 /* =====================================================
    Auth

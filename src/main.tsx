@@ -9,7 +9,7 @@ import './index.css'
 import { AuthProvider } from './modules/auth/useAuth'
 import { queryClient } from './shared/query/queryClient'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { CajaProvider } from './modules/pos/Caja/context/CajaProvider'
+import { CajaProvider } from './modules/pos/caja/context/CajaProvider'
 
 const rootElement = document.getElementById('root')
 

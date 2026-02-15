@@ -9,14 +9,14 @@ import ProductGrid from './product/ProductGrid'
 import ProductoSearchInput from '@/shared/producto/ui/ProductoSearchInput'
 
 /* ---------- Carrito ---------- */
-import Cart from '../../cart/ui/Cart'
+import Cart from '../cart/ui/Cart'
 
 /* ---------- Scanner ---------- */
-import ProductScanner from '../../scanner/ui/ProductScanner'
+import ProductScanner from '../scanner/ui/ProductScanner'
 
 /* ---------- Cobro ---------- */
-import PaymentModal from '../../Cobro/ui/PaymentModal'
-import SeleccionarTipoPagoModal from '../../Cobro/ui/SeleccionarTipoPagoModal'
+import PaymentModal from '../Cobro/ui/PaymentModal'
+import SeleccionarTipoPagoModal from '../Cobro/ui/SeleccionarTipoPagoModal'
 
 /* ---------- Documento ---------- */
 import DocumentoReceptorModal from './documento/DocumentoReceptorModal'
@@ -29,9 +29,9 @@ import type {
   CartItem,
   ProductoPOS,
   TipoPago,
-} from '../../domain/pos.types'
-import type { EstadoCobro } from '../../Cobro/domain/cobro.types'
-import type { DocumentoReceptor, DocumentoTributario } from '../../../../domains/venta/domain/venta.types';
+} from '../domain/pos.types'
+import type { EstadoCobro } from '../Cobro/domain/cobro.types'
+import type { DocumentoReceptor, DocumentoTributario } from '../../../domains/venta/domain/venta.types';
 
 
 interface CobroUIController {

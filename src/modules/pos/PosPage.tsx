@@ -7,21 +7,21 @@ import { useCatalogoRealtime } from './realtime/catalogo.realtime'
    Controllers
 =============================== */
 import { usePosController } from './hooks/usePosController'
-import { useCaja } from './Caja/context/CajaProvider'
+import { useCaja } from './caja/context/CajaProvider'
 import { usePosShortcuts } from './hooks/usePosShortcuts'
 
 /* ===============================
    UI Venta
 =============================== */
-import PosVentaView from './venta/ui/PosVentaView'
-import PostVentaModal from './venta/ui/postventa/PostVentaModal'
+import PosVentaView from './checkout/PosVentaView'
+import PostVentaModal from './checkout/postventa/PostVentaModal'
 
 /* ===============================
    UI Caja
 =============================== */
-import PosLock from './Caja/ui/PosLock'
-import SeleccionarCajaContenido from './Caja/ui/SeleccionarCajaContenido'
-import AbrirCajaContenido from './Caja/ui/AbrirCajaContenido'
+import PosLock from './caja/ui/PosLock'
+import SeleccionarCajaContenido from './caja/ui/SeleccionarCajaContenido'
+import AbrirCajaContenido from './caja/ui/AbrirCajaContenido'
 
 /* =======================================================
    POS PAGE

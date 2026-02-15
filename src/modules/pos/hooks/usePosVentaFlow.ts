@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { crearVentaPOS } from '@/domains/venta/api/venta.api'
 import { useVenta } from '../../../domains/venta/hooks/useVenta'
 import { usePostVenta } from '../../../domains/venta/hooks/usePostVenta'
-import { useCaja } from '../Caja/context/CajaProvider'
+import { useCaja } from '@/modules/pos/caja/context/CajaProvider'
 
 import type { ConfirmVentaPayload } from '../domain/pos.contracts'
 
