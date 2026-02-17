@@ -1,5 +1,6 @@
 import ProductoForm from './ProductoForm'
-import type { Producto } from '@/shared/producto/producto.types';
+import type { Producto } from '../../../domains/producto/domain/producto.types';
+
 
 type Props = {
   open: boolean

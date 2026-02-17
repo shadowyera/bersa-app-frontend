@@ -71,9 +71,9 @@ export async function cancelarPedidoInterno(
    GET /api/pedidos-internos/mios
 ===================================================== */
 export async function getPedidosInternosMios() {
-  const { data } = await api.get<
-    PedidoInterno[]
-  >('/pedidos-internos/mios')
+  const { data } = await api.get<PedidoInterno[]>(
+    '/pedidos-internos/mios'
+  )
 
   return data
 }
@@ -84,9 +84,9 @@ export async function getPedidosInternosMios() {
    GET /api/pedidos-internos/recibidos
 ===================================================== */
 export async function getPedidosInternosRecibidos() {
-  const { data } = await api.get<
-    PedidoInterno[]
-  >('/pedidos-internos/recibidos')
+  const { data } = await api.get<PedidoInterno[]>(
+    '/pedidos-internos/recibidos'
+  )
 
   return data
 }
@@ -107,6 +107,22 @@ export async function prepararPedidoInterno(
   const { data } = await api.post<PedidoInterno>(
     `/pedidos-internos/${pedidoId}/preparar`,
     { items }
+  )
+
+  return data
+}
+
+/* =====================================================
+   Despachar pedido interno
+   -----------------------------------------------------
+   POST /api/pedidos-internos/:id/despachar
+   - Bodega marca pedido como DESPACHADO
+===================================================== */
+export async function despacharPedidoInterno(
+  pedidoId: string
+) {
+  const { data } = await api.post<PedidoInterno>(
+    `/pedidos-internos/${pedidoId}/despachar`
   )
 
   return data

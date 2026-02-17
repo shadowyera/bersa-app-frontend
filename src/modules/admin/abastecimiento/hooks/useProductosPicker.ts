@@ -1,6 +1,6 @@
-import { useProductosAdmin } from '@/shared/queries/useProductos'
+import { useProductosAdmin } from '@/domains/producto/hooks/useProductos'
 import { useStockSucursal } from '@/shared/hooks/useStockSucursal'
-import type { Producto } from '@/shared/producto/producto.types'
+import type { Producto } from '@/domains/producto/domain/producto.types'
 
 export interface ProductoPickerItem {
   id: string
@@ -22,10 +22,10 @@ export function useProductosPicker(sucursalId: string) {
 
   const productos: ProductoPickerItem[] = catalogo.map(
     (p: Producto) => ({
-      id: p._id,
+      id: p.id,
       nombre: p.nombre,
       codigo: p.codigo,
-      stock: stock[p._id] ?? 0,
+      stock: stock[p.id] ?? 0,
     })
   )
 

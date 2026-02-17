@@ -1,4 +1,5 @@
-import type { Producto } from '@/shared/producto/producto.types'
+import type { Producto } from '../../../domains/producto/domain/producto.types';
+
 
 type Props = {
   productos: Producto[]
@@ -80,7 +81,7 @@ export default function ProductosTable({
           {/* Rows */}
           {productos.map(prod => (
             <tr
-              key={prod._id}
+              key={prod.id}
               className={`border-t border-slate-800 ${
                 prod.activo ? '' : 'opacity-60'
               }`}

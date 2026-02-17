@@ -1,4 +1,4 @@
-import type { TipoPago } from "../pago.types"
+import type { TipoPago } from "./pago.types"
 
 export const PAYMENT_METHODS: Record<TipoPago, {
     label: string

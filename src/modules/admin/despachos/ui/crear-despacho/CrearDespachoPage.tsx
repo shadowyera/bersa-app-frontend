@@ -18,7 +18,6 @@ export default function CrearDespachoPage() {
   =============================== */
 
   const isPedido = vm.origen === 'PEDIDO'
-  const isDirecto = vm.origen === 'DIRECTO'
 
   /* ===============================
      Render

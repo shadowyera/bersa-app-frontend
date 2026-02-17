@@ -5,8 +5,8 @@ import {
   editarPedidoInterno,
   cancelarPedidoInterno,
   prepararPedidoInterno,
+  despacharPedidoInterno,
 } from '../domain/api/pedido.api'
-
 
 /* =====================================================
    Hook: usePedidoMutations
@@ -117,6 +117,27 @@ export function usePedidoMutations() {
   })
 
   /* ===================================================
+     Despachar pedido interno (bodega)
+  =================================================== */
+  const despacharPedidoMutation = useMutation({
+    mutationFn: (pedidoId: string) =>
+      despacharPedidoInterno(pedidoId),
+    onSuccess: () => {
+      /**
+       * Despachar afecta:
+       * - pedidos recibidos
+       * - pedidos propios (estado actualizado)
+       */
+      queryClient.invalidateQueries({
+        queryKey: ['pedidos-internos', 'recibidos'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['pedidos-internos', 'mios'],
+      })
+    },
+  })
+
+  /* ===================================================
      API pública del hook
   =================================================== */
   return {
@@ -145,5 +166,13 @@ export function usePedidoMutations() {
       prepararPedidoMutation.isPending,
     prepararPedidoError:
       prepararPedidoMutation.error,
+
+    /* Despachar */
+    despacharPedido:
+      despacharPedidoMutation.mutateAsync,
+    despachandoPedido:
+      despacharPedidoMutation.isPending,
+    despacharPedidoError:
+      despacharPedidoMutation.error,
   }
 }

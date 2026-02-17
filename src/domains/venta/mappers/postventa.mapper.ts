@@ -1,4 +1,4 @@
-import type { CartItem } from '@/domains/venta/domain/pago/pago.types'
+import type { CartItem } from '../domain/cart-item.types'
 import type {
   PostVenta,
   PostVentaItem,

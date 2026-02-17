@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import type { Producto } from '../../../../shared/producto/producto.types'
+import type { Producto } from '@/domains/producto/domain/producto.types'
 
 interface Props {
   /**
@@ -43,7 +43,7 @@ function ProductoPicker({
     >
       {products.map(producto => (
         <button
-          key={producto._id}
+          key={producto.id}
           type="button"
           onMouseDown={() => onSelect(producto)}
           className="

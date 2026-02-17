@@ -1,4 +1,5 @@
-import type { PagoPOS, TipoPago } from '../../../../domains/venta/domain/pago.types'
+import type { TipoPago } from '../pago/pago.types';
+import type { Pago } from '../pago/pago.types';
 
 /* =====================================================
    Estado calculado del cobro (frontend)
@@ -70,7 +71,7 @@ export interface ConfirmacionCobro {
    * Desglose de pagos
    * (efectivo, débito, etc.)
    */
-  pagos: PagoPOS[]
+  pagos: Pago[]
 
   /**
    * Ajuste por redondeo CLP aplicado

@@ -59,7 +59,9 @@ export default function PedidosPage() {
   const {
     cancelarPedido,
     cancelandoPedido,
+    despacharPedido,
   } = usePedidoMutations()
+
 
   /* ===============================
      UI state
@@ -290,10 +292,9 @@ export default function PedidosPage() {
                     `/admin/pedidos/${pedidoId}/preparar`
                   )
                 }
+                onDespachar={despacharPedido}
                 onCancelar={cancelarPedido}
-                cancelandoPedido={
-                  cancelandoPedido
-                }
+                cancelandoPedido={cancelandoPedido}
               />
             )}
           </>
@@ -358,11 +359,10 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-1.5 rounded-lg text-sm ${
-        active
-          ? 'bg-slate-800 text-white'
-          : 'text-slate-400 hover:bg-slate-800/60'
-      }`}
+      className={`px-4 py-1.5 rounded-lg text-sm ${active
+        ? 'bg-slate-800 text-white'
+        : 'text-slate-400 hover:bg-slate-800/60'
+        }`}
     >
       {children}
     </button>
