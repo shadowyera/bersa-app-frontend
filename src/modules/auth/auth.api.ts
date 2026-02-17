@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { User } from './auth.types'
 
-const API_URL = 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL
 
 /**
  * Login
