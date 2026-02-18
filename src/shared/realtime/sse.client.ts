@@ -36,7 +36,7 @@ class SSEClient {
     if (this.connected || this.source) return
 
     const source = new EventSource(
-      `${API_BASE_URL}/api/realtime`,
+      `${API_BASE_URL}/realtime`,
       { withCredentials: true }
     )
 
