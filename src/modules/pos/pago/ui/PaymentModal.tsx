@@ -31,6 +31,8 @@ interface Props {
   loading?: boolean
 
   efectivoRaw: string
+  debitoRaw: string
+
   setEfectivo: (value: string) => void
   setDebito: (value: string) => void
 
@@ -43,13 +45,12 @@ interface Props {
 ===================================================== */
 
 function PaymentModal({
-  totalVenta,
   modo,
   estado,
   loading = false,
   efectivoRaw,
+  debitoRaw,
   setEfectivo,
-  setDebito,
   onConfirm,
   onClose,
 }: Props) {
@@ -62,31 +63,10 @@ function PaymentModal({
 
   const handleEfectivoChange = useCallback(
     (raw: string) => {
-      const efectivoNum = normalizarNumero(raw)
       setEfectivo(raw)
-
-      if (modo === 'MIXTO' && estado) {
-        const resto = Math.max(
-          0,
-          estado.totalCobrado - efectivoNum
-        )
-        setDebito(String(resto))
-      }
     },
-    [modo, estado, setEfectivo, setDebito]
+    [setEfectivo]
   )
-
-  const sumarEfectivo = useCallback(
-    (monto: number) => {
-      const actual = normalizarNumero(efectivoRaw)
-      handleEfectivoChange(String(actual + monto))
-    },
-    [efectivoRaw, handleEfectivoChange]
-  )
-
-  const borrarUltimoDigito = useCallback(() => {
-    setEfectivo(efectivoRaw.slice(0, -1))
-  }, [efectivoRaw, setEfectivo])
 
   /* ===============================
      Shortcuts teclado
@@ -96,8 +76,12 @@ function PaymentModal({
     enabled: true,
     onConfirm,
     onCancel: onClose,
-    onDeleteDigit: borrarUltimoDigito,
-    onAddMontoRapido: sumarEfectivo,
+    onDeleteDigit: () =>
+      setEfectivo(efectivoRaw.slice(0, -1)),
+    onAddMontoRapido: (monto) => {
+      const actual = normalizarNumero(efectivoRaw)
+      setEfectivo(String(actual + monto))
+    },
   })
 
   /* ===============================
@@ -110,7 +94,7 @@ function PaymentModal({
 
     efectivoRef.current?.focus()
     efectivoRef.current?.select()
-  }, [modo, totalVenta])
+  }, [modo])
 
   if (!estado) return null
 
@@ -122,10 +106,12 @@ function PaymentModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="w-[420px] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
 
+        {/* Header */}
         <h2 className="text-xl font-semibold mb-3">
           {TITULOS[modo]}
         </h2>
 
+        {/* Total */}
         <div className="text-center mb-4">
           <p className="text-xs text-slate-400">
             TOTAL A PAGAR
@@ -135,22 +121,34 @@ function PaymentModal({
           </p>
         </div>
 
+        {/* Resumen */}
         <PaymentSummary estado={estado} />
+
+        {/* ===============================
+            EFECTIVO
+        =============================== */}
 
         {(modo === 'EFECTIVO' || modo === 'MIXTO') && (
           <div className="mt-4 space-y-3">
 
-            {/* Input efectivo */}
-            <input
-              ref={efectivoRef}
-              value={efectivoRaw}
-              onChange={e =>
-                handleEfectivoChange(e.target.value)
-              }
-              inputMode="numeric"
-              placeholder="0"
-              className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-3xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            <div>
+              <p className="text-xs text-slate-400 mb-1">
+                EFECTIVO
+              </p>
+
+              <input
+                ref={efectivoRef}
+                value={efectivoRaw}
+                onChange={e =>
+                  handleEfectivoChange(
+                    e.target.value
+                  )
+                }
+                inputMode="numeric"
+                placeholder="0"
+                className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-3xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
 
             {/* Botones rápidos */}
             <div className="grid grid-cols-5 gap-2">
@@ -159,7 +157,13 @@ function PaymentModal({
                   key={monto}
                   onMouseDown={e => {
                     e.preventDefault()
-                    sumarEfectivo(monto)
+                    const actual =
+                      normalizarNumero(
+                        efectivoRaw
+                      )
+                    setEfectivo(
+                      String(actual + monto)
+                    )
                   }}
                   className="rounded-lg bg-slate-800 hover:bg-slate-700 py-2 text-sm flex flex-col items-center"
                 >
@@ -174,7 +178,28 @@ function PaymentModal({
           </div>
         )}
 
-        {/* Acciones */}
+        {/* ===============================
+            DEBITO (SOLO MIXTO)
+        =============================== */}
+
+        {modo === 'MIXTO' && (
+          <div className="mt-4">
+            <p className="text-xs text-slate-400 mb-1">
+              DÉBITO
+            </p>
+
+            <input
+              value={normalizarNumero(debitoRaw).toLocaleString('es-CL')}
+              readOnly
+              className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-2xl text-center text-slate-300 opacity-80"
+            />
+          </div>
+        )}
+
+        {/* ===============================
+            ACCIONES
+        =============================== */}
+
         <div className="mt-6 flex gap-3">
 
           <button

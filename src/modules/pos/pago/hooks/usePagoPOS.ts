@@ -8,10 +8,18 @@ import { calcularEstadoCobro } from '@/domains/venta/domain/cobro/cobro.logic'
 import { buildPagos } from '@/domains/venta/domain/pago/pago.factory'
 import { normalizarNumero } from '../ui/utils/normalizarNumero'
 
+/* =====================================================
+   Props
+===================================================== */
+
 interface UsePagoPOSProps {
   totalVenta: number
   onConfirmVenta: (data: ConfirmVentaPayload) => Promise<void>
 }
+
+/* =====================================================
+   Hook
+===================================================== */
 
 export function usePagoPOS({
   totalVenta,
@@ -67,13 +75,24 @@ export function usePagoPOS({
     setShowTipoPago(true)
   }, [totalVenta])
 
-  const selectTipoPago = useCallback((tipo: TipoPago) => {
-    setModoPago(tipo)
-    setEfectivoRaw('')
-    setDebitoRaw('')
-    setShowTipoPago(false)
-    setShowPayment(true)
-  }, [])
+  const selectTipoPago = useCallback(
+    (tipo: TipoPago) => {
+
+      setModoPago(tipo)
+
+      if (tipo === 'MIXTO') {
+        setEfectivoRaw('')
+        setDebitoRaw(String(totalVenta))
+      } else {
+        setEfectivoRaw('')
+        setDebitoRaw('')
+      }
+
+      setShowTipoPago(false)
+      setShowPayment(true)
+    },
+    [totalVenta]
+  )
 
   const backToTipoPago = useCallback(() => {
     setShowPayment(false)
@@ -93,37 +112,91 @@ export function usePagoPOS({
   }, [])
 
   /* ===============================
-     Input controlado
+     Input controlado (INTELIGENTE)
   =============================== */
 
-  const setEfectivo = useCallback((raw: string) => {
-    setEfectivoRaw(raw)
-  }, [])
+  const setEfectivo = useCallback(
+    (raw: string) => {
 
-  const setDebito = useCallback((raw: string) => {
-    setDebitoRaw(raw)
-  }, [])
+      const limpio = raw.replace(/\D/g, '')
+      setEfectivoRaw(limpio)
+
+      if (modoPago === 'MIXTO') {
+        const efectivoNum = Number(limpio || 0)
+        const restante =
+          Math.max(totalVenta - efectivoNum, 0)
+
+        setDebitoRaw(String(restante))
+      }
+    },
+    [modoPago, totalVenta]
+  )
+
+  const setDebito = useCallback(
+    (raw: string) => {
+
+      const limpio = raw.replace(/\D/g, '')
+      setDebitoRaw(limpio)
+
+      if (modoPago === 'MIXTO') {
+        const debitoNum = Number(limpio || 0)
+        const restante =
+          Math.max(totalVenta - debitoNum, 0)
+
+        setEfectivoRaw(String(restante))
+      }
+    },
+    [modoPago, totalVenta]
+  )
 
   /* ===============================
      Teclado
   =============================== */
 
-  const addMontoRapido = useCallback((monto: number) => {
-    setEfectivoRaw(prev => {
-      const actual = normalizarNumero(prev)
-      return String(actual + monto)
-    })
-  }, [])
+  const addMontoRapido = useCallback(
+    (monto: number) => {
+
+      setEfectivoRaw(prev => {
+        const actual = normalizarNumero(prev)
+        const nuevo = actual + monto
+
+        if (modoPago === 'MIXTO') {
+          const restante =
+            Math.max(totalVenta - nuevo, 0)
+          setDebitoRaw(String(restante))
+        }
+
+        return String(nuevo)
+      })
+    },
+    [modoPago, totalVenta]
+  )
 
   const deleteLastDigit = useCallback(() => {
-    setEfectivoRaw(prev => prev.slice(0, -1))
-  }, [])
+
+    setEfectivoRaw(prev => {
+      const nuevo = prev.slice(0, -1)
+
+      if (modoPago === 'MIXTO') {
+        const efectivoNum =
+          normalizarNumero(nuevo)
+
+        const restante =
+          Math.max(totalVenta - efectivoNum, 0)
+
+        setDebitoRaw(String(restante))
+      }
+
+      return nuevo
+    })
+  }, [modoPago, totalVenta])
 
   /* ===============================
      Confirmar
   =============================== */
 
   const confirm = useCallback(async () => {
+
     if (!estado || !modoPago) return
     if (!estado.puedeConfirmar) return
     if (loading) return
@@ -154,6 +227,10 @@ export function usePagoPOS({
     closeAll,
   ])
 
+  /* ===============================
+     API pública
+  =============================== */
+
   return {
     estado,
     loading,
@@ -179,6 +256,10 @@ export function usePagoPOS({
     backToTipoPago,
   }
 }
+
+/* =====================================================
+   Type helper
+===================================================== */
 
 export type PagoController =
   ReturnType<typeof usePagoPOS>

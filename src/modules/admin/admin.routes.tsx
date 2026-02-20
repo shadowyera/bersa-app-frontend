@@ -1,7 +1,17 @@
-import { Route } from 'react-router-dom'
+import { Outlet, Route } from 'react-router-dom'
+
 import AdminLayout from './AdminLayout'
 import RoleRoute from '@/shared/layouts/RoleRoute'
 
+/* ===============================
+   VENTAS
+=============================== */
+import AdminVentasPage from './ventas/pages/AdminVentasPage'
+import AdminVentaDetallePage from './ventas/pages/AdminVentaDetallePage'
+
+/* ===============================
+   CORE
+=============================== */
 import CategoriasPage from './categorias/CategoriasPage'
 import ProductosPage from './productos/ProductosPage'
 import StockPage from './stock/ui/StockPage'
@@ -41,6 +51,23 @@ export const AdminRoutes = (
       path="abastecimiento"
       element={<AbastecimientoPage />}
     />
+
+    {/* ===============================
+        VENTAS (solo admin / encargado)
+    =============================== */}
+    <Route
+      element={
+        <RoleRoute allow={['ADMIN', 'ENCARGADO']}>
+          <Outlet />
+        </RoleRoute>
+      }
+    >
+      <Route path="ventas" element={<AdminVentasPage />} />
+      <Route
+        path="ventas/:ventaId"
+        element={<AdminVentaDetallePage />}
+      />
+    </Route>
 
     {/* ===============================
         PEDIDOS

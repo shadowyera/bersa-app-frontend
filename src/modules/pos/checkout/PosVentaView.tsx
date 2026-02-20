@@ -224,11 +224,10 @@ function PosVentaView({
                   <div className="flex gap-2">
 
                     <button
-                      className={`flex-1 py-2 rounded font-medium ${
-                        documentoTributario.tipo === 'BOLETA'
+                      className={`flex-1 py-2 rounded font-medium ${documentoTributario.tipo === 'BOLETA'
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-700 text-slate-200'
-                      }`}
+                        }`}
                       onClick={() =>
                         onSetTipoDocumento('BOLETA')
                       }
@@ -237,11 +236,10 @@ function PosVentaView({
                     </button>
 
                     <button
-                      className={`flex-1 py-2 rounded font-medium ${
-                        documentoTributario.tipo === 'FACTURA'
+                      className={`flex-1 py-2 rounded font-medium ${documentoTributario.tipo === 'FACTURA'
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-700 text-slate-200'
-                      }`}
+                        }`}
                       onClick={() =>
                         onSetTipoDocumento('FACTURA')
                       }
@@ -259,11 +257,10 @@ function PosVentaView({
                       if (bloqueado) return
                       onCobrar()
                     }}
-                    className={`w-full py-3 rounded text-white font-semibold transition ${
-                      bloqueado
+                    className={`w-full py-3 rounded text-white font-semibold transition ${bloqueado
                         ? 'bg-gray-500 cursor-not-allowed'
                         : 'bg-emerald-600 hover:bg-emerald-700'
-                    }`}
+                      }`}
                   >
                     {cargandoCaja
                       ? 'Validando caja…'
@@ -298,11 +295,10 @@ function PosVentaView({
             modo={pago.modoPago}
             estado={pago.estado}
             loading={pago.loading}
-
             efectivoRaw={pago.efectivoRaw}
+            debitoRaw={pago.debitoRaw}
             setEfectivo={pago.setEfectivo}
             setDebito={pago.setDebito}
-
             onClose={pago.closeAll}
             onConfirm={pago.confirm}
           />
