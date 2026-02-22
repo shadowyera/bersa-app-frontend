@@ -50,7 +50,6 @@ export const listarVentasAdmin = async (
     data: data.data.map((v: any): VentaAdmin => ({
       id: v._id,
 
-      // 🔥 FOLIO
       folio: v.folio,
 
       numeroVenta: v.numeroVenta,
@@ -70,6 +69,8 @@ export const listarVentasAdmin = async (
       sucursalId: v.sucursalId,
 
       createdAt: v.createdAt,
+
+      pagos: [],
     })),
 
     page: data.page,
@@ -92,8 +93,6 @@ export const obtenerVentaAdminDetalle = async (
 
   return {
     id: data._id,
-
-    // 🔥 FOLIO
     folio: data.folio,
 
     numeroVenta: data.numeroVenta,
