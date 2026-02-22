@@ -18,6 +18,11 @@ export interface VentaAdmin {
     tipo: 'BOLETA' | 'FACTURA'
   }
 
+  pagos: {
+    tipo: string
+    monto: number
+  }[]
+
   usuarioId: string
   cajaId: string
   sucursalId: string

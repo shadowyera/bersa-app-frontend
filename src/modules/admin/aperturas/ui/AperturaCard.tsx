@@ -58,23 +58,23 @@ export function AperturaCard({ apertura }: Props) {
       className="
         p-5
         rounded-xl
-        bg-slate-900
-        hover:bg-slate-800
-        transition
-        border border-slate-800
-        space-y-4
+        bg-slate-900/40
+        hover:bg-slate-900/60
+        transition-colors
+        border border-slate-800/60
+        flex flex-col
       "
     >
 
-      {/* HEADER */}
-      <div className="flex justify-between items-start">
+      {/* ================= HEADER ================= */}
+      <div className="flex justify-between items-start mb-3">
 
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Apertura
           </p>
 
-          <p className="text-lg font-medium text-slate-100">
+          <p className="text-lg font-semibold text-slate-100">
             {new Date(apertura.fechaApertura)
               .toLocaleString()}
           </p>
@@ -82,7 +82,7 @@ export function AperturaCard({ apertura }: Props) {
 
         <span
           className={`
-            text-xs font-semibold px-2 py-1 rounded-md
+            text-[11px] font-semibold px-2 py-1 rounded-md
             ${apertura.estado === 'ABIERTA'
               ? 'bg-emerald-600/20 text-emerald-400'
               : 'bg-blue-600/20 text-blue-400'
@@ -94,103 +94,114 @@ export function AperturaCard({ apertura }: Props) {
 
       </div>
 
-      {/* CAJA / SUCURSAL */}
-      <div className="flex flex-wrap gap-2 text-xs">
+      {/* ================= CAJA / SUCURSAL ================= */}
+      <div className="flex flex-wrap gap-2 text-sm mb-3">
 
-        <span className="px-2 py-1 rounded bg-slate-800 text-slate-300">
-          Caja: {cajaNombre}
+        <span className="px-2 py-1 rounded bg-slate-800/70 text-slate-300">
+          {cajaNombre}
         </span>
 
-        <span className="px-2 py-1 rounded bg-slate-800 text-slate-300">
-          Sucursal: {sucursalNombre}
+        <span className="px-2 py-1 rounded bg-slate-800/70 text-slate-300">
+          {sucursalNombre}
         </span>
 
       </div>
 
-      {/* USUARIOS */}
-      <div className="grid grid-cols-2 gap-y-1 text-sm">
+      {/* ================= USUARIOS ================= */}
+      <div className="grid grid-cols-2 gap-y-1 text-[15px] mb-3">
 
         <p>
-          <span className="text-slate-400">
-            Abrió:
-          </span>{' '}
-          {apertura.usuarioAperturaNombre || '—'}
+          <span className="text-slate-400">Abrió</span>{' '}
+          <span>{apertura.usuarioAperturaNombre || '—'}</span>
         </p>
 
         {apertura.estado === 'CERRADA' && (
           <p>
-            <span className="text-slate-400">
-              Cerró:
-            </span>{' '}
-            {apertura.usuarioCierreNombre || '—'}
+            <span className="text-slate-400">Cerró</span>{' '}
+            <span>{apertura.usuarioCierreNombre || '—'}</span>
           </p>
         )}
 
       </div>
 
-      {/* MÉTRICAS */}
-      <div className="grid grid-cols-2 gap-y-2 text-sm">
+      {/* ================= MÉTRICAS ================= */}
+      <div className="grid grid-cols-2 gap-y-3 text-base">
 
-        <p>
-          <span className="text-slate-400">Ventas:</span>{' '}
-          {apertura.totalVentas}
-        </p>
+        <div>
+          <p className="text-sm text-slate-400">
+            Ventas
+          </p>
+          <p className="font-semibold">
+            {apertura.totalVentas}
+          </p>
+        </div>
 
-        <p>
-          <span className="text-slate-400">Total:</span>{' '}
-          {formatCLP(apertura.totalCobrado)}
-        </p>
+        <div>
+          <p className="text-sm text-slate-400">
+            Total
+          </p>
+          <p className="font-semibold">
+            {formatCLP(apertura.totalCobrado)}
+          </p>
+        </div>
 
-        <p>
-          <span className="text-slate-400">Promedio:</span>{' '}
-          {formatCLP(promedio)}
-        </p>
+        <div>
+          <p className="text-sm text-slate-400">
+            Ticket promedio
+          </p>
+          <p className="font-semibold">
+            {formatCLP(promedio)}
+          </p>
+        </div>
 
-        <p>
-          <span className="text-slate-400">
-            {duracionLabel}:
-          </span>{' '}
-          {duracion}
-        </p>
+        <div>
+          <p className="text-sm text-slate-400">
+            {duracionLabel}
+          </p>
+          <p className="font-semibold">
+            {duracion}
+          </p>
+        </div>
 
       </div>
 
-      {/* DIFERENCIA */}
-      {tieneDiferencia && (
-        <div
-          className={`
-            text-sm
-            p-2 rounded-md
-            ${diferenciaPositiva
-              ? 'bg-emerald-600/10 text-emerald-400'
-              : 'bg-red-600/10 text-red-400'
-            }
-          `}
-        >
-          Diferencia: {formatCLP(apertura.diferencia!)}
+      {/* ================= FOOTER ================= */}
+      <div className="mt-auto pt-4 space-y-3">
 
-          {apertura.motivoDiferencia && (
-            <div className="text-xs text-slate-400 mt-1">
-              Motivo: {apertura.motivoDiferencia}
-            </div>
-          )}
-        </div>
-      )}
+        {tieneDiferencia && (
+          <div
+            className={`
+              text-base font-medium
+              px-3 py-2 rounded-md
+              ${diferenciaPositiva
+                ? 'bg-emerald-600/10 text-emerald-400'
+                : 'bg-red-600/10 text-red-400'
+              }
+            `}
+          >
+            Diferencia: {formatCLP(apertura.diferencia!)}
 
-      {/* ACTION */}
-      <div className="pt-2">
+            {apertura.motivoDiferencia && (
+              <div className="text-xs text-slate-400 mt-1">
+                Motivo: {apertura.motivoDiferencia}
+              </div>
+            )}
+          </div>
+        )}
+
         <Link
           to={`/admin/aperturas/${apertura.id}`}
           className="
             inline-flex
             items-center
-            text-sm
+            text-base
             text-emerald-400
             hover:text-emerald-300
           "
         >
           Ver detalle →
         </Link>
+
       </div>
 
     </div>

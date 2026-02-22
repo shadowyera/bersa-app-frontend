@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAdminVentaDetalleQuery } from '@/domains/venta/hooks/useAdminVentasQuery'
 import VentaEstadoBadge from '../ui/VentaEstadoBadge'
 
-
 export default function AdminVentaDetallePage() {
   const { ventaId } = useParams()
   const navigate = useNavigate()
@@ -38,15 +37,15 @@ export default function AdminVentaDetallePage() {
           <button
             onClick={() => navigate(-1)}
             className="
-        mt-1
-        rounded-lg
-        border border-slate-800
-        bg-slate-900/60
-        px-3 py-2
-        text-slate-300
-        hover:bg-slate-800/60
-        transition-colors
-      "
+              mt-1
+              rounded-lg
+              border border-slate-800
+              bg-slate-900/60
+              px-3 py-2
+              text-slate-300
+              hover:bg-slate-800/60
+              transition-colors
+            "
           >
             ←
           </button>
@@ -61,12 +60,9 @@ export default function AdminVentaDetallePage() {
             </h1>
 
             <div className="text-sm text-slate-400 space-y-1">
+              <p>Venta Nº {data.numeroVenta}</p>
               <p>
-                Venta Nº {data.numeroVenta}
-              </p>
-              <p>
-                {new Date(data.createdAt)
-                  .toLocaleString()}
+                {new Date(data.createdAt).toLocaleString()}
               </p>
             </div>
 
@@ -115,29 +111,44 @@ export default function AdminVentaDetallePage() {
           Documento
         </h3>
 
-        <p className="text-sm text-slate-400">
-          Tipo:{' '}
-          <span className="text-slate-200">
+        <p className="text-sm text-slate-400 flex items-center gap-2">
+          Tipo documento
+          <span
+            className={`
+              rounded-md
+              px-2 py-0.5
+              text-xs font-medium
+              ${
+                data.documentoTributario.tipo === 'FACTURA'
+                  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              }
+            `}
+          >
             {data.documentoTributario.tipo}
           </span>
         </p>
 
         {data.documentoTributario.receptor && (
-          <div className="text-sm text-slate-400 space-y-1 pt-2 border-t border-slate-800">
+          <div className="text-sm text-slate-400 space-y-1 pt-3 border-t border-slate-800">
             <p>
-              RUT:{' '}
+              <span className="text-slate-300">RUT:</span>{' '}
               {data.documentoTributario.receptor.rut}
             </p>
             <p>
-              Razón Social:{' '}
+              <span className="text-slate-300">
+                Razón Social:
+              </span>{' '}
               {data.documentoTributario.receptor.razonSocial}
             </p>
             <p>
-              Giro:{' '}
+              <span className="text-slate-300">Giro:</span>{' '}
               {data.documentoTributario.receptor.giro}
             </p>
             <p>
-              Dirección:{' '}
+              <span className="text-slate-300">
+                Dirección:
+              </span>{' '}
               {data.documentoTributario.receptor.direccion}
             </p>
           </div>
@@ -213,13 +224,40 @@ export default function AdminVentaDetallePage() {
           Pagos
         </h3>
 
+        {data.pagos.length === 0 && (
+          <p className="text-sm text-slate-500">
+            Sin pagos registrados
+          </p>
+        )}
+
         {data.pagos.map((p, idx) => (
           <div
             key={idx}
-            className="flex justify-between text-sm text-slate-400"
+            className="
+              flex
+              items-center
+              justify-between
+              rounded-lg
+              border border-slate-800
+              bg-slate-950/40
+              px-3 py-2
+              text-sm
+            "
           >
-            <span>{p.tipo}</span>
-            <span className="text-slate-200 font-medium">
+            <span
+              className="
+                rounded-md
+                bg-slate-800
+                px-2 py-0.5
+                text-xs
+                font-medium
+                text-slate-300
+              "
+            >
+              {p.tipo}
+            </span>
+
+            <span className="text-slate-200 font-semibold">
               ${p.monto.toLocaleString()}
             </span>
           </div>

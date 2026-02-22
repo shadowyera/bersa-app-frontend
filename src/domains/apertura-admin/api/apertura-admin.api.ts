@@ -1,8 +1,7 @@
 import { api } from '@/shared/api/api'
-
+import type { VentaAdmin } from '@/domains/venta/domain/venta-admin.types'
 import type {
   AperturaAdmin,
-  VentaEnApertura,
   ListarAperturasAdminResponse,
 } from '../domain/apertura-admin.types'
 
@@ -15,11 +14,6 @@ export interface ListarAperturasAdminParams {
   to?: string
   page?: number
   limit?: number
-}
-
-export interface ObtenerAperturaAdminDetalleParams {
-  page: number
-  limit: number
 }
 
 /* ========================================
@@ -60,14 +54,23 @@ export const listarAperturasAdmin = async (
       motivoDiferencia: a.motivoDiferencia,
 
       ventas: (a.ventas || []).map(
-        (v: any): VentaEnApertura => ({
+        (v: any): VentaAdmin => ({
           id: v._id,
           folio: v.folio,
           numeroVenta: v.numeroVenta,
+          aperturaCajaId: v.aperturaCajaId,
           total: v.total,
           totalCobrado: v.totalCobrado,
           estado: v.estado,
           createdAt: v.createdAt,
+
+          documentoTributario: v.documentoTributario,
+
+          pagos: v.pagos || [],
+
+          usuarioId: v.usuarioId,
+          cajaId: v.cajaId,
+          sucursalId: v.sucursalId,
         })
       ),
     })),
@@ -113,14 +116,23 @@ export const obtenerAperturaAdminDetalle = async (
     motivoDiferencia: data.motivoDiferencia,
 
     ventas: (data.ventas || []).map(
-      (v: any): VentaEnApertura => ({
+      (v: any): VentaAdmin => ({
         id: v.id ?? v._id,
         folio: v.folio,
         numeroVenta: v.numeroVenta,
+        aperturaCajaId: v.aperturaCajaId,
         total: v.total,
         totalCobrado: v.totalCobrado,
         estado: v.estado,
         createdAt: v.createdAt,
+
+        documentoTributario: v.documentoTributario,
+
+        pagos: v.pagos || [],
+
+        usuarioId: v.usuarioId,
+        cajaId: v.cajaId,
+        sucursalId: v.sucursalId,
       })
     ),
   }

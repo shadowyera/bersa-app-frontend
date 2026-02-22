@@ -56,10 +56,6 @@ export const useAdminVentasQuery = (
       paramsKey,
     ],
     queryFn: () => {
-      console.log(
-        'ADMIN VENTAS PARAMS =>',
-        stableParams
-      )
       return listarVentasAdmin(stableParams)
     },
     placeholderData: previous => previous,

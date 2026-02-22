@@ -2,7 +2,15 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAperturaAdminDetalleQuery } from '@/domains/apertura-admin/hooks/useAperturaAdminDetalleQuery'
-import { formatCLP } from '@/shared/utils/aperturaMetrics'
+import {
+  formatCLP,
+  calcularDuracion,
+} from '@/shared/utils/aperturaMetrics'
+
+import {
+  AdminAperturaDetalleFilters,
+  type AperturaDetalleFilters,
+} from '../ui/AdminAperturaDetalleFilters'
 
 const ROW_HEIGHT = 48
 
@@ -14,10 +22,14 @@ export default function AdminAperturaDetallePage() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
 
-  const tableScrollRef = useRef<HTMLDivElement | null>(null)
+  const [filters, setFilters] =
+    useState<AperturaDetalleFilters>({})
+
+  const tableScrollRef =
+    useRef<HTMLDivElement | null>(null)
 
   /* ==============================
-     QUERY (SIN PAGINACIÓN)
+     QUERY
   ============================== */
 
   const {
@@ -25,6 +37,19 @@ export default function AdminAperturaDetallePage() {
     isLoading,
     isError,
   } = useAperturaAdminDetalleQuery(id!)
+
+  /* ==============================
+     DURACIÓN APERTURA
+  ============================== */
+
+  const duracion = data
+    ? calcularDuracion(
+        data.fechaApertura,
+        data.estado === 'CERRADA'
+          ? data.fechaCierre
+          : undefined
+      )
+    : ''
 
   /* ==============================
      CALCULAR LIMIT DINÁMICO
@@ -35,13 +60,17 @@ export default function AdminAperturaDetallePage() {
     const calcularLimit = () => {
       if (!tableScrollRef.current) return
 
-      const height = tableScrollRef.current.clientHeight
+      const height =
+        tableScrollRef.current.clientHeight
+
       if (!height) return
 
       const rows =
         Math.max(5, Math.floor(height / ROW_HEIGHT))
 
-      setLimit(prev => (prev !== rows ? rows : prev))
+      setLimit(prev =>
+        prev !== rows ? rows : prev
+      )
     }
 
     requestAnimationFrame(calcularLimit)
@@ -50,56 +79,77 @@ export default function AdminAperturaDetallePage() {
     window.addEventListener('resize', calcularLimit)
 
     return () => {
-      window.removeEventListener('resize', calcularLimit)
+      window.removeEventListener(
+        'resize',
+        calcularLimit
+      )
     }
 
   }, [])
 
   /* ==============================
-     RECALCULAR AL LLEGAR DATA
-  ============================== */
-
-  useEffect(() => {
-    if (!data) return
-
-    requestAnimationFrame(() => {
-      if (!tableScrollRef.current) return
-
-      const height = tableScrollRef.current.clientHeight
-      if (!height) return
-
-      const rows =
-        Math.max(5, Math.floor(height / ROW_HEIGHT))
-
-      setLimit(prev => (prev !== rows ? rows : prev))
-    })
-  }, [data])
-
-  /* ==============================
-     RESET PAGE SI CAMBIA LIMIT
+     RESET PAGE SI CAMBIA LIMIT O FILTROS
   ============================== */
 
   useEffect(() => {
     setPage(1)
-  }, [limit])
+  }, [limit, filters])
 
   /* ==============================
-     PAGINACIÓN LOCAL
+     FILTRADO CLIENTE
+  ============================== */
+
+  const ventasFiltradas = useMemo(() => {
+    if (!data) return []
+
+    return data.ventas.filter(v => {
+
+      if (
+        filters.estado &&
+        v.estado !== filters.estado
+      ) return false
+
+      if (
+        filters.documento &&
+        v.documentoTributario?.tipo !== filters.documento
+      ) return false
+
+      if (
+        filters.pago &&
+        !v.pagos?.some(p => p.tipo === filters.pago)
+      ) return false
+
+      if (
+        filters.search &&
+        !v.folio
+          .toLowerCase()
+          .includes(filters.search.toLowerCase())
+      ) return false
+
+      return true
+    })
+
+  }, [data, filters])
+
+  /* ==============================
+     PAGINACIÓN CLIENTE
   ============================== */
 
   const totalPages = useMemo(() => {
-    if (!data) return 1
-    return Math.ceil(data.ventas.length / limit)
-  }, [data, limit])
+    return Math.max(
+      1,
+      Math.ceil(ventasFiltradas.length / limit)
+    )
+  }, [ventasFiltradas, limit])
 
   const ventasPagina = useMemo(() => {
-    if (!data) return []
 
     const start = (page - 1) * limit
     const end = start + limit
 
-    return data.ventas.slice(start, end)
-  }, [data, page, limit])
+    return ventasFiltradas.slice(start, end)
+
+  }, [ventasFiltradas, page, limit])
 
   /* ==============================
      LOADING / ERROR
@@ -167,12 +217,9 @@ export default function AdminAperturaDetallePage() {
 
       {/* ================= RESUMEN ================= */}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 shrink-0">
 
-        <CompactStat
-          label="Ventas"
-          value={data.totalVentas}
-        />
+        <CompactStat label="Ventas" value={data.totalVentas} />
 
         <CompactStat
           label="Total cobrado"
@@ -186,22 +233,35 @@ export default function AdminAperturaDetallePage() {
         />
 
         <CompactStat
+          label={data.estado === 'ABIERTA' ? 'Activa' : 'Duración'}
+          value={duracion}
+        />
+
+        <CompactStat
           label="Responsables"
           value={`${data.usuarioAperturaNombre ?? '—'} → ${data.usuarioCierreNombre ?? '—'}`}
         />
 
       </div>
 
+      {/* ================= FILTROS ================= */}
+
+      <AdminAperturaDetalleFilters
+        onChange={(f) => setFilters({ ...f })}
+      />
+
       {/* ================= TABLA ================= */}
 
-      <div className="
-        flex-1
-        rounded-xl
-        border border-slate-800
-        bg-slate-900/60
-        overflow-hidden
-        flex flex-col
-      ">
+      <div
+        className="
+          flex-1
+          rounded-xl
+          border border-slate-800
+          bg-slate-900/60
+          overflow-hidden
+          flex flex-col
+        "
+      >
 
         <div
           ref={tableScrollRef}
@@ -216,6 +276,8 @@ export default function AdminAperturaDetallePage() {
                 <th className="px-4 py-3 text-left">N°</th>
                 <th className="px-4 py-3 text-left">Folio</th>
                 <th className="px-4 py-3 text-left">Hora</th>
+                <th className="px-4 py-3 text-left">Documento</th>
+                <th className="px-4 py-3 text-left">Pago</th>
                 <th className="px-4 py-3 text-right">Total</th>
                 <th className="px-4 py-3 text-center">Estado</th>
                 <th className="px-4 py-3 text-right">Acción</th>
@@ -242,6 +304,40 @@ export default function AdminAperturaDetallePage() {
 
                   <td className="px-4 py-3 text-slate-400">
                     {new Date(v.createdAt).toLocaleTimeString()}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <span
+                      className={`
+                        rounded-md
+                        px-2 py-0.5
+                        text-xs font-medium
+                        ${
+                          v.documentoTributario?.tipo === 'FACTURA'
+                            ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        }
+                      `}
+                    >
+                      {v.documentoTributario?.tipo}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3 flex flex-wrap gap-1">
+                    {v.pagos?.map((p, idx) => (
+                      <span
+                        key={idx}
+                        className="
+                          rounded-md
+                          bg-slate-800
+                          px-2 py-0.5
+                          text-xs
+                          text-slate-300
+                        "
+                      >
+                        {p.tipo}
+                      </span>
+                    ))}
                   </td>
 
                   <td className="px-4 py-3 text-right font-medium text-slate-200">

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import AperturasFilters from '../ui/AperturasFilters'
 import { AperturaCard } from '../ui/AperturaCard'
@@ -15,11 +16,39 @@ export default function AdminAperturasPage() {
     .toISOString()
     .slice(0, 10)
 
+  /* ===============================
+     URL Params
+  =============================== */
+
+  const [searchParams, setSearchParams] =
+    useSearchParams()
+
+  const dayParam =
+    searchParams.get('day') ?? today
+
+  const pageParam =
+    Number(searchParams.get('page') ?? 1)
+
+  /* ===============================
+     State
+  =============================== */
+
   const [day, setDay] =
-    useState<string>(today)
+    useState<string>(dayParam)
 
   const [page, setPage] =
-    useState(1)
+    useState(pageParam)
+
+  /* ===============================
+     Sync URL
+  =============================== */
+
+  useEffect(() => {
+    setSearchParams({
+      day,
+      page: String(page),
+    })
+  }, [day, page, setSearchParams])
 
   /* ===============================
      Data
@@ -41,10 +70,10 @@ export default function AdminAperturasPage() {
   =============================== */
 
   return (
-    <div className="p-6 space-y-6 text-slate-200">
+    <div className="h-full flex flex-col px-6 pt-6 pb-4 text-slate-200">
 
       {/* Header */}
-      <div>
+      <div className="shrink-0 mb-4">
         <h1 className="text-2xl font-semibold">
           Aperturas de Caja
         </h1>
@@ -55,13 +84,15 @@ export default function AdminAperturasPage() {
       </div>
 
       {/* Filtro día */}
-      <AperturasFilters
-        value={day}
-        onChange={(nextDay) => {
-          setDay(nextDay)
-          setPage(1)
-        }}
-      />
+      <div className="shrink-0 mb-4">
+        <AperturasFilters
+          value={day}
+          onChange={(nextDay) => {
+            setDay(nextDay)
+            setPage(1)
+          }}
+        />
+      </div>
 
       {/* Loading */}
       {isLoading && (
@@ -77,35 +108,55 @@ export default function AdminAperturasPage() {
         </div>
       )}
 
-      {/* Grid */}
+      {/* CONTENIDO */}
       {!isLoading && !isError && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+        <div className="flex-1 flex flex-col overflow-hidden">
 
-          {aperturas.length === 0 ? (
-            <div className="text-sm text-slate-400 text-center py-6">
-              No hay aperturas para el día seleccionado
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              {aperturas.map(a => (
-                <AperturaCard
-                  key={a.id}
-                  apertura={a}
-                />
-              ))}
-            </div>
-          )}
+          {/* SCROLL AREA */}
+          <div className="flex-1 overflow-y-auto">
 
-          {/* Paginación */}
+            {aperturas.length === 0 ? (
+              <div className="text-sm text-slate-400 text-center py-10">
+                No hay aperturas para el día seleccionado
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                {aperturas.map(a => (
+                  <AperturaCard
+                    key={a.id}
+                    apertura={a}
+                  />
+                ))}
+              </div>
+            )}
+
+          </div>
+
+          {/* PAGINACIÓN */}
           {data && data.totalPages > 1 && (
-            <div className="flex justify-end gap-2 pt-4">
+            <div
+              className="
+                shrink-0
+                flex
+                justify-end
+                items-center
+                gap-2
+                pt-6
+                mt-4
+                border-t
+                border-slate-800
+              "
+            >
 
               <button
                 disabled={page === 1}
-                onClick={() =>
-                  setPage(p => p - 1)
-                }
-                className="px-3 py-1 rounded bg-slate-800 disabled:opacity-40"
+                onClick={() => setPage(p => p - 1)}
+                className="
+                  px-3 py-1 rounded
+                  bg-slate-800
+                  hover:bg-slate-700
+                  disabled:opacity-40
+                "
               >
                 Anterior
               </button>
@@ -116,10 +167,13 @@ export default function AdminAperturasPage() {
 
               <button
                 disabled={page === data.totalPages}
-                onClick={() =>
-                  setPage(p => p + 1)
-                }
-                className="px-3 py-1 rounded bg-slate-800 disabled:opacity-40"
+                onClick={() => setPage(p => p + 1)}
+                className="
+                  px-3 py-1 rounded
+                  bg-slate-800
+                  hover:bg-slate-700
+                  disabled:opacity-40
+                "
               >
                 Siguiente
               </button>

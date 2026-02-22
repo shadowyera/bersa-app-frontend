@@ -1,28 +1,11 @@
+import type { VentaAdmin } from "@/domains/venta/domain/venta-admin.types"
+
 export type AperturaEstado =
   | 'ABIERTA'
   | 'CERRADA'
 
 /* =====================================================
-   Venta incluida dentro de una apertura
-===================================================== */
-
-export interface VentaEnApertura {
-  id: string
-
-  folio: string
-
-  numeroVenta: number
-
-  total: number
-  totalCobrado: number
-
-  estado: 'FINALIZADA' | 'ANULADA'
-
-  createdAt: string
-}
-
-/* =====================================================
-   Apertura Admin (para listados)
+   Apertura Admin (para listados y detalle)
 ===================================================== */
 
 export interface AperturaAdmin {
@@ -48,7 +31,8 @@ export interface AperturaAdmin {
   diferencia?: number
   motivoDiferencia?: string
 
-  ventas: VentaEnApertura[]
+  /* 👇 ahora ventas completas */
+  ventas: VentaAdmin[]
 }
 
 /* =====================================================
