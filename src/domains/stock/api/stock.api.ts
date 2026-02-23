@@ -1,16 +1,14 @@
+// src/domains/stock/api/stock.api.ts
+
 import { api } from '@/shared/api/api'
+import type { StockItem } from '../domain/stock.types'
 
-import type { StockProducto } 
-  from '@/shared/types/stock.types'
-
-/**
- * Obtiene stock por sucursal.
- */
-export async function getStockBySucursal(
+export async function obtenerStockSucursal(
   sucursalId: string
-): Promise<StockProducto[]> {
+): Promise<StockItem[]> {
   const { data } = await api.get(
     `/stock/sucursal/${sucursalId}`
   )
+
   return data
 }

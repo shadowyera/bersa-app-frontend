@@ -1,7 +1,7 @@
 import { useMemo, useDeferredValue } from 'react'
 
 import { useProductosPOS } from '@/domains/producto/hooks/useProductos'
-import { useStockSucursal } from '@/shared/hooks/useStockSucursal'
+import { useStockSucursalQuery } from '@/domains/stock/hooks/useStockSucursalQuery'
 import { useAuth } from '@/modules/auth/useAuth'
 
 import type { Producto } from '@/domains/producto/domain/producto.types'
@@ -46,7 +46,7 @@ export function usePosProductos(query: string) {
   const {
     stock: stockMap,
     loading: loadingStock,
-  } = useStockSucursal(sucursalId)
+  } = useStockSucursalQuery(sucursalId)
 
   /* ===============================
      Búsqueda diferida (UX)
