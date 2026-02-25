@@ -120,7 +120,6 @@ export function useAnularVentaMutation(
       })
 
       if (cajaId) {
-        // 🔥 Resumen previo caja
         queryClient.invalidateQueries({
           queryKey: cajaKeys.resumenPrevio(cajaId),
         })
@@ -135,9 +134,9 @@ export function useAnularVentaMutation(
 
       if (!sucursalId) return
 
+      // 🔥 Invalida TODO el dominio stock
       queryClient.invalidateQueries({
-        queryKey: stockKeys.sucursal(sucursalId),
-        exact: false,
+        queryKey: stockKeys.all,
       })
     },
   })

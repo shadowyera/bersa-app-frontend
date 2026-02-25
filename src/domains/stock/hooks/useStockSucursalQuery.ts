@@ -17,9 +17,7 @@ export function useStockSucursalQuery(
     isFetching,
     error,
   } = useQuery({
-    queryKey: sucursalId
-      ? stockKeys.sucursal(sucursalId)
-      : stockKeys.lists(),
+    queryKey: stockKeys.sucursal(sucursalId as string),
 
     queryFn: () => {
       if (!sucursalId) return Promise.resolve([])
@@ -27,7 +25,10 @@ export function useStockSucursalQuery(
     },
 
     enabled: !!sucursalId,
-    staleTime: 1000 * 30,
+
+    // 🔥 Operativo
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   })
 
