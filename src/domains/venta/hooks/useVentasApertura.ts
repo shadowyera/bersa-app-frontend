@@ -26,13 +26,26 @@ export function useVentasApertura(
   const anularMutation =
     useAnularVentaMutation(sucursalId)
 
+  /**
+   * Adapter semántico:
+   * UI llama con venta completa
+   */
+  const anularVenta = async (
+    venta: VentaApertura
+  ) => {
+    return anularMutation.mutateAsync({
+      ventaId: venta.ventaId,
+      items: venta.items,
+    })
+  }
+
   return {
     ventas: ventasQuery.data ?? [],
     loading: ventasQuery.isLoading,
     error: ventasQuery.error,
     refresh: ventasQuery.refetch,
 
-    anularVenta: anularMutation.mutateAsync,
+    anularVenta,
     anulando: anularMutation.isPending,
   }
 }

@@ -11,7 +11,7 @@ import ConfirmModal from '@/shared/ui/ConfirmModal'
 
 interface Props {
   venta: VentaApertura | null
-  onAnular: (ventaId: string) => Promise<void>
+  onAnular: (venta: VentaApertura) => Promise<void>
 }
 
 /* =====================================================
@@ -100,7 +100,7 @@ export function VentaDetallePanel({
   const confirmarAnulacion = async () => {
     try {
       setLoading(true)
-      await onAnular(venta.ventaId)
+      await onAnular(venta)
     } finally {
       setLoading(false)
       setShowConfirm(false)

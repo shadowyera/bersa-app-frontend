@@ -87,12 +87,22 @@ export interface VentaDetalle {
 ===================================================== */
 
 export interface VentaApertura {
-  ventaId: string
+  id: string               // id real de la venta
+  ventaId: string          // compat legacy (si aún lo usas)
   numeroVenta: number
   fecha: string
   total: number
   estado: 'FINALIZADA' | 'ANULADA'
+
   documentoTributario: {
     tipo: 'BOLETA' | 'FACTURA'
   }
+
+  /**
+   * Items mínimos para anulación y stock
+   */
+  items: {
+    productoId: string
+    cantidad: number
+  }[]
 }
