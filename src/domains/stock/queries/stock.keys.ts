@@ -6,4 +6,7 @@ export const stockKeys = {
 
   sucursal: (sucursalId: string) =>
     [...stockKeys.lists(), 'sucursal', sucursalId] as const,
+
+  admin: (sucursalId: string) =>
+    [...stockKeys.lists(), 'admin', sucursalId] as const,
 }

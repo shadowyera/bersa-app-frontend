@@ -1,7 +1,12 @@
-// src/domains/stock/api/stock.api.ts
-
 import { api } from '@/shared/api/api'
-import type { StockItem } from '../domain/stock.types'
+import type {
+  StockItem,
+  AdminStockItem,
+} from '../domain/stock.types'
+
+/* =====================================================
+   POS
+===================================================== */
 
 export async function obtenerStockSucursal(
   sucursalId: string
@@ -11,4 +16,31 @@ export async function obtenerStockSucursal(
   )
 
   return data
+}
+
+/* =====================================================
+   ADMIN
+===================================================== */
+
+export async function obtenerStockAdmin(
+  sucursalId: string
+): Promise<AdminStockItem[]> {
+  const { data } = await api.get(
+    `/admin/stock`,
+    {
+      params: { sucursalId },
+    }
+  )
+
+  return data
+}
+
+export async function updateStockHabilitado(
+  stockId: string,
+  habilitado: boolean
+): Promise<void> {
+  await api.put(
+    `/stock/${stockId}/habilitado`,
+    { habilitado }
+  )
 }
