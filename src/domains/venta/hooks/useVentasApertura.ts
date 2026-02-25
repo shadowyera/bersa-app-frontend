@@ -2,11 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { getVentasApertura } from '../api/venta.api'
 import type { VentaApertura } from '../domain/venta.types'
 import { useAnularVentaMutation } from './useAnularVentaMutation'
+import { ventaKeys } from '../queries/venta.keys'
 
-export function useVentasApertura(cajaId?: string) {
+export function useVentasApertura(
+  cajaId?: string,
+  sucursalId?: string
+) {
 
   const ventasQuery = useQuery<VentaApertura[]>({
-    queryKey: ['ventas-apertura', cajaId],
+    queryKey: ventaKeys.apertura(cajaId),
 
     queryFn: async () => {
       if (!cajaId) return []
@@ -15,12 +19,12 @@ export function useVentasApertura(cajaId?: string) {
     },
 
     enabled: !!cajaId,
-
     placeholderData: previousData => previousData,
     staleTime: 2000,
   })
 
-  const anularMutation = useAnularVentaMutation()
+  const anularMutation =
+    useAnularVentaMutation(sucursalId)
 
   return {
     ventas: ventasQuery.data ?? [],

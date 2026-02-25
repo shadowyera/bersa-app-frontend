@@ -1,9 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { getResumenPrevioCaja } from '../api/caja.api'
 
-export function useResumenPrevioCajaQuery(cajaId?: string) {
+import { getResumenPrevioCaja } from '../api/caja.api'
+import { cajaKeys } from '../queries/caja.keys'
+
+export function useResumenPrevioCajaQuery(
+  cajaId?: string
+) {
   return useQuery({
-    queryKey: ['resumen-previo-caja', cajaId],
+    queryKey: cajaKeys.resumenPrevio(cajaId),
 
     queryFn: async () => {
       if (!cajaId) return null

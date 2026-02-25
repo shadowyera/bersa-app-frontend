@@ -1,7 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+
 import { anularVentaPOSApi } from '../api/venta.api'
 
-export function useAnularVentaMutation() {
+import { stockKeys } from '@/domains/stock/queries/stock.keys'
+import { ventaKeys } from '@/domains/venta/queries/venta.keys'
+
+export function useAnularVentaMutation(
+  sucursalId?: string
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -9,15 +15,18 @@ export function useAnularVentaMutation() {
       anularVentaPOSApi(ventaId),
 
     onSuccess: () => {
-      // Lista de ventas
+
       queryClient.invalidateQueries({
-        queryKey: ['ventas-apertura'],
+        queryKey: ventaKeys.all,
+        exact: false,
       })
 
-      // Resumen de caja
-      queryClient.invalidateQueries({
-        queryKey: ['resumen-previo-caja'],
-      })
+      if (sucursalId) {
+        queryClient.invalidateQueries({
+          queryKey: stockKeys.sucursal(sucursalId),
+          exact: false,
+        })
+      }
     },
   })
 }

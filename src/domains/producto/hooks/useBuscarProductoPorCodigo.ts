@@ -1,20 +1,39 @@
-import { useCallback } from 'react'
-import { buscarProductoPorCodigo } from '../api/producto.api.ts'
+import { useQuery } from '@tanstack/react-query'
+
+import { buscarProductoPorCodigo } from '../api/producto.api'
 import { mapProductoFromApi } from '../mappers/producto.mapper'
-import type { Producto } from '../domain/producto.types.ts'
+import type { Producto } from '../domain/producto.types'
 
-export function useBuscarProductoPorCodigo() {
+import { productoKeys } from '../queries/producto.keys'
 
-  const buscar = useCallback(
-    async (codigo: string): Promise<Producto | null> => {
-      const raw = await buscarProductoPorCodigo(codigo)
+export function useBuscarProductoPorCodigo(
+  codigo?: string
+) {
+
+  const query = useQuery<Producto | null>({
+    queryKey: codigo
+      ? productoKeys.codigo(codigo)
+      : productoKeys.all,
+
+    queryFn: async () => {
+      if (!codigo) return null
+
+      const raw =
+        await buscarProductoPorCodigo(codigo)
 
       if (!raw) return null
 
       return mapProductoFromApi(raw)
     },
-    []
-  )
 
-  return { buscar }
+    enabled: Boolean(codigo),
+    staleTime: 1000 * 60 * 5,
+  })
+
+  return {
+    producto: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  }
 }

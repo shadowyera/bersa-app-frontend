@@ -1,10 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+
 import { crearVentaPOS } from '../api/venta.api'
 import type {
   CrearVentaPOSPayload,
 } from '../api/venta.api'
 
-export function useCrearVentaMutation() {
+import { stockKeys } from '@/domains/stock/queries/stock.keys'
+import { ventaKeys } from '@/domains/venta/queries/venta.keys'
+
+export function useCrearVentaMutation(
+  sucursalId?: string
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -12,15 +18,18 @@ export function useCrearVentaMutation() {
       crearVentaPOS(payload),
 
     onSuccess: () => {
-      // Ventas del turno
+
       queryClient.invalidateQueries({
-        queryKey: ['ventas-apertura'],
+        queryKey: ventaKeys.all,
+        exact: false,
       })
 
-      // Resumen previo de caja
-      queryClient.invalidateQueries({
-        queryKey: ['resumen-previo-caja'],
-      })
+      if (sucursalId) {
+        queryClient.invalidateQueries({
+          queryKey: stockKeys.sucursal(sucursalId),
+          exact: false,
+        })
+      }
     },
   })
 }

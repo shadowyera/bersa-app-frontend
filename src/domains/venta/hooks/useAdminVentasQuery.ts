@@ -12,14 +12,7 @@ import type {
   VentaAdminDetalle,
 } from '../domain/venta-admin.types'
 
-export const ADMIN_VENTAS_QUERY_KEY = ['admin-ventas']
-export const ADMIN_VENTA_DETALLE_QUERY_KEY = [
-  'admin-venta-detalle',
-]
-
-/* ============================================
-   Utils
-============================================ */
+import { ventaKeys } from '../queries/venta.keys'
 
 function cleanParams(
   params?: ListarVentasAdminParams
@@ -40,6 +33,7 @@ function cleanParams(
 export const useAdminVentasQuery = (
   params: ListarVentasAdminParams
 ) => {
+
   const stableParams = useMemo(
     () => cleanParams(params),
     [params]
@@ -51,13 +45,11 @@ export const useAdminVentasQuery = (
   )
 
   return useQuery<ListarVentasAdminResponse>({
-    queryKey: [
-      ...ADMIN_VENTAS_QUERY_KEY,
-      paramsKey,
-    ],
-    queryFn: () => {
-      return listarVentasAdmin(stableParams)
-    },
+    queryKey: ventaKeys.admin.list(paramsKey),
+
+    queryFn: () =>
+      listarVentasAdmin(stableParams),
+
     placeholderData: previous => previous,
     staleTime: 1000 * 30,
   })
@@ -71,12 +63,12 @@ export const useAdminVentaDetalleQuery = (
   ventaId?: string
 ) => {
   return useQuery<VentaAdminDetalle>({
-    queryKey: [
-      ...ADMIN_VENTA_DETALLE_QUERY_KEY,
-      ventaId,
-    ],
+    queryKey:
+      ventaKeys.admin.detalle(ventaId),
+
     queryFn: () =>
       obtenerVentaAdminDetalle(ventaId!),
+
     enabled: Boolean(ventaId),
     staleTime: 1000 * 30,
   })

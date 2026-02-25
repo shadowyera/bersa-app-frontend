@@ -1,24 +1,27 @@
 import { useCallback, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 
 import { useVenta } from '@/domains/venta/hooks/useVenta'
 import { usePostVenta } from '@/domains/venta/hooks/usePostVenta'
-import { useCrearVenta } from '@/domains/venta/hooks/useCrearVenta'
+import { useCrearVentaMutation } from '@/domains/venta/hooks/useCrearVentaMutation'
 
 import { useCaja } from '@/modules/pos/caja/context/CajaProvider'
 
-import type { ConfirmVentaPayload } from '@/domains/venta/domain/venta.contracts'
+import type {
+  ConfirmVentaPayload,
+} from '@/domains/venta/domain/venta.contracts'
 
 export function usePosVentaFlow() {
 
   const venta = useVenta()
   const postVenta = usePostVenta()
-  const crearVenta = useCrearVenta()
-
-  const queryClient = useQueryClient()
 
   const { cajaSeleccionada, aperturaActiva } =
     useCaja()
+
+  const crearVenta =
+    useCrearVentaMutation(
+      cajaSeleccionada?.sucursalId
+    )
 
   /* ===============================
      UI STATE
@@ -68,10 +71,6 @@ export function usePosVentaFlow() {
         venta.cart
       )
 
-      queryClient.invalidateQueries({
-        queryKey: ['stock-sucursal'],
-      })
-
       venta.clear()
       closeReceptor()
 
@@ -82,7 +81,6 @@ export function usePosVentaFlow() {
       venta,
       postVenta,
       crearVenta,
-      queryClient,
       closeReceptor,
     ]
   )

@@ -1,6 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { RealtimeEvent } from '@/shared/realtime/realtime.types'
 
+import { productoKeys } from '@/domains/producto/queries/producto.keys'
+import { stockKeys } from '@/domains/stock/queries/stock.keys'
+
 /**
  * =====================================================
  * Producto Realtime Events (DOMINIO)
@@ -27,13 +30,15 @@ export function handleProductoRealtimeEvent(
     return
   }
 
-  // Refrescar listados de productos
+  // 🔄 Refrescar todo el dominio producto
   queryClient.invalidateQueries({
-    queryKey: ['productos'],
+    queryKey: productoKeys.all,
+    exact: false,
   })
 
-  // Refrescar stock
+  // 📦 Refrescar todo el dominio stock
   queryClient.invalidateQueries({
-    queryKey: ['stock'],
+    queryKey: stockKeys.all,
+    exact: false,
   })
 }
