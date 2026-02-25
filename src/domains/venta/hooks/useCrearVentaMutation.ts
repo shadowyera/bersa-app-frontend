@@ -120,6 +120,8 @@ export function useCrearVentaMutation(
 
     onSuccess: (ventaCreada) => {
 
+      /* -------- Ventas apertura -------- */
+
       if (cajaId) {
         queryClient.setQueryData<VentaApertura[]>(
           ventaKeys.apertura(cajaId),
@@ -129,7 +131,6 @@ export function useCrearVentaMutation(
           ]
         )
 
-        // 🔥 Resumen previo caja
         queryClient.invalidateQueries({
           queryKey: cajaKeys.resumenPrevio(cajaId),
         })
@@ -147,12 +148,12 @@ export function useCrearVentaMutation(
 
     onSettled: () => {
 
-      if (sucursalId) {
-        queryClient.invalidateQueries({
-          queryKey: stockKeys.sucursal(sucursalId),
-          exact: false,
-        })
-      }
+      if (!sucursalId) return
+
+      // 🔥 Invalida TODO stock
+      queryClient.invalidateQueries({
+        queryKey: stockKeys.all,
+      })
     },
   })
 }
