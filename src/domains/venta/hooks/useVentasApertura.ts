@@ -1,8 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { getVentasApertura } from '../api/venta.api'
 import type { VentaApertura } from '../domain/venta.types'
+
 import { useAnularVentaMutation } from './useAnularVentaMutation'
 import { ventaKeys } from '../queries/venta.keys'
+
+/* =====================================================
+   Hook
+===================================================== */
 
 export function useVentasApertura(
   cajaId?: string,
@@ -23,8 +28,12 @@ export function useVentasApertura(
     staleTime: 2000,
   })
 
+  // 🔥 PASAMOS CAJA ID
   const anularMutation =
-    useAnularVentaMutation(sucursalId)
+    useAnularVentaMutation(
+      sucursalId,
+      cajaId
+    )
 
   /**
    * Adapter semántico:
@@ -32,8 +41,9 @@ export function useVentasApertura(
    */
   const anularVenta = async (
     venta: VentaApertura
-  ) => {
-    return anularMutation.mutateAsync({
+  ): Promise<void> => {
+
+    await anularMutation.mutateAsync({
       ventaId: venta.ventaId,
       items: venta.items,
     })

@@ -1,63 +1,88 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { crearVentaPOS } from '../api/venta.api'
-import type {
-  CrearVentaPOSPayload,
-} from '../api/venta.api'
+import type { CrearVentaPOSPayload } from '../api/venta.api'
 
 import { stockKeys } from '@/domains/stock/queries/stock.keys'
 import { ventaKeys } from '@/domains/venta/queries/venta.keys'
+import { cajaKeys } from '@/domains/caja/queries/caja.keys'
+
 import type { StockItem } from '@/domains/stock/domain/stock.types'
+import type { VentaApertura } from '@/domains/venta/domain/venta.types'
+
+/* =====================================================
+   Tipos
+===================================================== */
+
+interface CrearVentaContext {
+  previousStock?: StockItem[]
+}
+
+interface CrearVentaOptions {
+  sucursalId?: string
+  cajaId?: string
+}
+
+/* =====================================================
+   Hook
+===================================================== */
 
 export function useCrearVentaMutation(
-  sucursalId?: string
+  options?: CrearVentaOptions
 ) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (payload: CrearVentaPOSPayload) =>
+  const sucursalId = options?.sucursalId
+  const cajaId = options?.cajaId
+
+  return useMutation<
+    unknown,
+    Error,
+    CrearVentaPOSPayload,
+    CrearVentaContext
+  >({
+    mutationFn: (payload) =>
       crearVentaPOS(payload),
 
     /* =====================================================
-       OPTIMISTIC UPDATE
+       OPTIMISTIC STOCK UPDATE
     ===================================================== */
 
     onMutate: async (payload) => {
 
-      if (!sucursalId) return
+      if (!sucursalId) {
+        return {}
+      }
 
-      const stockQueryKey =
+      const stockKey =
         stockKeys.sucursal(sucursalId)
 
-      // 1️⃣ Cancelar refetch en curso
       await queryClient.cancelQueries({
-        queryKey: stockQueryKey,
+        queryKey: stockKey,
       })
 
-      // 2️⃣ Snapshot previo
       const previousStock =
         queryClient.getQueryData<StockItem[]>(
-          stockQueryKey
+          stockKey
         )
 
-      // 3️⃣ Optimistic stock update (nunca negativo)
       queryClient.setQueryData<StockItem[]>(
-        stockQueryKey,
+        stockKey,
         (old) => {
 
           if (!old) return old
 
           return old.map(item => {
 
-            const soldItem =
+            const sold =
               payload.items.find(
                 i => i.productoId === item.productoId
               )
 
-            if (!soldItem) return item
+            if (!sold) return item
 
             const nuevaCantidad =
-              item.cantidad - soldItem.cantidad
+              item.cantidad - sold.cantidad
 
             return {
               ...item,
@@ -74,42 +99,60 @@ export function useCrearVentaMutation(
     },
 
     /* =====================================================
-       ROLLBACK
+       ROLLBACK STOCK
     ===================================================== */
 
-    onError: (_err, _payload, context) => {
+    onError: (_error, _payload, ctx) => {
 
       if (!sucursalId) return
 
-      if (context?.previousStock) {
+      if (ctx?.previousStock) {
         queryClient.setQueryData(
           stockKeys.sucursal(sucursalId),
-          context.previousStock
+          ctx.previousStock
         )
       }
     },
 
     /* =====================================================
-       INVALIDACIONES
+       SUCCESS
     ===================================================== */
 
-    onSuccess: () => {
-      // Todo el dominio venta
+    onSuccess: (ventaCreada) => {
+
+      if (cajaId) {
+        queryClient.setQueryData<VentaApertura[]>(
+          ventaKeys.apertura(cajaId),
+          (old = []) => [
+            ventaCreada as VentaApertura,
+            ...old,
+          ]
+        )
+
+        // 🔥 Resumen previo caja
+        queryClient.invalidateQueries({
+          queryKey: cajaKeys.resumenPrevio(cajaId),
+        })
+      }
+
       queryClient.invalidateQueries({
         queryKey: ventaKeys.all,
         exact: false,
       })
     },
 
+    /* =====================================================
+       SETTLED
+    ===================================================== */
+
     onSettled: () => {
 
-      if (!sucursalId) return
-
-      // Confirmación backend stock
-      queryClient.invalidateQueries({
-        queryKey: stockKeys.sucursal(sucursalId),
-        exact: false,
-      })
+      if (sucursalId) {
+        queryClient.invalidateQueries({
+          queryKey: stockKeys.sucursal(sucursalId),
+          exact: false,
+        })
+      }
     },
   })
 }

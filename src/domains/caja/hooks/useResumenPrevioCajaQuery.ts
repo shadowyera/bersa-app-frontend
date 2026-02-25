@@ -15,6 +15,9 @@ export function useResumenPrevioCajaQuery(
     },
 
     enabled: !!cajaId,
-    staleTime: 15_000,
+
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   })
 }

@@ -1,4 +1,10 @@
-import { memo, useCallback, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useState,
+  useEffect,
+} from 'react'
+
 import ModalBase from './ModalBase'
 
 import { useResumenPrevioCajaQuery } from '@/domains/caja/hooks/useResumenPrevioCajaQuery'
@@ -28,7 +34,7 @@ function ResumenCajaModal({
 }: Props) {
 
   /* ================================
-     Resumen de caja (React Query)
+     Resumen de caja
   ================================ */
 
   const {
@@ -55,6 +61,31 @@ function ResumenCajaModal({
     ventaSeleccionada,
     setVentaSeleccionada,
   ] = useState<VentaApertura | null>(null)
+
+  /**
+   * 🔁 Sincroniza venta seleccionada
+   * cuando cambia la lista (optimistic update)
+   */
+  useEffect(() => {
+
+    if (!ventaSeleccionada) return
+
+    const updated =
+      ventas.find(
+        v =>
+          v.ventaId ===
+          ventaSeleccionada.ventaId
+      )
+
+    if (updated) {
+      setVentaSeleccionada(updated)
+    }
+
+  }, [ventas, ventaSeleccionada])
+
+  /* ================================
+     Handlers
+  ================================ */
 
   const handleRefresh = useCallback(() => {
     refetch()

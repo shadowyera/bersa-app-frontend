@@ -4,7 +4,13 @@ import { anularVentaPOSApi } from '../api/venta.api'
 
 import { stockKeys } from '@/domains/stock/queries/stock.keys'
 import { ventaKeys } from '@/domains/venta/queries/venta.keys'
+import { cajaKeys } from '@/domains/caja/queries/caja.keys'
+
 import type { StockItem } from '@/domains/stock/domain/stock.types'
+
+/* =====================================================
+   Tipos
+===================================================== */
 
 interface AnularVentaPayload {
   ventaId: string
@@ -14,22 +20,38 @@ interface AnularVentaPayload {
   }[]
 }
 
+interface AnularVentaContext {
+  previousStock?: StockItem[]
+}
+
+/* =====================================================
+   Hook
+===================================================== */
+
 export function useAnularVentaMutation(
-  sucursalId?: string
+  sucursalId?: string,
+  cajaId?: string
 ) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (payload: AnularVentaPayload) =>
+  return useMutation<
+    unknown,
+    Error,
+    AnularVentaPayload,
+    AnularVentaContext
+  >({
+    mutationFn: (payload) =>
       anularVentaPOSApi(payload.ventaId),
 
     /* =====================================================
-       OPTIMISTIC UPDATE
+       OPTIMISTIC STOCK
     ===================================================== */
 
     onMutate: async (payload) => {
 
-      if (!sucursalId) return
+      if (!sucursalId) {
+        return {}
+      }
 
       const stockQueryKey =
         stockKeys.sucursal(sucursalId)
@@ -43,7 +65,6 @@ export function useAnularVentaMutation(
           stockQueryKey
         )
 
-      // Sumar stock devuelto
       queryClient.setQueryData<StockItem[]>(
         stockQueryKey,
         (old) => {
@@ -75,28 +96,40 @@ export function useAnularVentaMutation(
        ROLLBACK
     ===================================================== */
 
-    onError: (_err, _payload, context) => {
+    onError: (_e, _p, ctx) => {
 
       if (!sucursalId) return
 
-      if (context?.previousStock) {
+      if (ctx?.previousStock) {
         queryClient.setQueryData(
           stockKeys.sucursal(sucursalId),
-          context.previousStock
+          ctx.previousStock
         )
       }
     },
 
     /* =====================================================
-       INVALIDACIONES
+       SUCCESS
     ===================================================== */
 
     onSuccess: () => {
+
       queryClient.invalidateQueries({
         queryKey: ventaKeys.all,
         exact: false,
       })
+
+      if (cajaId) {
+        // 🔥 Resumen previo caja
+        queryClient.invalidateQueries({
+          queryKey: cajaKeys.resumenPrevio(cajaId),
+        })
+      }
     },
+
+    /* =====================================================
+       SETTLED
+    ===================================================== */
 
     onSettled: () => {
 
