@@ -19,9 +19,10 @@ export function usePosVentaFlow() {
     useCaja()
 
   const crearVenta =
-    useCrearVentaMutation(
-      cajaSeleccionada?.sucursalId
-    )
+    useCrearVentaMutation({
+      sucursalId: cajaSeleccionada?.sucursalId,
+      cajaId: cajaSeleccionada?.id,
+    })
 
   /* ===============================
      UI STATE
