@@ -13,8 +13,7 @@ import { useCajaRealtime } from './caja/hooks/useCajaRealtime'
 export default function PosShell() {
   const { user } = useAuth()
 
-  // 🔥 AQUÍ MISMO
-  useCajaRealtime(user?.sucursalId)
+  useCajaRealtime(user?.sucursal?.id)
 
   return (
     <div className="relative h-full">

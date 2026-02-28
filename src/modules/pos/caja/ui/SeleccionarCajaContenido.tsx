@@ -92,7 +92,7 @@ function SeleccionarCajaContenido() {
                         )}
                       </div>
 
-                      <Badge variant={isAbierta ? 'success' : 'muted'}>
+                      <Badge variant={isAbierta ? 'success' : 'default'}>
                         {isAbierta ? 'ABIERTA' : 'CERRADA'}
                       </Badge>
                     </CardInteractive>

@@ -25,7 +25,7 @@ import type { Producto } from '@/domains/producto/domain/producto.types'
 export function usePosProductos(query: string) {
 
   const { user } = useAuth()
-  const sucursalId = user?.sucursalId
+  const sucursalId = user?.sucursal.id
 
   /* ===============================
      Catálogo de productos

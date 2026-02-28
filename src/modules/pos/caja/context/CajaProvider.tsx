@@ -117,7 +117,7 @@ function getCajaPersistida(): CajaPersistida | null {
 export function CajaProvider({ children }: { children: ReactNode }) {
 
   const { user } = useAuth()
-  const sucursalId = user?.sucursalId
+  const sucursalId = user?.sucursal.id
 
   const [state, dispatch] = useReducer(
     cajaReducer,
@@ -177,7 +177,7 @@ export function CajaProvider({ children }: { children: ReactNode }) {
           caja: {
             id: persisted.id,
             nombre: persisted.nombre,
-            sucursalId: user.sucursalId,
+            sucursalId: user.sucursal.id,
             activa: true,
           },
         })

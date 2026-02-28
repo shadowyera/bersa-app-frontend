@@ -22,7 +22,7 @@ export const useAbastecimiento = () => {
   const { user } = useAuth()
 
   // La sucursal destino viene desde el usuario autenticado
-  const sucursalId = user?.sucursalId
+  const sucursalId = user?.sucursal.id
 
   /* ================================
      Estado

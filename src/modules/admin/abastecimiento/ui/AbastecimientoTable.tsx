@@ -54,7 +54,7 @@ export const AbastecimientoTable = () => {
 
   useEffect(() => {
     if (!user) return
-    cargar(user.sucursalId, page)
+    cargar(user.sucursal.id, page)
   }, [user, page])
 
   const cargar = async (sucursalId: string, page: number) => {
