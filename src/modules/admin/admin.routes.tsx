@@ -10,11 +10,17 @@ import AdminVentasPage from './ventas/pages/AdminVentasPage'
 import AdminVentaDetallePage from './ventas/pages/AdminVentaDetallePage'
 
 /* ===============================
+   APERTURAS
+=============================== */
+import AdminAperturasPage from './aperturas/pages/AdminAperturasPage'
+import AdminAperturaDetallePage from './aperturas/pages/AdminAperturaDetallePage'
+
+/* ===============================
    CORE
 =============================== */
 import CategoriasPage from './categorias/CategoriasPage'
 import ProductosPage from './productos/ProductosPage'
-import StockPage from './stock/ui/StockPage'
+import AdminStockPage from './stock/pages/AdminStockPage'
 import ProveedoresPage from './proveedores/ProveedoresPage'
 import AbastecimientoPage from './abastecimiento/AbastecimientoPage'
 
@@ -30,8 +36,6 @@ import CrearPedidoPage from './pedido/ui/crear-pedido/CrearPedidoPage'
 =============================== */
 import DespachosPage from './despachos/ui/despachos/DespachosPage'
 import CrearDespachoPage from './despachos/ui/crear-despacho/CrearDespachoPage'
-import AdminAperturaDetallePage from './aperturas/pages/AdminAperturaDetallePage'
-import AdminAperturasPage from './aperturas/pages/AdminAperturasPage'
 
 export const AdminRoutes = (
   <Route
@@ -48,14 +52,15 @@ export const AdminRoutes = (
     <Route path="categorias" element={<CategoriasPage />} />
     <Route path="productos" element={<ProductosPage />} />
     <Route path="proveedores" element={<ProveedoresPage />} />
-    <Route path="stock" element={<StockPage />} />
+    <Route path="stock" element={<AdminStockPage />} />
     <Route
       path="abastecimiento"
       element={<AbastecimientoPage />}
     />
+
     {/* ===============================
-    APERTURAS (solo admin)
-=============================== */}
+        APERTURAS (solo admin)
+    =============================== */}
     <Route
       element={
         <RoleRoute allow={['ADMIN']}>
@@ -67,14 +72,14 @@ export const AdminRoutes = (
         path="aperturas"
         element={<AdminAperturasPage />}
       />
-
       <Route
         path="aperturas/:id"
         element={<AdminAperturaDetallePage />}
       />
     </Route>
+
     {/* ===============================
-        VENTAS (solo admin / encargado)
+        VENTAS (admin / encargado)
     =============================== */}
     <Route
       element={
@@ -83,7 +88,10 @@ export const AdminRoutes = (
         </RoleRoute>
       }
     >
-      <Route path="ventas" element={<AdminVentasPage />} />
+      <Route
+        path="ventas"
+        element={<AdminVentasPage />}
+      />
       <Route
         path="ventas/:ventaId"
         element={<AdminVentaDetallePage />}
@@ -93,7 +101,10 @@ export const AdminRoutes = (
     {/* ===============================
         PEDIDOS
     =============================== */}
-    <Route path="pedidos" element={<PedidosPage />} />
+    <Route
+      path="pedidos"
+      element={<PedidosPage />}
+    />
     <Route
       path="pedidos/nuevo"
       element={<CrearPedidoPage />}

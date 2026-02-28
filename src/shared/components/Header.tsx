@@ -1,3 +1,4 @@
+import { APP_CONFIG } from '@/config/app.config'
 import HeaderUserMenu from './HeaderUserMenu'
 
 /**
@@ -13,7 +14,7 @@ export default function Header() {
       {/* Branding */}
       <div className="flex items-center gap-2">
         <span className="text-lg font-semibold text-slate-100">
-          Bersa
+          {APP_CONFIG.appName}
         </span>
         <span className="text-xs text-slate-400">
           App

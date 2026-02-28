@@ -6,10 +6,6 @@ interface ModalBaseProps {
   children: ReactNode
   onClose?: () => void
   footer?: ReactNode
-
-  /**
-   * Controla ancho máximo del modal
-   */
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 }
 
@@ -22,18 +18,23 @@ export default function ModalBase({
 }: ModalBaseProps) {
 
   const maxWidthClass = {
-    sm: 'max-w-md',   // dialogs pequeños
+    sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-xl',
-    xl: 'max-w-4xl',  // 🔥 ideal para resumen
+    xl: 'max-w-4xl',
     '2xl': 'max-w-5xl',
   }[maxWidth]
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="
+          absolute inset-0
+          bg-background/80
+          backdrop-blur-sm
+        "
         onClick={onClose}
       />
 
@@ -43,12 +44,22 @@ export default function ModalBase({
           relative w-full mx-4
           ${maxWidthClass}
           rounded-2xl
-          bg-slate-900 text-slate-100
-          border border-slate-700 shadow-2xl
+          bg-surface text-foreground
+          border border-border
+          shadow-xl
+          flex flex-col
+          max-h-[90vh]
         `}
       >
+
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-700 flex justify-between">
+        <div className="
+          px-6 py-4
+          border-b border-border
+          flex items-center justify-between
+          bg-background/40
+          rounded-t-2xl
+        ">
           <h2 className="text-lg font-semibold">
             {title}
           </h2>
@@ -56,7 +67,11 @@ export default function ModalBase({
           {onClose && (
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200"
+              className="
+                text-muted-foreground
+                hover:text-foreground
+                transition-colors
+              "
             >
               ✕
             </button>
@@ -64,17 +79,24 @@ export default function ModalBase({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 overflow-y-auto">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl">
+          <div className="
+            px-6 py-4
+            border-t border-border
+            bg-background/30
+            rounded-b-2xl
+          ">
             {footer}
           </div>
         )}
+
       </div>
+
     </div>,
     document.body
   )

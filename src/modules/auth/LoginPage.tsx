@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './useAuth'
+import { APP_CONFIG } from '@/config/app.config'
 
 export function LoginPage() {
   const { login } = useAuth()
@@ -23,29 +24,30 @@ export function LoginPage() {
     e.preventDefault()
     e.stopPropagation()
 
-    console.log('[LOGIN] submit', { email })
-
     try {
       setLoading(true)
       setError(null)
 
       const user = await login(email, password)
 
-      console.log('[LOGIN OK]', user)
-
-      // 🔥 redirección por rol
-      if (user.rol === 'ADMIN' || user.rol === 'ENCARGADO') {
+      // 🔥 Navegación basada en capacidades, no rol
+      if (user.permisos.puedeGestionarUsuarios) {
         navigate('/admin/productos', { replace: true })
-      } else if (user.rol === 'BODEGUERO') {
-        navigate('/admin/stock', { replace: true })
-      } else {
-        navigate('/pos', { replace: true })
+        return
       }
+
+      if (user.permisos.puedeVerTodasLasSucursales) {
+        navigate('/admin/stock', { replace: true })
+        return
+      }
+
+      // Default: POS
+      navigate('/pos', { replace: true })
+
     } catch (err: any) {
-      console.error('[LOGIN ERROR]', err)
       setError(
         err?.response?.data?.message ??
-          'Error al iniciar sesión'
+        'Error al iniciar sesión'
       )
     } finally {
       setLoading(false)
@@ -60,7 +62,7 @@ export function LoginPage() {
         className="w-full max-w-md bg-slate-800 p-8 rounded-xl space-y-4"
       >
         <h1 className="text-2xl font-bold text-white">
-          POS Bersa
+          {APP_CONFIG.appName}
         </h1>
 
         <div>

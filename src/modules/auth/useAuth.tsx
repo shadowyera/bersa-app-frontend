@@ -22,7 +22,7 @@ interface AuthContextValue {
   user: User | null
   loading: boolean
 
-  // 👇 NUEVO: expuesto de forma directa
+  // 👇 derivado del nuevo modelo
   sucursalId: string | null
 
   login: (email: string, password: string) => Promise<User>
@@ -44,7 +44,7 @@ export function AuthProvider({
   const [loading, setLoading] = useState(true)
 
   /* -------------------------------
-     Snapshot (NO TOCAR)
+     Snapshot
   -------------------------------- */
   useEffect(() => {
     setAuthSnapshot(user)
@@ -64,7 +64,6 @@ export function AuthProvider({
       })
       .catch((err) => {
         console.warn('[AUTH] me failed', err)
-        // 👇 CLAVE: NO limpiar user acá
       })
       .finally(() => {
         if (!cancelled) {
@@ -101,18 +100,14 @@ export function AuthProvider({
     window.location.href = '/login'
   }
 
-  /* ================================
-     Provider
-  ================================ */
-
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
 
-        // 👇 NUEVO: derivado del user
-        sucursalId: user?.sucursalId ?? null,
+        // 🔥 ahora correctamente derivado
+        sucursalId: user?.sucursal.id ?? null,
 
         login,
         logout,

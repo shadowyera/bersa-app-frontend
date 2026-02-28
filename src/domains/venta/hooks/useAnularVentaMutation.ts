@@ -6,7 +6,7 @@ import { stockKeys } from '@/domains/stock/queries/stock.keys'
 import { ventaKeys } from '@/domains/venta/queries/venta.keys'
 import { cajaKeys } from '@/domains/caja/queries/caja.keys'
 
-import type { StockItem } from '@/domains/stock/domain/stock.types'
+import type { Stock } from '@/domains/stock/domain/stock.types'
 
 /* =====================================================
    Tipos
@@ -21,7 +21,7 @@ interface AnularVentaPayload {
 }
 
 interface AnularVentaContext {
-  previousStock?: StockItem[]
+  previousStock?: Stock[]
 }
 
 /* =====================================================
@@ -61,11 +61,11 @@ export function useAnularVentaMutation(
       })
 
       const previousStock =
-        queryClient.getQueryData<StockItem[]>(
+        queryClient.getQueryData<Stock[]>(
           stockQueryKey
         )
 
-      queryClient.setQueryData<StockItem[]>(
+      queryClient.setQueryData<Stock[]>(
         stockQueryKey,
         (old) => {
 

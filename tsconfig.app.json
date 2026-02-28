@@ -35,5 +35,5 @@
     "noUncheckedSideEffectImports": true,
     "erasableSyntaxOnly": true
   },
-  "include": ["src", "tailwind.config.js"]
+  "include": ["src", "tailwind.config.ts"]
 }

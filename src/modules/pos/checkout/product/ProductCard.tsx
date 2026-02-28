@@ -1,28 +1,14 @@
-import { memo, useCallback } from 'react'
+import { memo, useCallback } from "react"
+import { CardInteractive } from "@/shared/ui/card/Card"
 
 interface Props {
   nombre: string
   precio: number
   activo: boolean
   stock: number
-
-  /**
-   * Acción pura:
-   * - agrega producto
-   * - NO conoce scanner ni estado global
-   */
   onAdd: () => void
 }
 
-/**
- * =====================================================
- * ProductCard
- *
- * - UI pura
- * - Sin estado propio
- * - Optimizada para render masivo
- * =====================================================
- */
 function ProductCard({
   nombre,
   precio,
@@ -30,16 +16,9 @@ function ProductCard({
   stock,
   onAdd,
 }: Props) {
-  /* ===============================
-     Estado visual derivado
-  =============================== */
   const bloqueado = !activo
   const agotado = activo && stock <= 0
 
-  /* ===============================
-     Handler estable
-     - onMouseDown para compatibilidad scanner
-  =============================== */
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
@@ -50,47 +29,40 @@ function ProductCard({
   )
 
   return (
-    <button
-      type="button"
+    <CardInteractive
       disabled={bloqueado}
       onMouseDown={handleMouseDown}
       aria-disabled={bloqueado}
       className={`
-        p-3 rounded text-left transition
+        p-4
         ${
           bloqueado
-            ? 'bg-slate-700 opacity-40 cursor-not-allowed'
-            : agotado
-            ? 'bg-slate-800 ring-2 ring-red-500 hover:bg-slate-700'
-            : 'bg-slate-800 hover:bg-slate-700'
+            ? "opacity-40 cursor-not-allowed"
+            : ""
         }
       `}
     >
-      <div className="font-medium">
+      <div className="font-medium text-foreground">
         {nombre}
       </div>
 
-      <div className="text-sm text-slate-400">
-        ${precio.toLocaleString('es-CL')}
+      <div className="text-sm text-foreground/60 mt-1">
+        ${precio.toLocaleString("es-CL")}
       </div>
 
       {agotado && (
-        <div className="text-xs text-red-400 mt-1">
+        <div className="mt-2 inline-flex items-center rounded-md bg-red-500/15 px-2 py-0.5 text-xs text-red-400">
           Agotado
         </div>
       )}
 
       {bloqueado && (
-        <div className="text-xs text-slate-500 mt-1">
+        <div className="mt-2 text-xs text-foreground/40">
           No habilitado
         </div>
       )}
-    </button>
+    </CardInteractive>
   )
 }
 
-/**
- * Memo:
- * - Re-renderiza solo si cambian props reales
- */
 export default memo(ProductCard)

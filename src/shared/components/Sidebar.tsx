@@ -8,14 +8,13 @@ import { useAuth } from '../../modules/auth/useAuth'
 
 const linkBase =
   'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm select-none ' +
-  'transition-colors duration-75 ease-linear ' +
-  'will-change-[background-color,color]'
+  'transition-colors duration-100 ease-out'
 
 const active =
-  'bg-emerald-600/20 text-emerald-400'
+  'bg-primary/15 text-primary'
 
 const inactive =
-  'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+  'text-foreground/70 hover:bg-surface hover:text-foreground'
 
 /* =====================================================
    Sidebar
@@ -36,14 +35,16 @@ export default memo(function Sidebar() {
     isAdmin || rol === 'BODEGUERO'
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
+    <aside className="w-64 bg-surface border-r border-border flex flex-col">
 
       {/* =============================================
           Brand
       ============================================= */}
-      <div className="h-14 px-4 flex items-center border-b border-slate-800 text-slate-200 font-semibold">
-        Bersa
-        <span className="text-emerald-400 ml-1">
+      <div className="h-14 px-4 flex items-center border-b border-border font-semibold">
+        <span className="text-foreground">
+          Bersa
+        </span>
+        <span className="text-primary ml-1">
           POS
         </span>
       </div>
@@ -53,14 +54,8 @@ export default memo(function Sidebar() {
       ============================================= */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto overscroll-contain">
 
-        {/* ===============================
-            POS
-        =============================== */}
         <Item to="/pos">🧾 POS</Item>
 
-        {/* ===============================
-            OPERACIÓN
-        =============================== */}
         <Section title="Operación" />
 
         <Item to="/admin/pedidos">
@@ -87,9 +82,6 @@ export default memo(function Sidebar() {
           🔄 Movimientos
         </Item>
 
-        {/* ===============================
-            CAJA / AUDITORÍA
-        =============================== */}
         <Section title="Caja" />
 
         <Item to="/admin/aperturas">
@@ -104,9 +96,6 @@ export default memo(function Sidebar() {
           📊 Cierres
         </Item>
 
-        {/* ===============================
-            CATÁLOGO
-        =============================== */}
         <Section title="Catálogo" />
 
         <Item to="/admin/productos">
@@ -121,18 +110,12 @@ export default memo(function Sidebar() {
           🚚 Proveedores
         </Item>
 
-        {/* ===============================
-            ANÁLISIS
-        =============================== */}
         <Section title="Análisis" />
 
         <Item to="/admin/reportes">
           📈 Reportes
         </Item>
 
-        {/* ===============================
-            SISTEMA
-        =============================== */}
         {isAdmin && (
           <>
             <Section title="Sistema" />
@@ -156,8 +139,8 @@ export default memo(function Sidebar() {
       {/* =============================================
           Footer
       ============================================= */}
-      <div className="border-t border-slate-800 p-3 text-xs text-slate-400">
-        <div className="text-slate-200">
+      <div className="border-t border-border p-3 text-xs text-foreground/60">
+        <div className="text-foreground">
           {user.nombre}
         </div>
         <div>{user.rol}</div>
@@ -182,9 +165,7 @@ function Item({
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `${linkBase} ${
-          isActive ? active : inactive
-        }`
+        `${linkBase} ${isActive ? active : inactive}`
       }
     >
       {children}
@@ -198,7 +179,7 @@ function Section({
   title: string
 }) {
   return (
-    <div className="mt-4 px-3 text-xs text-slate-500 uppercase tracking-wide">
+    <div className="mt-4 px-3 text-xs text-foreground/40 uppercase tracking-wide">
       {title}
     </div>
   )

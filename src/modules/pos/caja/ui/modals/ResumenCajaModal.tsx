@@ -13,29 +13,20 @@ import { useVentasApertura } from '@/domains/venta/hooks/useVentasApertura'
 import { VentasAperturaList } from '@/modules/pos/checkout/postventa/VentasAperturaList'
 import { VentaDetallePanel } from '@/modules/pos/checkout/postventa/VentaDetallePanel'
 
-import type { VentaApertura } from '@/domains/venta/domain/venta.types'
+import { Button } from '@/shared/ui/button/button'
+import { Separator } from '@/shared/ui/separator/separator'
 
-/* =====================================================
-   Props
-===================================================== */
+import type { VentaApertura } from '@/domains/venta/domain/venta.types'
 
 interface Props {
   cajaId: string
   onClose: () => void
 }
 
-/* =====================================================
-   Componente
-===================================================== */
-
 function ResumenCajaModal({
   cajaId,
   onClose,
 }: Props) {
-
-  /* ================================
-     Resumen de caja
-  ================================ */
 
   const {
     data,
@@ -43,31 +34,18 @@ function ResumenCajaModal({
     refetch,
   } = useResumenPrevioCajaQuery(cajaId)
 
-  /* ================================
-     Ventas del turno
-  ================================ */
-
   const {
     ventas,
     loading: loadingVentas,
     anularVenta,
   } = useVentasApertura(cajaId)
 
-  /* ================================
-     Venta seleccionada
-  ================================ */
-
   const [
     ventaSeleccionada,
     setVentaSeleccionada,
   ] = useState<VentaApertura | null>(null)
 
-  /**
-   * 🔁 Sincroniza venta seleccionada
-   * cuando cambia la lista (optimistic update)
-   */
   useEffect(() => {
-
     if (!ventaSeleccionada) return
 
     const updated =
@@ -83,19 +61,11 @@ function ResumenCajaModal({
 
   }, [ventas, ventaSeleccionada])
 
-  /* ================================
-     Handlers
-  ================================ */
-
   const handleRefresh = useCallback(() => {
     refetch()
   }, [refetch])
 
   if (!cajaId) return null
-
-  /* ================================
-     Render
-  ================================ */
 
   return (
     <ModalBase
@@ -107,7 +77,7 @@ function ResumenCajaModal({
       {/* ================= Totales ================= */}
 
       {isLoading && (
-        <div className="text-center py-4 text-slate-400">
+        <div className="text-center py-4 text-muted-foreground">
           Cargando resumen…
         </div>
       )}
@@ -115,7 +85,6 @@ function ResumenCajaModal({
       {!isLoading && data && (
         <div className="grid grid-cols-2 gap-6 mb-6 text-sm">
 
-          {/* Totales principales */}
           <div className="space-y-2">
 
             <Fila
@@ -133,7 +102,7 @@ function ResumenCajaModal({
               value={data.efectivoVentas}
             />
 
-            <div className="border-t border-slate-700 my-2" />
+            <Separator className="my-2" />
 
             <Fila
               label="Efectivo esperado"
@@ -143,10 +112,9 @@ function ResumenCajaModal({
 
           </div>
 
-          {/* Medios de pago */}
           <div>
 
-            <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
               Por medio de pago
             </div>
 
@@ -183,8 +151,7 @@ function ResumenCajaModal({
 
       <div className="grid grid-cols-2 gap-4 h-[420px]">
 
-        {/* Lista */}
-        <div className="border border-slate-700 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden bg-surface">
 
           <VentasAperturaList
             ventas={ventas}
@@ -197,8 +164,7 @@ function ResumenCajaModal({
 
         </div>
 
-        {/* Detalle */}
-        <div className="border border-slate-700 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden bg-surface">
 
           <VentaDetallePanel
             venta={ventaSeleccionada}
@@ -213,26 +179,19 @@ function ResumenCajaModal({
 
       <div className="mt-6 flex justify-center gap-4">
 
-        <button
+        <Button
+          variant="secondary"
           onClick={handleRefresh}
-          className="
-            px-5 py-2 text-sm rounded-lg
-            bg-slate-800 hover:bg-slate-700
-            border border-slate-700
-          "
         >
           Actualizar
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="primary"
           onClick={onClose}
-          className="
-            px-5 py-2 text-sm rounded-lg font-medium
-            bg-emerald-600 hover:bg-emerald-500
-          "
         >
           Cerrar
-        </button>
+        </Button>
 
       </div>
 
@@ -241,10 +200,6 @@ function ResumenCajaModal({
 }
 
 export default memo(ResumenCajaModal)
-
-/* =====================================================
-   Subcomponente
-===================================================== */
 
 interface FilaProps {
   label: string
@@ -260,10 +215,13 @@ const Fila = memo(function Fila({
   return (
     <div
       className={`flex justify-between items-center ${
-        bold ? 'text-lg font-bold' : ''
+        bold ? 'text-lg font-semibold' : ''
       }`}
     >
-      <span>{label}</span>
+      <span className={bold ? '' : 'text-muted-foreground'}>
+        {label}
+      </span>
+
       <span>
         ${value.toLocaleString('es-CL')}
       </span>

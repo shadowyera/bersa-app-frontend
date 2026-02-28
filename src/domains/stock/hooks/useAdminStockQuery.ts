@@ -8,12 +8,10 @@ export function useAdminStockQuery(
   sucursalId?: string
 ) {
   return useQuery<AdminStockItem[]>({
-    queryKey: stockKeys.admin(sucursalId as string),
+    queryKey: stockKeys.admin(sucursalId),
 
-    queryFn: () => {
-      if (!sucursalId) return Promise.resolve([])
-      return obtenerStockAdmin(sucursalId)
-    },
+    queryFn: () =>
+      obtenerStockAdmin(sucursalId as string),
 
     enabled: !!sucursalId,
 

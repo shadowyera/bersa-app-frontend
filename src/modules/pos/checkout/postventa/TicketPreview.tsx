@@ -1,26 +1,15 @@
 import { memo } from 'react'
 import type { PostVenta } from '@/domains/venta/domain/postventa.types'
-
-/* =====================================================
-   Props
-===================================================== */
+import { APP_CONFIG } from '@/config/app.config'
 
 interface Props {
   venta: PostVenta
 }
 
-/* =====================================================
-   Helpers
-===================================================== */
-
 function formatearNumeroVenta(numero?: number) {
   if (!numero && numero !== 0) return '---'
   return numero.toString().padStart(3, '0')
 }
-
-/* =====================================================
-   Componente
-===================================================== */
 
 function TicketPreview({ venta }: Props) {
 
@@ -36,35 +25,35 @@ function TicketPreview({ venta }: Props) {
   return (
     <div
       className="
-        bg-slate-900
-        border border-slate-700
-        rounded-lg
+        bg-background
+        border border-border
+        rounded-xl
         px-5
         py-4
         font-mono
         text-xs
-        text-slate-200
-        shadow-inner
+        text-foreground
+        shadow-sm
       "
     >
 
       {/* ================= Header ================= */}
 
-      <div className="text-center space-y-1 pb-3 border-b border-slate-700">
+      <div className="text-center space-y-1 pb-3 border-b border-border">
 
         <div className="font-bold text-base tracking-wide">
-          BERSA POS
+          {APP_CONFIG.appName}
         </div>
 
         <div className="text-sm">
           Venta N° {formatearNumeroVenta(venta.numeroVenta)}
         </div>
 
-        <div className="text-slate-400">
+        <div className="text-muted-foreground">
           Folio #{venta.folio}
         </div>
 
-        <div className="text-slate-400">
+        <div className="text-muted-foreground">
           {venta.fecha}
         </div>
 
@@ -144,10 +133,8 @@ function TicketPreview({ venta }: Props) {
 
       {/* ================= Footer ================= */}
 
-      <div className="pt-3 border-t border-slate-700 text-center text-slate-400">
-
+      <div className="pt-3 border-t border-border text-center text-muted-foreground">
         Gracias por su compra
-
       </div>
 
     </div>
@@ -156,13 +143,9 @@ function TicketPreview({ venta }: Props) {
 
 export default memo(TicketPreview)
 
-/* =====================================================
-   Subcomponentes
-===================================================== */
-
 function Divider() {
   return (
-    <div className="border-t border-dashed border-slate-600" />
+    <div className="border-t border-dashed border-border/60" />
   )
 }
 
@@ -181,15 +164,14 @@ function Row({
 }: RowProps) {
   return (
     <div
-      className={`flex justify-between ${
-        bold ? 'font-bold text-sm' : ''
-      }`}
+      className={`flex justify-between ${bold ? 'font-bold text-sm' : ''
+        }`}
     >
-      <span className="text-slate-300">
+      <span className="text-muted-foreground">
         {label}
       </span>
 
-      <span>
+      <span className={bold ? 'text-foreground' : ''}>
         {sign && value > 0 ? '+' : ''}
         ${value.toLocaleString('es-CL')}
       </span>

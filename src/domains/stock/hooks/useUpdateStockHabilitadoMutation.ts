@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { updateStockHabilitado } from '../api/stock.api'
+import { toggleStockHabilitado } from '../api/stock.api'
 import { stockKeys } from '../queries/stock.keys'
 
 interface UpdateStockHabilitadoPayload {
@@ -17,7 +17,7 @@ export function useUpdateStockHabilitadoMutation() {
     UpdateStockHabilitadoPayload
   >({
     mutationFn: ({ stockId, habilitado }) =>
-      updateStockHabilitado(stockId, habilitado),
+      toggleStockHabilitado(stockId, habilitado),
 
     onSuccess: () => {
       // 🔥 refresca todo el dominio stock

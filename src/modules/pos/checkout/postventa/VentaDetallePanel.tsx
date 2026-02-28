@@ -4,19 +4,13 @@ import type { PostVenta } from '@/domains/venta/domain/postventa.types'
 import TicketPreview from './TicketPreview'
 import { useVentaDetalle } from '@/modules/pos/hooks/useVentaDetalle'
 import ConfirmModal from '@/shared/ui/ConfirmModal'
-
-/* =====================================================
-   Props
-===================================================== */
+import { Badge } from '@/shared/ui/badge/badge'
+import { Button } from '@/shared/ui/button/button'
 
 interface Props {
   venta: VentaApertura | null
   onAnular: (venta: VentaApertura) => Promise<void>
 }
-
-/* =====================================================
-   Componente
-===================================================== */
 
 export function VentaDetallePanel({
   venta,
@@ -26,18 +20,10 @@ export function VentaDetallePanel({
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  /* ================================
-     Obtener detalle real
-  ================================ */
-
   const {
     data: detalle,
     isLoading,
   } = useVentaDetalle(venta?.ventaId)
-
-  /* ================================
-     Adaptar VentaDetalle → PostVenta
-  ================================ */
 
   const postVenta: PostVenta | null = useMemo(() => {
 
@@ -46,18 +32,13 @@ export function VentaDetallePanel({
     return {
       ventaId: venta.ventaId,
       numeroVenta: venta.numeroVenta,
-
       folio: venta.ventaId.slice(-6),
-
       fecha: new Date(detalle.createdAt)
         .toLocaleString('es-CL'),
-
       total: detalle.total,
       ajusteRedondeo: detalle.ajusteRedondeo,
       totalCobrado: detalle.totalCobrado,
-
       items: detalle.items,
-
       pagos: detalle.pagos.map(p => ({
         tipo: p.tipo as any,
         monto: p.monto,
@@ -66,13 +47,9 @@ export function VentaDetallePanel({
 
   }, [venta, detalle])
 
-  /* ================================
-     Estados tempranos
-  ================================ */
-
   if (!venta) {
     return (
-      <div className="h-full flex items-center justify-center text-sm text-slate-400">
+      <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
         Selecciona una venta para ver el detalle
       </div>
     )
@@ -80,22 +57,14 @@ export function VentaDetallePanel({
 
   if (isLoading || !postVenta) {
     return (
-      <div className="h-full flex items-center justify-center text-sm text-slate-400">
+      <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
         Cargando detalle de la venta…
       </div>
     )
   }
 
-  /* ================================
-     Permisos
-  ================================ */
-
   const puedeAnular =
     venta.estado === 'FINALIZADA'
-
-  /* ================================
-     Acciones
-  ================================ */
 
   const confirmarAnulacion = async () => {
     try {
@@ -108,61 +77,60 @@ export function VentaDetallePanel({
   }
 
   const tipoDocumento =
-    postVenta
-      ? detalle?.documentoTributario?.tipo
-      : undefined
+    detalle?.documentoTributario?.tipo
 
   const rut =
-    postVenta
-      ? detalle?.documentoTributario?.receptor?.rut
-      : undefined
-
-  /* ================================
-     Render
-  ================================ */
+    detalle?.documentoTributario?.receptor?.rut
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-surface rounded-xl overflow-hidden">
 
       {/* ================= Header ================= */}
 
-      <div className="px-4 py-2 border-b border-slate-700 flex items-center justify-between">
+      <div className="
+        px-4 py-3
+        border-b border-border
+        flex items-center justify-between
+        bg-background/40
+      ">
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
 
-          <div className="text-sm font-medium">
+          <div className="text-sm font-semibold">
             Venta #{venta.numeroVenta
               .toString()
               .padStart(3, '0')}
           </div>
 
           {tipoDocumento && (
-            <span
-              className={`px-2 py-0.5 rounded text-xs font-medium ${tipoDocumento === 'FACTURA'
-                  ? 'bg-indigo-500/10 text-indigo-400'
-                  : 'bg-emerald-500/10 text-emerald-400'
-                }`}
+            <Badge
+              variant={
+                tipoDocumento === 'FACTURA'
+                  ? 'info'
+                  : 'outline'
+              }
             >
               {tipoDocumento}
-            </span>
+            </Badge>
           )}
 
           {rut && (
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted-foreground">
               RUT: {rut}
             </span>
           )}
 
         </div>
 
-        <div
-          className={`text-xs font-medium ${venta.estado === 'ANULADA'
-              ? 'text-red-400'
-              : 'text-emerald-400'
-            }`}
+        <Badge
+          variant={
+            venta.estado === 'ANULADA'
+              ? 'danger'
+              : 'success'
+          }
         >
           {venta.estado}
-        </div>
+        </Badge>
 
       </div>
 
@@ -184,33 +152,24 @@ export function VentaDetallePanel({
 
       {/* ================= Acciones ================= */}
 
-      <div className="p-4 border-t border-slate-700 flex gap-2">
+      <div className="p-4 border-t border-border flex gap-3 bg-background/30">
 
-        <button
+        <Button
+          variant="outline"
+          className="flex-1"
           onClick={() => window.print()}
-          className="
-            flex-1
-            py-2
-            text-sm
-            rounded
-            bg-slate-700
-            hover:bg-slate-600
-            text-white
-          "
         >
           Reimprimir
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="danger"
+          className="flex-1"
           disabled={!puedeAnular || loading}
           onClick={() => setShowConfirm(true)}
-          className={`flex-1 py-2 text-sm rounded text-white ${puedeAnular
-              ? 'bg-red-600 hover:bg-red-500'
-              : 'bg-slate-600 cursor-not-allowed'
-            }`}
         >
           {loading ? 'Anulando…' : 'Anular'}
-        </button>
+        </Button>
 
       </div>
 

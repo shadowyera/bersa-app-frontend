@@ -5,8 +5,17 @@ export type RolUsuario =
   | 'BODEGUERO'
 
 export interface User {
-  _id: string
+  id: string
   nombre: string
   rol: RolUsuario
-  sucursalId: string
+
+  sucursal: {
+    id: string
+    esPrincipal: boolean
+  }
+
+  permisos: {
+    puedeVerTodasLasSucursales: boolean
+    puedeGestionarUsuarios: boolean
+  }
 }

@@ -30,7 +30,8 @@ import type { CajaVisual } from '../../../../domains/caja/domain/caja.types'
 
 export function useSeleccionarCaja() {
   const { user } = useAuth()
-  const sucursalId = user?.sucursalId
+
+  const sucursalId = user?.sucursal.id
 
   const { seleccionarCaja, validandoCaja } = useCaja()
 
@@ -41,20 +42,16 @@ export function useSeleccionarCaja() {
   const cajasQuery = useQuery({
     queryKey: ['cajas', sucursalId],
     queryFn: () => getCajasSucursal(sucursalId!),
-    enabled: Boolean(sucursalId),
+    enabled: !!sucursalId,
     staleTime: 30_000,
   })
 
   const aperturasQuery = useQuery({
     queryKey: ['aperturas-activas', sucursalId],
     queryFn: () => getAperturasActivasSucursal(sucursalId!),
-    enabled: Boolean(sucursalId),
+    enabled: !!sucursalId,
     staleTime: 5_000,
   })
-
-  /* =====================================================
-     Estado derivado (selector puro)
-  ===================================================== */
 
   const cajas: CajaVisual[] = useMemo(() => {
     if (!cajasQuery.data || !aperturasQuery.data) {
@@ -66,10 +63,6 @@ export function useSeleccionarCaja() {
       aperturasQuery.data
     )
   }, [cajasQuery.data, aperturasQuery.data])
-
-  /* =====================================================
-     Acción UI
-  ===================================================== */
 
   const onSelectCaja = useCallback(
     async (caja: CajaVisual) => {
@@ -84,10 +77,6 @@ export function useSeleccionarCaja() {
     },
     [seleccionarCaja, sucursalId]
   )
-
-  /* =====================================================
-     Estado UI
-  ===================================================== */
 
   const loading =
     cajasQuery.isLoading || aperturasQuery.isLoading

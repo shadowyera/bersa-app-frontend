@@ -1,0 +1,1 @@
+export const STOCK_LIMITE_BAJO_DEFAULT = 5

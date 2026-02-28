@@ -1,46 +1,61 @@
 import { api } from '@/shared/api/api'
-import type {
-  StockItem,
-  AdminStockItem,
-} from '../domain/stock.types'
 
-/* =====================================================
+/* =========================================
    POS
-===================================================== */
+========================================= */
+
+export interface StockSucursalDTO {
+  productoId: string
+  cantidad: number
+}
 
 export async function obtenerStockSucursal(
   sucursalId: string
-): Promise<StockItem[]> {
-  const { data } = await api.get(
+): Promise<StockSucursalDTO[]> {
+
+  const { data } = await api.get<StockSucursalDTO[]>(
     `/stock/sucursal/${sucursalId}`
   )
 
   return data
 }
 
-/* =====================================================
+/* =========================================
    ADMIN
-===================================================== */
+========================================= */
 
 export async function obtenerStockAdmin(
   sucursalId: string
-): Promise<AdminStockItem[]> {
+) {
   const { data } = await api.get(
-    `/admin/stock`,
-    {
-      params: { sucursalId },
-    }
+    '/admin/stock',
+    { params: { sucursalId } }
   )
 
   return data
 }
 
-export async function updateStockHabilitado(
+export async function ajustarStockAdmin(
+  stockId: string,
+  cantidad: number,
+  motivo: string
+) {
+  const { data } = await api.post(
+    `/admin/stock/${stockId}/ajuste`,
+    { cantidad, motivo }
+  )
+
+  return data
+}
+
+export async function toggleStockHabilitado(
   stockId: string,
   habilitado: boolean
-): Promise<void> {
-  await api.put(
+) {
+  const { data } = await api.put(
     `/stock/${stockId}/habilitado`,
     { habilitado }
   )
+
+  return data
 }

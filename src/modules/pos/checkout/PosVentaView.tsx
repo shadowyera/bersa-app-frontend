@@ -21,6 +21,9 @@ import SeleccionarTipoPagoModal from '../pago/ui/SeleccionarTipoPagoModal'
 /* ---------- Documento ---------- */
 import DocumentoReceptorModal from './documento/DocumentoReceptorModal'
 
+/* ---------- UI Base ---------- */
+import { Button } from '@/shared/ui/button/button'
+
 /* =====================================================
    Types
 ===================================================== */
@@ -65,20 +68,16 @@ interface PagoUIController {
 ===================================================== */
 
 export interface PosVentaViewProps {
-
-  /* scanner */
   scannerRef: React.RefObject<HTMLInputElement | null>
   onAddProduct: (producto: Producto) => void
   onFocusScanner: () => void
 
-  /* búsqueda */
   query: string
   onChangeQuery: (value: string) => void
   productos: Producto[]
   stockMap: Record<string, number>
   loadingProductos: boolean
 
-  /* cart */
   cart: CartItem[]
   highlightedId?: string | null
   onIncrease: (productoId: string) => void
@@ -86,16 +85,13 @@ export interface PosVentaViewProps {
   total: number
   onClearCart: () => void
 
-  /* documento */
   documentoTributario: DocumentoTributario
   onSetTipoDocumento: (tipo: 'BOLETA' | 'FACTURA') => void
   onSetReceptor: (r: DocumentoReceptor) => void
 
-  /* receptor */
   showReceptor: boolean
   onCloseReceptor: () => void
 
-  /* caja / pago */
   bloqueado: boolean
   cargandoCaja: boolean
   onCobrar: () => void
@@ -107,7 +103,6 @@ export interface PosVentaViewProps {
 ===================================================== */
 
 function PosVentaView({
-
   scannerRef,
   onAddProduct,
   onFocusScanner,
@@ -136,7 +131,6 @@ function PosVentaView({
   cargandoCaja,
   onCobrar,
   pago,
-
 }: PosVentaViewProps) {
 
   const handleAddProductFromGrid = useCallback(
@@ -150,46 +144,40 @@ function PosVentaView({
 
   return (
     <>
-      {/* =======================
-          SCANNER
-      ======================= */}
+      {/* ======================= SCANNER ======================= */}
 
       <ProductScanner
         scannerRef={scannerRef}
         onAddProduct={onAddProduct}
       />
 
-      {/* =======================
-          CUERPO
-      ======================= */}
+      {/* ======================= CUERPO ======================= */}
 
-      <div className="pt-3 h-[calc(100vh-7rem)]">
+      <div className="pt-2 h-[calc(100vh-6.5rem)]">
 
         <div
           className={
             bloqueado
-              ? 'pointer-events-none opacity-40 h-full'
+              ? 'pointer-events-none opacity-40 h-full transition-opacity'
               : 'h-full'
           }
         >
 
-          <div className="grid grid-cols-3 gap-4 h-full min-h-0">
+          <div className="grid grid-cols-3 gap-3 h-full min-h-0">
 
-            {/* =======================
-                IZQUIERDA
-            ======================= */}
+            {/* ======================= IZQUIERDA ======================= */}
 
-            <div className="col-span-2 flex flex-col space-y-4 min-h-0">
+            <div className="col-span-2 flex flex-col gap-3 min-h-0">
 
               <ProductoSearchInput
                 autoFocus
                 placeholder="Buscar producto..."
                 value={query}
                 onChange={onChangeQuery}
-                className="w-full px-4 py-3 text-base"
+                className="w-full px-3 py-2.5 text-sm"
               />
 
-              <div className="flex-1 overflow-y-auto min-h-0">
+              <div className="flex-1 overflow-y-auto min-h-0 pr-1">
                 <ProductGrid
                   productos={productos}
                   stockMap={stockMap}
@@ -200,9 +188,7 @@ function PosVentaView({
 
             </div>
 
-            {/* =======================
-                DERECHA
-            ======================= */}
+            {/* ======================= DERECHA ======================= */}
 
             <div className="flex flex-col h-full min-h-0">
 
@@ -218,54 +204,55 @@ function PosVentaView({
               </div>
 
               {cart.length > 0 && (
-                <div className="pt-3 pb-4 space-y-2">
+                <div className="pt-2 pb-3 space-y-2">
 
                   {/* Documento */}
                   <div className="flex gap-2">
 
-                    <button
-                      className={`flex-1 py-2 rounded font-medium ${documentoTributario.tipo === 'BOLETA'
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-700 text-slate-200'
-                        }`}
-                      onClick={() =>
-                        onSetTipoDocumento('BOLETA')
+                    <Button
+                      variant={
+                        documentoTributario.tipo === 'BOLETA'
+                          ? 'primary'
+                          : 'secondary'
                       }
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => onSetTipoDocumento('BOLETA')}
                     >
                       Boleta
-                    </button>
+                    </Button>
 
-                    <button
-                      className={`flex-1 py-2 rounded font-medium ${documentoTributario.tipo === 'FACTURA'
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-700 text-slate-200'
-                        }`}
-                      onClick={() =>
-                        onSetTipoDocumento('FACTURA')
+                    <Button
+                      variant={
+                        documentoTributario.tipo === 'FACTURA'
+                          ? 'primary'
+                          : 'secondary'
                       }
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => onSetTipoDocumento('FACTURA')}
                     >
                       Factura
-                    </button>
+                    </Button>
 
                   </div>
 
                   {/* Cobrar */}
-                  <button
+                  <Button
+                    size="lg"
+                    variant="primary"
+                    className="w-full"
                     disabled={bloqueado}
-                    onMouseDown={e => {
+                    onMouseDown={(e) => {
                       e.preventDefault()
                       if (bloqueado) return
                       onCobrar()
                     }}
-                    className={`w-full py-3 rounded text-white font-semibold transition ${bloqueado
-                        ? 'bg-gray-500 cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-700'
-                      }`}
                   >
                     {cargandoCaja
                       ? 'Validando caja…'
                       : 'Cobrar (F2)'}
-                  </button>
+                  </Button>
 
                 </div>
               )}
@@ -276,9 +263,7 @@ function PosVentaView({
         </div>
       </div>
 
-      {/* =======================
-          MODALES
-      ======================= */}
+      {/* ======================= MODALES ======================= */}
 
       {pago.showTipoPago && (
         <SeleccionarTipoPagoModal
@@ -309,7 +294,6 @@ function PosVentaView({
         onClose={onCloseReceptor}
         onConfirm={onSetReceptor}
       />
-
     </>
   )
 }

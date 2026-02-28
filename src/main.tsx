@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
-
+import { APP_CONFIG } from '@/config/app.config'
 import App from './App'
 import './index.css'
 
@@ -12,6 +12,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { CajaProvider } from './modules/pos/caja/context/CajaProvider'
 
 const rootElement = document.getElementById('root')
+document.title = APP_CONFIG.appName
 
 if (!rootElement) {
   throw new Error('Root element not found')

@@ -4,9 +4,9 @@ export const stockKeys = {
   lists: () =>
     [...stockKeys.all, 'list'] as const,
 
-  sucursal: (sucursalId: string) =>
+  sucursal: (sucursalId?: string) =>
     [...stockKeys.lists(), 'sucursal', sucursalId] as const,
 
-  admin: (sucursalId: string) =>
+  admin: (sucursalId?: string) =>
     [...stockKeys.lists(), 'admin', sucursalId] as const,
 }

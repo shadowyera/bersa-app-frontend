@@ -1,6 +1,12 @@
 import { memo } from 'react'
 import { useSeleccionarCaja } from '../hooks/useSeleccionarCaja'
 
+
+import { Badge } from '@/shared/ui/badge/badge'
+import { Separator } from '@/shared/ui/separator/separator'
+import { Skeleton } from '@/shared/ui/skeleton/skeleton'
+import { CardInteractive, Card } from '../../../../shared/ui/card/Card';
+
 function SeleccionarCajaContenido() {
   const {
     cajas,
@@ -11,79 +17,95 @@ function SeleccionarCajaContenido() {
   } = useSeleccionarCaja()
 
   return (
-    <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-      <div className="px-6 py-5 border-b border-slate-800">
-        <h2 className="text-lg font-semibold text-slate-100">
-          Seleccionar caja
-        </h2>
-        <p className="mt-1 text-sm text-slate-400">
-          Elige una caja para comenzar a operar
-        </p>
-      </div>
+    <div className="w-full max-w-md">
+      <Card className="overflow-hidden">
 
-      <div className="px-6 py-5 space-y-4">
-        {loading && (
-          <p className="text-sm text-slate-400">
-            Cargando cajas…
+        {/* Header */}
+        <div className="px-6 py-5">
+          <h2 className="text-lg font-semibold text-foreground">
+            Seleccionar caja
+          </h2>
+          <p className="mt-1 text-sm text-foreground/60">
+            Elige una caja para comenzar a operar
           </p>
-        )}
+        </div>
 
-        {error && (
-          <p className="text-sm text-red-400">
-            {error}
-          </p>
-        )}
+        <Separator />
 
-        {!loading && !error && cajas.length === 0 && (
-          <p className="text-sm text-slate-400">
-            No hay cajas disponibles
-          </p>
-        )}
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
 
-        <ul className="space-y-3">
-          {cajas.map(caja => (
-            <li key={caja.id}>
-              <button
-                onClick={() => onSelectCaja(caja)}
-                disabled={validandoCaja}
-                className={`
-                  w-full p-4 rounded-xl border flex items-center justify-between
-                  ${caja.abierta
-                    ? 'border-emerald-500/40 bg-emerald-500/10'
-                    : 'border-slate-700 bg-slate-800'}
-                `}
-              >
-                <div className="space-y-1">
-                  <div className="font-medium text-slate-100">
-                    {caja.nombre}
-                  </div>
+          {loading && (
+            <div className="space-y-3">
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </div>
+          )}
 
-                  {caja.abierta && caja.abiertaPor && (
-                    <div className="text-xs text-slate-400">
-                      Abierta por{' '}
-                      <span className="text-slate-200 font-medium">
-                        {caja.abiertaPor}
-                      </span>
-                    </div>
-                  )}
-                </div>
+          {error && (
+            <p className="text-sm text-red-500">
+              {error}
+            </p>
+          )}
 
-                <div
-                  className={`
-                    px-3 py-1 rounded-full text-xs font-semibold
-                    ${caja.abierta
-                      ? 'bg-emerald-500 text-emerald-950'
-                      : 'bg-slate-600 text-slate-100'}
-                  `}
-                >
-                  {caja.abierta ? 'ABIERTA' : 'CERRADA'}
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+          {!loading && !error && cajas.length === 0 && (
+            <p className="text-sm text-foreground/60">
+              No hay cajas disponibles
+            </p>
+          )}
+
+          {!loading && !error && (
+            <ul className="space-y-3">
+              {cajas.map(caja => {
+                const isAbierta = caja.abierta
+
+                return (
+                  <li key={caja.id}>
+                    <CardInteractive
+                      onClick={() => onSelectCaja(caja)}
+                      disabled={validandoCaja}
+                      className={`
+            w-full
+            p-5
+            flex items-center justify-between
+            gap-4
+            min-h-[92px]
+            transition-all duration-200
+            ${isAbierta
+                          ? 'ring-1 ring-primary/40 bg-primary/5'
+                          : ''
+                        }
+          `}
+                    >
+                      <div className="flex flex-col text-left">
+                        <span className="text-base font-semibold text-foreground">
+                          {caja.nombre}
+                        </span>
+
+                        {isAbierta && caja.abiertaPor && (
+                          <span className="text-sm text-foreground/60 mt-1">
+                            Abierta por{' '}
+                            <span className="font-medium text-foreground">
+                              {caja.abiertaPor}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      <Badge variant={isAbierta ? 'success' : 'muted'}>
+                        {isAbierta ? 'ABIERTA' : 'CERRADA'}
+                      </Badge>
+                    </CardInteractive>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+
+        </div>
+
+      </Card >
+    </div >
   )
 }
 
