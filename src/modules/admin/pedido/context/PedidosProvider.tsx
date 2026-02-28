@@ -110,7 +110,7 @@ export function PedidosProvider({
       /* ================= PEDIDO CREATED ================= */
       if (event.type === 'PEDIDO_CREATED') {
         // Mis pedidos
-        if (event.sucursalId === user.sucursalId) {
+        if (event.sucursalId === user.sucursal.id) {
           setPedidosMios(prev => [
             {
               id: event.pedidoId,
@@ -121,7 +121,7 @@ export function PedidosProvider({
         }
 
         // Pedidos recibidos
-        if (event.sucursalId === user.sucursalId) {
+        if (event.sucursalId === user.sucursal.id) {
           setPedidosRecibidos(prev => [
             {
               id: event.pedidoId,
