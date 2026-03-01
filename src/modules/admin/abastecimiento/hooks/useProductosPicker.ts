@@ -1,5 +1,5 @@
 import { useStockSucursalQuery } from '@/domains/stock/hooks/useStockSucursalQuery';
-import { useProductosAdmin } from '@/domains/producto/hooks/useProductosQuery'
+import { useProductosPOSQuery } from '@/domains/producto/hooks/useProductosQuery'
 import type { Producto } from '@/domains/producto/domain/producto.types'
 
 export interface ProductoPickerItem {
@@ -13,7 +13,7 @@ export function useProductosPicker(sucursalId: string) {
   const {
     data: catalogo = [],
     isLoading: loadingCatalogo,
-  } = useProductosAdmin()
+  } = useProductosPOSQuery()
 
   const {
     stock,
