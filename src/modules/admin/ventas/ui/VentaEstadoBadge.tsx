@@ -1,12 +1,15 @@
+import { Badge } from '@/shared/ui/badge/badge'
+
 interface Props {
   estado: 'FINALIZADA' | 'ANULADA'
 }
 
 export default function VentaEstadoBadge({ estado }: Props) {
-  const styles =
+
+  const variant =
     estado === 'FINALIZADA'
-      ? 'bg-emerald-500/15 text-emerald-400'
-      : 'bg-red-500/15 text-red-400'
+      ? 'success'
+      : 'danger'
 
   const label =
     estado === 'FINALIZADA'
@@ -14,20 +17,8 @@ export default function VentaEstadoBadge({ estado }: Props) {
       : 'Anulada'
 
   return (
-    <span
-      className={`
-        inline-flex
-        items-center
-        justify-center
-        rounded-full
-        px-3
-        py-1
-        text-xs
-        font-medium
-        ${styles}
-      `}
-    >
+    <Badge variant={variant}>
       {label}
-    </span>
+    </Badge>
   )
 }

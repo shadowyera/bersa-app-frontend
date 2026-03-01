@@ -2,30 +2,45 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAdminVentaDetalleQuery } from '@/domains/venta/hooks/useAdminVentasQuery'
 import VentaEstadoBadge from '../ui/VentaEstadoBadge'
 
+import { Button } from '@/shared/ui/button/button'
+import { Badge } from '@/shared/ui/badge/badge'
+import { Card } from '@/shared/ui/card/Card'
+
+import {
+  Table,
+  TableContent,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@/shared/ui/table/table'
+
 export default function AdminVentaDetallePage() {
   const { ventaId } = useParams()
   const navigate = useNavigate()
-  const { data, isLoading, error } =
+
+  const { data, isLoading } =
     useAdminVentaDetalleQuery(ventaId)
 
   if (isLoading) {
     return (
-      <div className="p-10 text-slate-400">
+      <div className="p-10 text-muted-foreground">
         Cargando venta...
       </div>
     )
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
-      <div className="p-10 text-red-400">
+      <div className="p-10 text-danger">
         Error al cargar venta
       </div>
     )
   }
 
   return (
-    <section className="p-6 space-y-8">
+    <section className="p-8 max-w-7xl mx-auto space-y-12">
 
       {/* ================= HEADER ================= */}
 
@@ -33,37 +48,26 @@ export default function AdminVentaDetallePage() {
 
         <div className="flex items-start gap-4">
 
-          {/* 🔙 VOLVER */}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => navigate(-1)}
-            className="
-              mt-1
-              rounded-lg
-              border border-slate-800
-              bg-slate-900/60
-              px-3 py-2
-              text-slate-300
-              hover:bg-slate-800/60
-              transition-colors
-            "
           >
             ←
-          </button>
+          </Button>
 
           <div className="space-y-2">
 
-            <h1 className="text-2xl font-semibold text-slate-100">
+            <h1 className="text-2xl font-semibold">
               Folio{' '}
-              <span className="font-mono text-emerald-400">
+              <span className="font-mono text-success">
                 {data.folio}
               </span>
             </h1>
 
-            <div className="text-sm text-slate-400 space-y-1">
-              <p>Venta Nº {data.numeroVenta}</p>
-              <p>
-                {new Date(data.createdAt).toLocaleString()}
-              </p>
+            <div className="text-sm text-muted-foreground">
+              Venta Nº {data.numeroVenta} ·{' '}
+              {new Date(data.createdAt).toLocaleString()}
             </div>
 
           </div>
@@ -74,194 +78,159 @@ export default function AdminVentaDetallePage() {
 
       </div>
 
-      {/* ================= TOTALES ================= */}
+      {/* ================= MÉTRICAS ================= */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
-        <InfoCard
-          label="Total productos"
-          value={`$${data.total.toLocaleString()}`}
-        />
+          <Metric
+            label="Total productos"
+            value={`$${data.total.toLocaleString()}`}
+          />
 
-        <InfoCard
-          label="Ajuste redondeo"
-          value={`$${data.ajusteRedondeo.toLocaleString()}`}
-        />
+          <Metric
+            label="Ajuste redondeo"
+            value={`$${data.ajusteRedondeo.toLocaleString()}`}
+          />
 
-        <InfoCard
-          label="Total cobrado"
-          value={`$${data.totalCobrado.toLocaleString()}`}
-          highlight
-        />
+          <Metric
+            label="Total cobrado"
+            value={`$${data.totalCobrado.toLocaleString()}`}
+            highlight
+          />
 
-      </div>
+        </div>
+      </Card>
 
-      {/* ================= DOCUMENTO ================= */}
+      {/* ================= GRID PRINCIPAL ================= */}
 
-      <div
-        className="
-          rounded-xl
-          border border-slate-800
-          bg-slate-900/60
-          p-5
-          space-y-3
-        "
-      >
-        <h3 className="font-medium text-slate-200">
-          Documento
-        </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-        <p className="text-sm text-slate-400 flex items-center gap-2">
-          Tipo documento
-          <span
-            className={`
-              rounded-md
-              px-2 py-0.5
-              text-xs font-medium
-              ${
-                data.documentoTributario.tipo === 'FACTURA'
-                  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-              }
-            `}
-          >
-            {data.documentoTributario.tipo}
-          </span>
-        </p>
+        {/* ===== DETALLE (70%) ===== */}
 
-        {data.documentoTributario.receptor && (
-          <div className="text-sm text-slate-400 space-y-1 pt-3 border-t border-slate-800">
-            <p>
-              <span className="text-slate-300">RUT:</span>{' '}
-              {data.documentoTributario.receptor.rut}
-            </p>
-            <p>
-              <span className="text-slate-300">
-                Razón Social:
-              </span>{' '}
-              {data.documentoTributario.receptor.razonSocial}
-            </p>
-            <p>
-              <span className="text-slate-300">Giro:</span>{' '}
-              {data.documentoTributario.receptor.giro}
-            </p>
-            <p>
-              <span className="text-slate-300">
-                Dirección:
-              </span>{' '}
-              {data.documentoTributario.receptor.direccion}
-            </p>
+        <div className="lg:col-span-2 space-y-4">
+
+          <h2 className="text-lg font-medium">
+            Detalle
+          </h2>
+
+          <Table className="max-h-[500px]">
+            <TableContent>
+
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Producto</TableHead>
+                  <TableHead className="text-right">
+                    Cantidad
+                  </TableHead>
+                  <TableHead className="text-right">
+                    Precio
+                  </TableHead>
+                  <TableHead className="text-right">
+                    Subtotal
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {data.items.map(i => (
+                  <TableRow key={i.productoId}>
+
+                    <TableCell>
+                      {i.nombre}
+                    </TableCell>
+
+                    <TableCell className="text-right text-muted-foreground">
+                      {i.cantidad}
+                    </TableCell>
+
+                    <TableCell className="text-right text-muted-foreground">
+                      ${i.precioUnitario.toLocaleString()}
+                    </TableCell>
+
+                    <TableCell className="text-right font-semibold">
+                      ${i.subtotal.toLocaleString()}
+                    </TableCell>
+
+                  </TableRow>
+                ))}
+              </TableBody>
+
+            </TableContent>
+          </Table>
+
+        </div>
+
+        {/* ===== PANEL DERECHO (30%) ===== */}
+
+        <div className="space-y-10">
+
+          {/* Documento */}
+
+          <div className="space-y-4">
+
+            <h2 className="text-lg font-medium">
+              Documento
+            </h2>
+
+            <Card className="p-6 space-y-4">
+
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span>Tipo</span>
+                <Badge
+                  variant={
+                    data.documentoTributario.tipo === 'FACTURA'
+                      ? 'info'
+                      : 'success'
+                  }
+                >
+                  {data.documentoTributario.tipo}
+                </Badge>
+              </div>
+
+              {data.documentoTributario.receptor && (
+                <div className="pt-4 border-t border-border text-sm space-y-2">
+                  <Info label="RUT" value={data.documentoTributario.receptor.rut} />
+                  <Info label="Razón Social" value={data.documentoTributario.receptor.razonSocial} />
+                  <Info label="Giro" value={data.documentoTributario.receptor.giro} />
+                  <Info label="Dirección" value={data.documentoTributario.receptor.direccion} />
+                </div>
+              )}
+
+            </Card>
+
           </div>
-        )}
-      </div>
 
-      {/* ================= ITEMS ================= */}
+          {/* Pagos */}
 
-      <div
-        className="
-          rounded-xl
-          border border-slate-800
-          overflow-hidden
-          bg-slate-900/60
-        "
-      >
-        <table className="w-full text-sm">
+          <div className="space-y-4">
 
-          <thead className="bg-slate-800/60 text-slate-300">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">
-                Producto
-              </th>
-              <th className="px-4 py-3 text-right font-medium">
-                Cantidad
-              </th>
-              <th className="px-4 py-3 text-right font-medium">
-                Precio
-              </th>
-              <th className="px-4 py-3 text-right font-medium">
-                Subtotal
-              </th>
-            </tr>
-          </thead>
+            <h2 className="text-lg font-medium">
+              Pagos
+            </h2>
 
-          <tbody>
-            {data.items.map(i => (
-              <tr
-                key={i.productoId}
-                className="border-t border-slate-800 hover:bg-slate-800/40"
-              >
-                <td className="px-4 py-3 text-slate-200">
-                  {i.nombre}
-                </td>
-                <td className="px-4 py-3 text-right text-slate-400">
-                  {i.cantidad}
-                </td>
-                <td className="px-4 py-3 text-right text-slate-400">
-                  ${i.precioUnitario.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-right text-slate-200 font-medium">
-                  ${i.subtotal.toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
+            <Card className="p-6 space-y-4">
 
-        </table>
-      </div>
+              {data.pagos.map((p, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <Badge variant="outline">
+                    {p.tipo}
+                  </Badge>
 
-      {/* ================= PAGOS ================= */}
+                  <span className="font-semibold">
+                    ${p.monto.toLocaleString()}
+                  </span>
+                </div>
+              ))}
 
-      <div
-        className="
-          rounded-xl
-          border border-slate-800
-          bg-slate-900/60
-          p-5
-          space-y-3
-        "
-      >
-        <h3 className="font-medium text-slate-200">
-          Pagos
-        </h3>
+            </Card>
 
-        {data.pagos.length === 0 && (
-          <p className="text-sm text-slate-500">
-            Sin pagos registrados
-          </p>
-        )}
-
-        {data.pagos.map((p, idx) => (
-          <div
-            key={idx}
-            className="
-              flex
-              items-center
-              justify-between
-              rounded-lg
-              border border-slate-800
-              bg-slate-950/40
-              px-3 py-2
-              text-sm
-            "
-          >
-            <span
-              className="
-                rounded-md
-                bg-slate-800
-                px-2 py-0.5
-                text-xs
-                font-medium
-                text-slate-300
-              "
-            >
-              {p.tipo}
-            </span>
-
-            <span className="text-slate-200 font-semibold">
-              ${p.monto.toLocaleString()}
-            </span>
           </div>
-        ))}
+
+        </div>
 
       </div>
 
@@ -269,11 +238,9 @@ export default function AdminVentaDetallePage() {
   )
 }
 
-/* ========================================
-   Shadow InfoCard
-======================================== */
+/* ================= Metric ================= */
 
-function InfoCard({
+function Metric({
   label,
   value,
   highlight = false,
@@ -283,26 +250,40 @@ function InfoCard({
   highlight?: boolean
 }) {
   return (
-    <div
-      className="
-        rounded-xl
-        border border-slate-800
-        bg-slate-900/60
-        p-4
-      "
-    >
-      <p className="text-sm text-slate-400">
+    <div className="space-y-2">
+
+      <p className="text-sm text-muted-foreground">
         {label}
       </p>
 
       <p
-        className={`
-          text-lg font-semibold
-          ${highlight ? 'text-emerald-400' : 'text-slate-200'}
-        `}
+        className={`text-xl font-semibold ${highlight ? 'text-success' : ''
+          }`}
       >
         {value}
       </p>
+
     </div>
+  )
+}
+
+/* ================= Info ================= */
+
+function Info({
+  label,
+  value,
+}: {
+  label: string
+  value: string
+}) {
+  return (
+    <p>
+      <span className="text-muted-foreground">
+        {label}:
+      </span>{' '}
+      <span className="text-foreground">
+        {value}
+      </span>
+    </p>
   )
 }

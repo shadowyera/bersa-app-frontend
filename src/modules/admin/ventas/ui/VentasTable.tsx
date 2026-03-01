@@ -2,6 +2,18 @@ import type { VentaAdmin } from '@/domains/venta/domain/venta-admin.types'
 import { useNavigate } from 'react-router-dom'
 import VentaEstadoBadge from './VentaEstadoBadge'
 
+import {
+  Table,
+  TableContent,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@/shared/ui/table/table'
+
+import { Badge } from '@/shared/ui/badge/badge'
+
 interface Props {
   ventas: VentaAdmin[]
 }
@@ -12,126 +24,82 @@ export default function VentasTable({ ventas }: Props) {
 
   if (ventas.length === 0) {
     return (
-      <div className="p-10 text-center text-slate-400">
+      <div className="p-10 text-center text-muted-foreground">
         No hay ventas para mostrar
       </div>
     )
   }
 
   return (
-    <div
-      className="
-        rounded-xl
-        border border-slate-800
-        overflow-hidden
-        bg-slate-900/60
-      "
-    >
+    <Table className="flex flex-col overflow-hidden">
 
-      <table className="w-full text-sm">
+      <TableContent>
 
-        {/* ================= HEADER ================= */}
-        <thead className="bg-slate-800/60 sticky top-0 z-10">
-
-          <tr className="text-left text-slate-300">
-
-            {/* 🔥 FOLIO */}
-            <th className="px-4 py-3 font-medium">
-              Folio
-            </th>
-
-            <th className="px-4 py-3 font-medium">
-              Fecha
-            </th>
-
-            <th className="px-4 py-3 font-medium">
-              Documento
-            </th>
-
-            <th className="px-4 py-3 font-medium text-right">
+        <TableHeader className="sticky top-0 z-10 bg-surface border-b border-border">
+          <TableRow>
+            <TableHead>Folio</TableHead>
+            <TableHead>Fecha</TableHead>
+            <TableHead>Documento</TableHead>
+            <TableHead className="text-right">
               Total
-            </th>
-
-            <th className="px-4 py-3 font-medium text-center">
+            </TableHead>
+            <TableHead className="text-center">
               Estado
-            </th>
-
-            <th className="px-4 py-3 font-medium text-right">
+            </TableHead>
+            <TableHead className="text-right">
               Acción
-            </th>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
 
-          </tr>
-
-        </thead>
-
-        {/* ================= BODY ================= */}
-        <tbody>
+        <TableBody>
 
           {ventas.map(v => (
 
-            <tr
+            <TableRow
               key={v.id}
               onClick={() =>
                 navigate(`/admin/ventas/${v.id}`)
               }
-              className="
-                border-t border-slate-800
-                hover:bg-slate-800/40
-                cursor-pointer
-                transition-colors
-              "
+              className="cursor-pointer"
             >
 
-              {/* 🔥 FOLIO */}
-              <td className="px-4 py-3 text-slate-200 font-mono">
+              <TableCell className="font-mono">
                 {v.folio}
-              </td>
+              </TableCell>
 
-              {/* Fecha */}
-              <td className="px-4 py-3 text-slate-400">
+              <TableCell className="text-muted-foreground">
                 {new Date(v.createdAt).toLocaleString()}
-              </td>
+              </TableCell>
 
-              {/* Documento */}
-              <td className="px-4 py-3">
-                <span
-                  className="
-                    px-2 py-0.5
-                    rounded-md
-                    bg-slate-800
-                    text-xs
-                    text-slate-300
-                  "
-                >
+              <TableCell>
+                <Badge variant="outline">
                   {v.documentoTributario.tipo}
-                </span>
-              </td>
+                </Badge>
+              </TableCell>
 
-              {/* Total */}
-              <td className="px-4 py-3 text-right font-medium text-slate-200">
+              <TableCell className="text-right font-medium">
                 ${v.totalCobrado.toLocaleString()}
-              </td>
+              </TableCell>
 
-              {/* Estado */}
-              <td className="px-4 py-3 text-center">
+              <TableCell className="text-center">
                 <VentaEstadoBadge estado={v.estado} />
-              </td>
+              </TableCell>
 
-              {/* Acción */}
-              <td className="px-4 py-3 text-right">
-                <span className="text-emerald-400 hover:text-emerald-300">
+              <TableCell className="text-right">
+                <span className="text-primary hover:opacity-80">
                   Ver
                 </span>
-              </td>
+              </TableCell>
 
-            </tr>
+            </TableRow>
 
           ))}
 
-        </tbody>
+        </TableBody>
 
-      </table>
+      </TableContent>
 
-    </div>
+    </Table>
   )
 }

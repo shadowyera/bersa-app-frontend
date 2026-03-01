@@ -8,6 +8,11 @@ import type {
 import VentasTable from '../ui/VentasTable'
 import VentasFilters from '../ui/VentasFilters'
 
+import { SectionHeader } from '@/shared/ui/section-header/section-header'
+import { Card } from '@/shared/ui/card/Card'
+import { Button } from '@/shared/ui/button/button'
+import { Skeleton } from '@/shared/ui/skeleton/skeleton'
+
 export default function AdminVentasPage() {
 
   const [filters, setFilters] =
@@ -16,7 +21,7 @@ export default function AdminVentasPage() {
       limit: 10,
     })
 
-  const { data, isLoading, error } =
+  const { data, isLoading } =
     useAdminVentasQuery(filters)
 
   const ventas = data?.data ?? []
@@ -26,68 +31,57 @@ export default function AdminVentasPage() {
   return (
     <section className="p-6 space-y-6">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            Ventas
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Historial de ventas del sistema
-          </p>
-        </div>
-      </div>
+      {/* ===== Header ===== */}
 
-      {/* Filtros */}
-      <VentasFilters
-        value={filters}
-        onChange={next => {
-          setFilters({
-            ...next,
-            page: 1, // reset al filtrar
-            limit: 10,
-          })
-        }}
+      <SectionHeader
+        title="Ventas"
+        subtitle="Historial de ventas del sistema"
       />
 
-      {/* Estados */}
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">
-          Cargando ventas...
-        </p>
-      )}
+      {/* ===== Filtros ===== */}
 
-      {error && (
-        <pre className="text-xs text-red-500">
-          {JSON.stringify(error, null, 2)}
-        </pre>
-      )}
+      <VentasFilters
+        value={filters}
+        onChange={next =>
+          setFilters({
+            ...next,
+            page: 1,
+            limit: 10,
+          })
+        }
+      />
 
-      {/* Tabla */}
-      {!isLoading && (
-        <VentasTable ventas={ventas} />
-      )}
+      {/* ===== Tabla ===== */}
 
-      {/* Paginación */}
+      <Card className="p-0 overflow-hidden">
+
+        {isLoading ? (
+          <div className="p-6 space-y-3">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-6 w-2/3" />
+          </div>
+        ) : (
+          <VentasTable ventas={ventas} />
+        )}
+
+      </Card>
+
+      {/* ===== Paginación ===== */}
+
       {data && totalPages > 1 && (
-        <div
-          className="
-            flex
-            items-center
-            justify-between
-            pt-2
-          "
-        >
 
-          {/* Info */}
-          <p className="text-sm text-slate-400">
+        <div className="flex items-center justify-between">
+
+          <p className="text-sm text-muted-foreground">
             Página {page} de {totalPages}
           </p>
 
-          {/* Controles */}
           <div className="flex gap-2">
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page === 1}
               onClick={() =>
                 setFilters(prev => ({
@@ -95,21 +89,13 @@ export default function AdminVentasPage() {
                   page: prev.page! - 1,
                 }))
               }
-              className="
-                px-3 py-1.5
-                rounded-lg
-                border border-slate-800
-                text-sm
-                text-slate-300
-                hover:bg-slate-800
-                disabled:opacity-40
-                disabled:hover:bg-transparent
-              "
             >
               ← Anterior
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page === totalPages}
               onClick={() =>
                 setFilters(prev => ({
@@ -117,22 +103,14 @@ export default function AdminVentasPage() {
                   page: prev.page! + 1,
                 }))
               }
-              className="
-                px-3 py-1.5
-                rounded-lg
-                border border-slate-800
-                text-sm
-                text-slate-300
-                hover:bg-slate-800
-                disabled:opacity-40
-                disabled:hover:bg-transparent
-              "
             >
               Siguiente →
-            </button>
+            </Button>
 
           </div>
+
         </div>
+
       )}
 
     </section>

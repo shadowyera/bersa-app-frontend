@@ -1,6 +1,6 @@
 import { useMemo, useDeferredValue } from 'react'
 
-import { useProductosPOS } from '@/domains/producto/hooks/useProductos'
+import { useProductosPOSQuery } from '@/domains/producto/hooks/useProductosQuery'
 import { useStockSucursalQuery } from '@/domains/stock/hooks/useStockSucursalQuery'
 import { useAuth } from '@/modules/auth/useAuth'
 
@@ -34,7 +34,7 @@ export function usePosProductos(query: string) {
   const {
     data: productosCatalogo = [],
     isLoading: loadingProductos,
-  } = useProductosPOS()
+  } = useProductosPOSQuery()
 
   // Cast controlado mientras no refactorizamos dominio
   const productos = productosCatalogo as Producto[]

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { useProductosAdmin } from '@/domains/producto/hooks/useProductos'
+import { useProductosPOSQuery } from '@/domains/producto/hooks/useProductosQuery'
 import { useProductoFilter } from '@/domains/producto/hooks/useProductoFilter'
 import ProductoSearchInput from '@/domains/producto/ui/ProductoSearchInput'
 
@@ -22,7 +22,7 @@ const IngresoAbastecimiento = () => {
      Productos (cache admin)
   =============================== */
   const { data: productos = [], isLoading } =
-    useProductosAdmin()
+    useProductosPOSQuery()
 
   /* ===============================
      Abastecimiento (dominio)

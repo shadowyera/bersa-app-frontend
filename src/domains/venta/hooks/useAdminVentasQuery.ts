@@ -13,6 +13,7 @@ import type {
 } from '../domain/venta-admin.types'
 
 import { ventaKeys } from '../queries/venta.keys'
+import { useDebounce } from '@/shared/hooks/useDebounce'
 
 function cleanParams(
   params?: ListarVentasAdminParams
@@ -26,17 +27,15 @@ function cleanParams(
   ) as ListarVentasAdminParams
 }
 
-/* ============================================
-   LISTAR VENTAS (PAGINADO)
-============================================ */
-
 export const useAdminVentasQuery = (
   params: ListarVentasAdminParams
 ) => {
 
+  const debouncedParams = useDebounce(params, 400)
+
   const stableParams = useMemo(
-    () => cleanParams(params),
-    [params]
+    () => cleanParams(debouncedParams),
+    [debouncedParams]
   )
 
   const paramsKey = useMemo(
@@ -54,10 +53,6 @@ export const useAdminVentasQuery = (
     staleTime: 1000 * 30,
   })
 }
-
-/* ============================================
-   DETALLE VENTA
-============================================ */
 
 export const useAdminVentaDetalleQuery = (
   ventaId?: string

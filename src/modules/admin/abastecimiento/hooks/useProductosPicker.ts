@@ -1,5 +1,5 @@
 import { useStockSucursalQuery } from '@/domains/stock/hooks/useStockSucursalQuery';
-import { useProductosAdmin } from '@/domains/producto/hooks/useProductos'
+import { useProductosAdmin } from '@/domains/producto/hooks/useProductosQuery'
 import type { Producto } from '@/domains/producto/domain/producto.types'
 
 export interface ProductoPickerItem {

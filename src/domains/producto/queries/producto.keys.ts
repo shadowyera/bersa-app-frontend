@@ -4,8 +4,8 @@ export const productoKeys = {
   pos: () =>
     [...productoKeys.all, 'pos'] as const,
 
-  admin: () =>
-    [...productoKeys.all, 'admin'] as const,
+  admin: (params?: unknown) =>
+    [...productoKeys.all, 'admin', JSON.stringify(params ?? {})] as const,
 
   search: (term: string) =>
     [...productoKeys.all, 'search', term] as const,
