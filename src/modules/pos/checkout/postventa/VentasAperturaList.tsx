@@ -36,7 +36,7 @@ export function VentasAperturaList({
 
       {/* Header */}
       <div className="
-        px-4 py-2
+        px-4 py-3
         text-xs font-semibold
         uppercase tracking-wide
         text-muted-foreground
@@ -47,7 +47,7 @@ export function VentasAperturaList({
       </div>
 
       {/* Lista */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto divide-y divide-border">
 
         {ventas.map(v => {
 
@@ -70,12 +70,12 @@ export function VentasAperturaList({
                 text-left
                 px-4 py-3
                 text-sm
-                transition-all
+                transition-colors
                 duration-150
                 ${
                   selected
-                    ? 'bg-primary/10'
-                    : 'hover:bg-primary/5'
+                    ? 'bg-background'
+                    : 'hover:bg-background/60'
                 }
                 ${
                   anulada
@@ -85,15 +85,13 @@ export function VentasAperturaList({
               `}
             >
 
-              {/* Indicador azul lateral */}
+              {/* Indicador lateral */}
               {selected && (
                 <span
                   className="
                     absolute left-0 top-0 bottom-0
-                    w-1
+                    w-[3px]
                     bg-primary
-                    rounded-r
-                    z-10
                   "
                 />
               )}
@@ -111,7 +109,7 @@ export function VentasAperturaList({
                   className={
                     anulada
                       ? 'line-through text-muted-foreground'
-                      : 'font-medium'
+                      : 'font-medium text-foreground'
                   }
                 >
                   ${v.total.toLocaleString('es-CL')}
@@ -122,7 +120,6 @@ export function VentasAperturaList({
               {/* Línea inferior */}
               <div className="flex justify-between items-center text-xs mt-1">
 
-                {/* Hora */}
                 <span className="text-muted-foreground">
                   {new Date(v.fecha)
                     .toLocaleTimeString(
@@ -134,7 +131,6 @@ export function VentasAperturaList({
                     )}
                 </span>
 
-                {/* Estado + Tipo */}
                 <div className="flex items-center gap-2">
 
                   <Badge
@@ -162,9 +158,6 @@ export function VentasAperturaList({
                 </div>
 
               </div>
-
-              {/* Línea divisoria manual */}
-              <span className="absolute bottom-0 left-0 right-0 h-px bg-border" />
 
             </button>
           )

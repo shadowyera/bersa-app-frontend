@@ -15,10 +15,10 @@ import type { Producto }
 /**
  * Hook para procesar un código escaneado.
  *
- * - Busca el producto por código
- * - Usa cache de React Query
- * - Valida que exista y esté activo
- * - Lanza errores semánticos para la UI
+ * Flujo:
+ * 1️⃣ Busca en catálogo cacheado (ultra rápido)
+ * 2️⃣ Si no lo encuentra → consulta API por código
+ * 3️⃣ Valida existencia y estado
  */
 export function useScanProduct() {
 
@@ -26,29 +26,61 @@ export function useScanProduct() {
 
   const scan = async (code: string): Promise<Producto> => {
 
-    const producto = await queryClient.fetchQuery({
-      queryKey: productoKeys.codigo(code),
+    const codigo = code.trim()
+
+    /* =====================================================
+       1️⃣ Buscar en catálogo cacheado
+    ===================================================== */
+
+    const productosCatalogo =
+      queryClient.getQueryData<Producto[]>(
+        productoKeys.pos()
+      )
+
+    if (productosCatalogo) {
+
+      const encontrado = productosCatalogo.find(
+        p => p.codigo === codigo
+      )
+
+      if (encontrado) {
+
+        if (!encontrado.activo) {
+          throw new Error('INACTIVE')
+        }
+
+        return encontrado
+      }
+    }
+
+    /* =====================================================
+       2️⃣ Si no está en catálogo → buscar en API
+    ===================================================== */
+
+    const producto = await queryClient.fetchQuery<Producto>({
+      queryKey: productoKeys.codigo(codigo),
 
       queryFn: async () => {
 
         const raw =
-          await buscarProductoPorCodigo(code)
+          await buscarProductoPorCodigo(codigo)
 
-        if (!raw) return null
+        if (!raw) {
+          throw new Error('NOT_FOUND')
+        }
 
-        return mapProductoFromApi(raw)
+        const mapped = mapProductoFromApi(raw)
+
+        if (!mapped.activo) {
+          throw new Error('INACTIVE')
+        }
+
+        return mapped
       },
 
       staleTime: 1000 * 60 * 5,
+      retry: false,
     })
-
-    if (!producto) {
-      throw new Error('NOT_FOUND')
-    }
-
-    if (!producto.activo) {
-      throw new Error('INACTIVE')
-    }
 
     return producto
   }

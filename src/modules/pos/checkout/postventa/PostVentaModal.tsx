@@ -1,6 +1,8 @@
 import { memo } from 'react'
 import TicketPreview from './TicketPreview'
 import { useModalShortcuts } from '@/shared/hooks/useModalShortcuts'
+import ModalBase from '../../caja/ui/modals/ModalBase'
+import { Button } from '@/shared/ui/button/button'
 import type { PostVenta } from '@/domains/venta/domain/postventa.types'
 
 /* =====================================================
@@ -15,7 +17,7 @@ interface Props {
 }
 
 /* =====================================================
-   Componente
+   Component
 ===================================================== */
 
 function PostVentaModal({
@@ -33,10 +35,6 @@ function PostVentaModal({
 
   if (!open || !venta) return null
 
-  /* ===============================
-     Regla única efectivo
-  =============================== */
-
   const esEfectivo = venta.ajusteRedondeo !== 0
 
   const totalFinal = esEfectivo
@@ -44,95 +42,70 @@ function PostVentaModal({
     : venta.total
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-
-      <div
-        className="
-          w-[420px]
-          rounded-2xl
-          bg-slate-900
-          border border-slate-700
-          shadow-2xl
-          p-6
-        "
-      >
-
-        {/* =====================
-            Header
-        ===================== */}
-
-        <div className="text-center mb-4">
-          <div className="text-emerald-400 text-3xl mb-1">
-            ✔
-          </div>
-
-          <h2 className="text-xl font-semibold text-slate-100">
-            Venta realizada
-          </h2>
-
-          <p className="text-sm text-slate-400">
-            Folio #{venta.folio}
-          </p>
-        </div>
-
-        {/* =====================
-            Ticket Preview
-        ===================== */}
-
-        <TicketPreview venta={venta} />
-
-        {/* =====================
-            Total Final
-        ===================== */}
-
-        <div className="mt-4 flex justify-between text-sm">
-          <span>Total</span>
-
-          <span className="text-emerald-400 font-semibold">
-            ${totalFinal.toLocaleString('es-CL')}
-          </span>
-        </div>
-
-        {/* =====================
-            Acciones
-        ===================== */}
-
-        <div className="mt-6 flex gap-3">
-
-          <button
-            onMouseDown={onClose}
-            className="
-              flex-1
-              rounded-xl
-              bg-slate-700
-              hover:bg-slate-600
-              py-3
-              text-sm
-              transition
-            "
+    <ModalBase
+      title="Venta realizada"
+      onClose={onClose}
+      maxWidth="md"
+      footer={
+        <div className="flex gap-3 w-full">
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={onClose}
           >
             Cerrar (ESC)
-          </button>
+          </Button>
 
-          <button
-            onMouseDown={onPrint}
-            className="
-              flex-1
-              rounded-xl
-              bg-emerald-600
-              hover:bg-emerald-500
-              py-3
-              text-sm font-semibold
-              transition
-            "
+          <Button
+            variant="primary"
+            className="flex-1"
+            onClick={onPrint}
           >
             Imprimir (ENTER)
-          </button>
+          </Button>
+        </div>
+      }
+    >
 
+      {/* Icono éxito */}
+      <div className="flex flex-col items-center mb-5">
+
+        <div
+          className="
+            w-12 h-12
+            rounded-full
+            bg-success/10
+            flex items-center justify-center
+            text-success
+            text-xl font-bold
+          "
+        >
+          ✓
         </div>
 
+        <p className="text-sm text-muted-foreground mt-3">
+          Folio #{venta.folio}
+        </p>
+
       </div>
-    </div>
+
+      {/* Ticket */}
+      <TicketPreview venta={venta} />
+
+      {/* Total final */}
+      <div className="mt-5 flex justify-between text-sm">
+
+        <span className="text-muted-foreground">
+          Total
+        </span>
+
+        <span className="text-lg font-semibold text-foreground">
+          ${totalFinal.toLocaleString('es-CL')}
+        </span>
+
+      </div>
+
+    </ModalBase>
   )
 }
 

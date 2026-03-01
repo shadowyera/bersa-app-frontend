@@ -6,22 +6,52 @@ export function ToastContainer({
   toasts: Toast[]
 }) {
   return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2">
-      {toasts.map(t => (
-        <div
-          key={t.id}
-          className={`px-4 py-3 rounded-lg shadow-lg text-sm text-white
-            ${
-              t.type === 'success'
-                ? 'bg-emerald-600'
-                : t.type === 'error'
-                ? 'bg-red-600'
-                : 'bg-slate-700'
-            }`}
-        >
-          {t.message}
-        </div>
-      ))}
+    <div
+      className="
+        fixed
+        top-6
+        left-1/2
+        -translate-x-1/2
+        z-[9999]
+        space-y-3
+        pointer-events-none
+      "
+    >
+      {toasts.map(t => {
+
+        const variantStyles =
+          t.type === 'success'
+            ? 'border-success/40 text-success'
+            : t.type === 'error'
+            ? 'border-danger/40 text-danger'
+            : t.type === 'warning'
+            ? 'border-warning/40 text-warning'
+            : 'border-border text-foreground'
+
+        return (
+          <div
+            key={t.id}
+            className={`
+              min-w-[260px]
+              max-w-[420px]
+              rounded-xl
+              bg-surface
+              border
+              px-5
+              py-3
+              text-sm
+              font-medium
+              shadow-lg
+              backdrop-blur-sm
+              transition-all
+              duration-200
+              ${variantStyles}
+            `}
+          >
+            {t.message}
+          </div>
+        )
+      })}
     </div>
   )
 }

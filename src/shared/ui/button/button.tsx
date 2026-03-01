@@ -1,19 +1,13 @@
 import * as React from 'react'
 import clsx from 'clsx'
 
-/* =====================================================
-   Button – Sistema base
-   - Sin colores hardcodeados
-   - Basado en tokens
-   - Variantes consistentes
-===================================================== */
-
 type Variant =
   | 'primary'
   | 'secondary'
   | 'outline'
   | 'ghost'
   | 'danger'
+  | 'success'
 
 type Size =
   | 'sm'
@@ -25,10 +19,6 @@ export interface ButtonProps
   variant?: Variant
   size?: Size
 }
-
-/* =====================================================
-   Estilos base
-===================================================== */
 
 const base =
   'inline-flex items-center justify-center rounded-lg font-medium ' +
@@ -43,6 +33,7 @@ const sizes: Record<Size, string> = {
 }
 
 const variants: Record<Variant, string> = {
+
   primary:
     'bg-primary text-primary-foreground ' +
     'hover:opacity-90 active:scale-[0.98]',
@@ -60,13 +51,13 @@ const variants: Record<Variant, string> = {
     'hover:bg-surface/60 active:scale-[0.98]',
 
   danger:
-    'bg-danger text-danger-foreground shadow-sm ' +
+    'bg-danger text-danger-foreground ' +
     'hover:bg-danger/90 active:scale-[0.98]',
-}
 
-/* =====================================================
-   Component
-===================================================== */
+  success:
+    'bg-success text-success-foreground ' +
+    'hover:bg-success/90 active:scale-[0.98]',
+}
 
 export const Button = React.forwardRef<
   HTMLButtonElement,

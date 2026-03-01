@@ -5,9 +5,11 @@ import { normalizarNumero } from './utils/normalizarNumero'
 import PaymentSummary from './PaymentSummary'
 import { usePagoShortcuts } from '../hooks/usePagoShortcuts'
 
-/* =====================================================
-   Constantes
-===================================================== */
+import { Card } from '@/shared/ui/card/Card'
+import { Button } from '@/shared/ui/button/button'
+import { Input } from '@/shared/ui/input/input'
+
+/* ===================================================== */
 
 const TITULOS: Record<TipoPago, string> = {
   EFECTIVO: 'Pago en efectivo',
@@ -20,29 +22,22 @@ const TITULOS: Record<TipoPago, string> = {
 const ATAJOS = [1000, 2000, 5000, 10000, 20000]
 const ATAJOS_KEYS = ['F1', 'F2', 'F3', 'F4', 'F5']
 
-/* =====================================================
-   Props
-===================================================== */
+/* ===================================================== */
 
 interface Props {
   totalVenta: number
   modo: TipoPago
   estado: EstadoCobro | null
   loading?: boolean
-
   efectivoRaw: string
   debitoRaw: string
-
   setEfectivo: (value: string) => void
   setDebito: (value: string) => void
-
   onConfirm: () => void
   onClose: () => void
 }
 
-/* =====================================================
-   Component
-===================================================== */
+/* ===================================================== */
 
 function PaymentModal({
   modo,
@@ -57,20 +52,12 @@ function PaymentModal({
 
   const efectivoRef = useRef<HTMLInputElement | null>(null)
 
-  /* ===============================
-     Handlers
-  =============================== */
-
   const handleEfectivoChange = useCallback(
     (raw: string) => {
       setEfectivo(raw)
     },
     [setEfectivo]
   )
-
-  /* ===============================
-     Shortcuts teclado
-  =============================== */
 
   usePagoShortcuts({
     enabled: true,
@@ -84,39 +71,31 @@ function PaymentModal({
     },
   })
 
-  /* ===============================
-     Autofocus
-  =============================== */
-
   useEffect(() => {
-    if (modo !== 'EFECTIVO' && modo !== 'MIXTO')
-      return
-
+    if (modo !== 'EFECTIVO' && modo !== 'MIXTO') return
     efectivoRef.current?.focus()
     efectivoRef.current?.select()
   }, [modo])
 
   if (!estado) return null
 
-  /* ===============================
-     Render
-  =============================== */
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-[420px] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+
+      <Card className="w-[440px] p-6 space-y-6 shadow-2xl">
 
         {/* Header */}
-        <h2 className="text-xl font-semibold mb-3">
+        <h2 className="text-xl font-semibold text-foreground">
           {TITULOS[modo]}
         </h2>
 
         {/* Total */}
-        <div className="text-center mb-4">
-          <p className="text-xs text-slate-400">
+        <div className="text-center space-y-1">
+          <p className="text-xs text-muted-foreground">
             TOTAL A PAGAR
           </p>
-          <p className="text-3xl font-bold text-emerald-400">
+
+          <p className="text-4xl font-bold text-primary tracking-tight">
             ${estado.totalCobrado.toLocaleString('es-CL')}
           </p>
         </div>
@@ -124,106 +103,110 @@ function PaymentModal({
         {/* Resumen */}
         <PaymentSummary estado={estado} />
 
-        {/* ===============================
-            EFECTIVO
-        =============================== */}
-
+        {/* EFECTIVO */}
         {(modo === 'EFECTIVO' || modo === 'MIXTO') && (
-          <div className="mt-4 space-y-3">
+          <div className="space-y-4">
 
             <div>
-              <p className="text-xs text-slate-400 mb-1">
+              <p className="text-xs text-muted-foreground mb-2">
                 EFECTIVO
               </p>
 
-              <input
+              <Input
                 ref={efectivoRef}
                 value={efectivoRaw}
-                onChange={e =>
-                  handleEfectivoChange(
-                    e.target.value
-                  )
-                }
+                onChange={e => handleEfectivoChange(e.target.value)}
                 inputMode="numeric"
                 placeholder="0"
-                className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-3xl text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="
+    h-16
+    text-4xl
+    text-center
+    font-bold
+    tracking-tight
+  "
               />
             </div>
 
-            {/* Botones rápidos */}
             <div className="grid grid-cols-5 gap-2">
               {ATAJOS.map((monto, i) => (
-                <button
+                <Button
                   key={monto}
+                  variant="outline"
+                  size="md"
                   onMouseDown={e => {
                     e.preventDefault()
-                    const actual =
-                      normalizarNumero(
-                        efectivoRaw
-                      )
-                    setEfectivo(
-                      String(actual + monto)
-                    )
+                    const actual = normalizarNumero(efectivoRaw)
+                    setEfectivo(String(actual + monto))
                   }}
-                  className="rounded-lg bg-slate-800 hover:bg-slate-700 py-2 text-sm flex flex-col items-center"
+                  className="
+                    h-12
+                    flex flex-col
+                    items-center
+                    justify-center
+                  "
                 >
-                  <span>+${monto / 1000}k</span>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="font-medium">
+                    +${monto / 1000}k
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
                     ({ATAJOS_KEYS[i]})
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
 
           </div>
         )}
 
-        {/* ===============================
-            DEBITO (SOLO MIXTO)
-        =============================== */}
-
+        {/* DÉBITO MIXTO */}
         {modo === 'MIXTO' && (
-          <div className="mt-4">
-            <p className="text-xs text-slate-400 mb-1">
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
               DÉBITO
             </p>
 
-            <input
+            <Input
               value={normalizarNumero(debitoRaw).toLocaleString('es-CL')}
               readOnly
-              className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-2xl text-center text-slate-300 opacity-80"
+              className="
+                h-12
+                text-2xl
+                text-center
+                font-medium
+                opacity-80
+              "
             />
           </div>
         )}
 
-        {/* ===============================
-            ACCIONES
-        =============================== */}
+        {/* Acciones */}
+        <div className="flex gap-3 pt-2">
 
-        <div className="mt-6 flex gap-3">
-
-          <button
+          <Button
+            variant="secondary"
+            className="flex-1 h-12"
             onMouseDown={onClose}
-            className="flex-1 rounded-xl bg-slate-700 hover:bg-slate-600 py-3 text-sm"
           >
             Cancelar (ESC)
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="primary"
+            className="flex-1 h-12"
             disabled={!estado.puedeConfirmar || loading}
             onMouseDown={onConfirm}
-            className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 text-sm font-semibold disabled:opacity-50"
           >
             Pagar (Enter)
-          </button>
+          </Button>
 
         </div>
 
-        <p className="mt-3 text-xs text-slate-500 text-center">
+        <p className="text-xs text-muted-foreground text-center">
           F1–F5 → montos rápidos · Backspace → borrar · ESC → cancelar
         </p>
 
-      </div>
+      </Card>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import type { DocumentoReceptor } from '../../../../domains/venta/domain/venta.types';
+import type { DocumentoReceptor } from '@/domains/venta/domain/venta.types'
 import {
   useState,
   useCallback,
@@ -6,7 +6,8 @@ import {
   useRef,
   memo,
 } from 'react'
-
+import ModalBase from '../../caja/ui/modals/ModalBase'
+import { Button } from '@/shared/ui/button/button'
 
 /* =====================================================
    Helpers RUT
@@ -68,11 +69,9 @@ function DocumentoReceptorModal({
   const rutRef = useRef<HTMLInputElement>(null)
 
   const [rut, setRut] = useState('')
-  const [razonSocial, setRazonSocial] =
-    useState('')
+  const [razonSocial, setRazonSocial] = useState('')
   const [giro, setGiro] = useState('')
-  const [direccion, setDireccion] =
-    useState('')
+  const [direccion, setDireccion] = useState('')
   const [comuna, setComuna] = useState('')
   const [ciudad, setCiudad] = useState('')
 
@@ -89,7 +88,7 @@ function DocumentoReceptorModal({
   }, [open])
 
   /* ===============================
-     Rut state
+     RUT State
   =============================== */
 
   const [body, dv] = rut.split('-')
@@ -101,10 +100,6 @@ function DocumentoReceptorModal({
 
   const rutValido =
     rutCompleto && validarRut(rut)
-
-  /* ===============================
-     Validation
-  =============================== */
 
   const formValido =
     rutValido &&
@@ -131,22 +126,14 @@ function DocumentoReceptorModal({
 
       if (e.key === 'Enter') {
         e.preventDefault()
-        if (formValido) {
-          handleConfirm()
-        }
+        if (formValido) handleConfirm()
       }
     }
 
-    document.addEventListener(
-      'keydown',
-      handler
-    )
+    document.addEventListener('keydown', handler)
 
     return () =>
-      document.removeEventListener(
-        'keydown',
-        handler
-      )
+      document.removeEventListener('keydown', handler)
 
   }, [open, formValido])
 
@@ -155,7 +142,6 @@ function DocumentoReceptorModal({
   =============================== */
 
   const handleConfirm = useCallback(() => {
-
     if (!formValido) return
 
     onConfirm({
@@ -166,7 +152,6 @@ function DocumentoReceptorModal({
       comuna,
       ciudad,
     })
-
   }, [
     rut,
     razonSocial,
@@ -181,145 +166,85 @@ function DocumentoReceptorModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-
-      <div className="w-[440px] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
-
-        {/* Header */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-100">
-            Datos del cliente
-          </h2>
-          <p className="text-sm text-slate-400">
-            Obligatorio para factura
-          </p>
-        </div>
-
-        {/* Form */}
-        <div className="space-y-3">
-
-          {/* RUT */}
-          <div className="relative">
-
-            <input
-              ref={rutRef}
-              value={rut}
-              onChange={e =>
-                setRut(
-                  limpiarRut(
-                    e.target.value
-                  )
-                )
-              }
-              placeholder="RUT (sin puntos, con guion)"
-              className={`
-                w-full px-3 py-2 pr-10 rounded
-                bg-slate-800 text-white
-                border
-                ${rutCompleto
-                  ? rutValido
-                    ? 'border-emerald-500'
-                    : 'border-red-500'
-                  : 'border-slate-700'
-                }
-                focus:outline-none
-                focus:ring-2
-                focus:ring-emerald-500
-              `}
-            />
-
-            {rutCompleto && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
-                {rutValido ? (
-                  <span className="text-emerald-400">
-                    ✓
-                  </span>
-                ) : (
-                  <span className="text-red-400">
-                    ✕
-                  </span>
-                )}
-              </div>
-            )}
-
-            {rutCompleto && !rutValido && (
-              <p className="text-xs text-red-400 mt-1">
-                RUT inválido
-              </p>
-            )}
-          </div>
-
-          {/* Campos */}
-          <Field
-            value={razonSocial}
-            onChange={setRazonSocial}
-            placeholder="Razón social"
-          />
-
-          <Field
-            value={giro}
-            onChange={setGiro}
-            placeholder="Giro"
-          />
-
-          <Field
-            value={direccion}
-            onChange={setDireccion}
-            placeholder="Dirección"
-          />
-
-          <Field
-            value={comuna}
-            onChange={setComuna}
-            placeholder="Comuna"
-          />
-
-          <Field
-            value={ciudad}
-            onChange={setCiudad}
-            placeholder="Ciudad"
-          />
-
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end gap-2 pt-6">
-
-          <button
-            onMouseDown={e => {
-              e.preventDefault()
-              onClose()
-            }}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300"
+    <ModalBase
+      title="Datos del cliente"
+      onClose={onClose}
+      maxWidth="md"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="secondary"
+            onClick={onClose}
           >
             Cancelar
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="primary"
             disabled={!formValido}
-            onMouseDown={e => {
-              e.preventDefault()
-              handleConfirm()
-            }}
-            className={`px-4 py-2 rounded-xl text-white transition ${formValido
-                ? 'bg-emerald-600 hover:bg-emerald-500'
-                : 'bg-slate-600 cursor-not-allowed'
-              }`}
+            onClick={handleConfirm}
           >
             Guardar
-          </button>
+          </Button>
+        </div>
+      }
+    >
 
+      <p className="text-sm text-muted-foreground mb-5">
+        Obligatorio para emitir factura.
+      </p>
+
+      <div className="space-y-3">
+
+        {/* RUT */}
+        <div>
+          <input
+            ref={rutRef}
+            value={rut}
+            onChange={e =>
+              setRut(limpiarRut(e.target.value))
+            }
+            placeholder="RUT (sin puntos, con guion)"
+            className={`
+              w-full px-3 py-2 rounded-lg
+              bg-background text-foreground
+              border
+              ${
+                rutCompleto
+                  ? rutValido
+                    ? 'border-success'
+                    : 'border-danger'
+                  : 'border-border'
+              }
+              focus:outline-none
+              focus:ring-2
+              focus:ring-primary/40
+            `}
+          />
+
+          {rutCompleto && !rutValido && (
+            <p className="text-xs text-danger mt-1">
+              RUT inválido
+            </p>
+          )}
         </div>
 
+        <Field value={razonSocial} onChange={setRazonSocial} placeholder="Razón social" />
+        <Field value={giro} onChange={setGiro} placeholder="Giro" />
+        <Field value={direccion} onChange={setDireccion} placeholder="Dirección" />
+        <Field value={comuna} onChange={setComuna} placeholder="Comuna" />
+        <Field value={ciudad} onChange={setCiudad} placeholder="Ciudad" />
+
       </div>
-    </div>
+
+    </ModalBase>
   )
 }
 
 export default memo(DocumentoReceptorModal)
 
 /* =====================================================
-   Reusable Field
+   Field Component
 ===================================================== */
 
 interface FieldProps {
@@ -336,17 +261,15 @@ function Field({
   return (
     <input
       value={value}
-      onChange={e =>
-        onChange(e.target.value)
-      }
+      onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       className="
-        w-full px-3 py-2 rounded
-        bg-slate-800 text-white
-        border border-slate-700
+        w-full px-3 py-2 rounded-lg
+        bg-background text-foreground
+        border border-border
         focus:outline-none
         focus:ring-2
-        focus:ring-emerald-500
+        focus:ring-primary/40
       "
     />
   )

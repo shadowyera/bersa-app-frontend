@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react'
 import ProductCard from './ProductCard'
-
 import type { Producto } from '@/domains/producto/domain/producto.types'
 
 interface Props {
@@ -30,16 +29,26 @@ function ProductGrid({
   return (
     <div className="relative">
 
+      {/* Grid */}
       <div
         className={`
-          grid grid-cols-2 gap-3
+          grid
+          grid-cols-2
+          sm:grid-cols-3
+          md:grid-cols-4
+          xl:grid-cols-5
+          2xl:grid-cols-5
+          gap-3
           transition-opacity duration-200 ease-out
-          ${loading ? 'opacity-70 pointer-events-none' : ''}
+          ${loading ? 'opacity-60 pointer-events-none' : ''}
         `}
       >
-        {productos.length === 0 && (
-          <div className="col-span-2 text-center text-foreground/40 py-8">
-            No hay productos
+
+        {productos.length === 0 && !loading && (
+          <div className="col-span-full flex items-center justify-center py-12">
+            <span className="text-sm text-muted-foreground">
+              No hay productos disponibles
+            </span>
           </div>
         )}
 
@@ -57,11 +66,14 @@ function ProductGrid({
             />
           )
         })}
+
       </div>
 
+      {/* Loading overlay suave */}
       {loading && (
-        <div className="absolute inset-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] pointer-events-none" />
       )}
+
     </div>
   )
 }

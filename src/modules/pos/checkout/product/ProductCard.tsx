@@ -1,5 +1,6 @@
 import { memo, useCallback } from "react"
 import { CardInteractive } from "@/shared/ui/card/Card"
+import { Badge } from "@/shared/ui/badge/badge"
 
 interface Props {
   nombre: string
@@ -16,51 +17,67 @@ function ProductCard({
   stock,
   onAdd,
 }: Props) {
+
   const bloqueado = !activo
   const agotado = activo && stock <= 0
+
+  // SOLO bloqueamos si está inactivo
+  const disabled = bloqueado
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
-      if (bloqueado) return
+      if (disabled) return
       onAdd()
     },
-    [bloqueado, onAdd]
+    [disabled, onAdd]
   )
 
   return (
     <CardInteractive
-      disabled={bloqueado}
+      disabled={disabled}
       onMouseDown={handleMouseDown}
-      aria-disabled={bloqueado}
+      aria-disabled={disabled}
       className={`
-        p-4
+        relative
+        p-3
+        min-h-[88px]
+        flex flex-col justify-between
+        transition-all duration-150
         ${
           bloqueado
-            ? "opacity-40 cursor-not-allowed"
-            : ""
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:shadow-lg hover:border-primary/40 active:scale-[0.98]"
         }
       `}
     >
-      <div className="font-medium text-foreground">
+
+      {/* Estados arriba a la derecha */}
+      {(agotado || bloqueado) && (
+        <div className="absolute top-2 right-2 flex gap-1">
+          {agotado && (
+            <Badge variant="warning">
+              Stock 0
+            </Badge>
+          )}
+          {bloqueado && (
+            <Badge variant="outline">
+              Inactivo
+            </Badge>
+          )}
+        </div>
+      )}
+
+      {/* Nombre */}
+      <div className="text-sm font-medium text-foreground line-clamp-2 leading-snug pr-2">
         {nombre}
       </div>
 
-      <div className="text-sm text-foreground/60 mt-1">
+      {/* Precio */}
+      <div className="mt-2 text-lg font-bold text-primary">
         ${precio.toLocaleString("es-CL")}
       </div>
 
-      {agotado && (
-        <div className="mt-2 inline-flex items-center rounded-md bg-red-500/15 px-2 py-0.5 text-xs text-red-400">
-          Agotado
-        </div>
-      )}
-
-      {bloqueado && (
-        <div className="mt-2 text-xs text-foreground/40">
-          No habilitado
-        </div>
-      )}
     </CardInteractive>
   )
 }

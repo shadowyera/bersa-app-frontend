@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom'
 import { useSucursalesQuery } from '@/domains/sucursal/hooks/useSucursalesQuery'
 import { useCajasQuery } from '@/domains/caja/hooks/useCajasQuery'
 
+import { Card } from '@/shared/ui/card/Card'
+import { Badge } from '@/shared/ui/badge/badge'
+
 import {
   calcularDuracion,
   calcularPromedio,
@@ -54,135 +57,112 @@ export function AperturaCard({ apertura }: Props) {
     (apertura.diferencia ?? 0) > 0
 
   return (
-    <div
-      className="
-        p-5
-        rounded-xl
-        bg-slate-900/40
-        hover:bg-slate-900/60
-        transition-colors
-        border border-slate-800/60
-        flex flex-col
-      "
-    >
+    <Card className="p-5 flex flex-col gap-4 hover:border-primary/40 transition-colors">
 
       {/* ================= HEADER ================= */}
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex justify-between items-start">
 
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Apertura
           </p>
 
-          <p className="text-lg font-semibold text-slate-100">
+          <p className="text-lg font-semibold">
             {new Date(apertura.fechaApertura)
               .toLocaleString()}
           </p>
         </div>
 
-        <span
-          className={`
-            text-[11px] font-semibold px-2 py-1 rounded-md
-            ${apertura.estado === 'ABIERTA'
-              ? 'bg-emerald-600/20 text-emerald-400'
-              : 'bg-blue-600/20 text-blue-400'
-            }
-          `}
+        <Badge
+          variant={
+            apertura.estado === 'ABIERTA'
+              ? 'success'
+              : 'info'
+          }
         >
           {apertura.estado}
-        </span>
+        </Badge>
 
       </div>
 
       {/* ================= CAJA / SUCURSAL ================= */}
-      <div className="flex flex-wrap gap-2 text-sm mb-3">
+      <div className="flex flex-wrap gap-2 text-sm">
 
-        <span className="px-2 py-1 rounded bg-slate-800/70 text-slate-300">
+        <Badge variant="outline">
           {cajaNombre}
-        </span>
+        </Badge>
 
-        <span className="px-2 py-1 rounded bg-slate-800/70 text-slate-300">
+        <Badge variant="outline">
           {sucursalNombre}
-        </span>
+        </Badge>
 
       </div>
 
       {/* ================= USUARIOS ================= */}
-      <div className="grid grid-cols-2 gap-y-1 text-[15px] mb-3">
+      <div className="grid grid-cols-2 gap-y-1 text-sm">
 
         <p>
-          <span className="text-slate-400">Abrió</span>{' '}
-          <span>{apertura.usuarioAperturaNombre || '—'}</span>
+          <span className="text-muted-foreground">
+            Abrió
+          </span>{' '}
+          <span>
+            {apertura.usuarioAperturaNombre || '—'}
+          </span>
         </p>
 
         {apertura.estado === 'CERRADA' && (
           <p>
-            <span className="text-slate-400">Cerró</span>{' '}
-            <span>{apertura.usuarioCierreNombre || '—'}</span>
+            <span className="text-muted-foreground">
+              Cerró
+            </span>{' '}
+            <span>
+              {apertura.usuarioCierreNombre || '—'}
+            </span>
           </p>
         )}
 
       </div>
 
       {/* ================= MÉTRICAS ================= */}
-      <div className="grid grid-cols-2 gap-y-3 text-base">
+      <div className="grid grid-cols-2 gap-y-3 text-sm">
 
-        <div>
-          <p className="text-sm text-slate-400">
-            Ventas
-          </p>
-          <p className="font-semibold">
-            {apertura.totalVentas}
-          </p>
-        </div>
+        <Metric
+          label="Ventas"
+          value={apertura.totalVentas}
+        />
 
-        <div>
-          <p className="text-sm text-slate-400">
-            Total
-          </p>
-          <p className="font-semibold">
-            {formatCLP(apertura.totalCobrado)}
-          </p>
-        </div>
+        <Metric
+          label="Total"
+          value={formatCLP(apertura.totalCobrado)}
+        />
 
-        <div>
-          <p className="text-sm text-slate-400">
-            Ticket promedio
-          </p>
-          <p className="font-semibold">
-            {formatCLP(promedio)}
-          </p>
-        </div>
+        <Metric
+          label="Ticket promedio"
+          value={formatCLP(promedio)}
+        />
 
-        <div>
-          <p className="text-sm text-slate-400">
-            {duracionLabel}
-          </p>
-          <p className="font-semibold">
-            {duracion}
-          </p>
-        </div>
+        <Metric
+          label={duracionLabel}
+          value={duracion}
+        />
 
       </div>
 
       {/* ================= FOOTER ================= */}
-      <div className="mt-auto pt-4 space-y-3">
+      <div className="mt-auto space-y-3 pt-2">
 
         {tieneDiferencia && (
           <div
-            className={`
-              text-base font-medium
-              px-3 py-2 rounded-md
-              ${diferenciaPositiva
-                ? 'bg-emerald-600/10 text-emerald-400'
-                : 'bg-red-600/10 text-red-400'
-              }
-            `}
+            className={`px-3 py-2 rounded-md text-sm font-medium ${
+              diferenciaPositiva
+                ? 'bg-success/10 text-success'
+                : 'bg-danger/10 text-danger'
+            }`}
           >
             Diferencia: {formatCLP(apertura.diferencia!)}
 
             {apertura.motivoDiferencia && (
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 Motivo: {apertura.motivoDiferencia}
               </div>
             )}
@@ -191,19 +171,34 @@ export function AperturaCard({ apertura }: Props) {
 
         <Link
           to={`/admin/aperturas/${apertura.id}`}
-          className="
-            inline-flex
-            items-center
-            text-base
-            text-emerald-400
-            hover:text-emerald-300
-          "
+          className="inline-flex items-center text-sm font-medium text-primary hover:opacity-80"
         >
           Ver detalle →
         </Link>
 
       </div>
 
+    </Card>
+  )
+}
+
+/* ================= SUB COMPONENT ================= */
+
+function Metric({
+  label,
+  value,
+}: {
+  label: string
+  value: any
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">
+        {label}
+      </p>
+      <p className="font-semibold">
+        {value}
+      </p>
     </div>
   )
 }

@@ -93,7 +93,7 @@ export default function PosPage() {
   ======================================================= */
 
   return (
-    <div className="relative h-full">
+    <div className="relative flex-1 flex flex-col min-h-0">
 
       {/* ===============================
           LOCK CAJA
@@ -112,46 +112,44 @@ export default function PosPage() {
       </PosLock>
 
       {/* ===============================
-          POS
+          POS PRINCIPAL
       =============================== */}
 
-      <PosVentaView
-        scannerRef={pos.scannerRef}
-        onAddProduct={pos.onAddProduct}
-        onFocusScanner={pos.focusScanner}
+      <div className="flex-1 min-h-0 flex flex-col">
 
-        query={pos.query}
-        onChangeQuery={pos.setQuery}
-        productos={pos.productos}
-        stockMap={pos.stockMap}
-        loadingProductos={pos.loadingProductos}
+        <PosVentaView
+          scannerRef={pos.scannerRef}
+          onAddProduct={pos.onAddProduct}
+          onFocusScanner={pos.focusScanner}
 
-        showReceptor={pos.showReceptor}
-        onCloseReceptor={pos.closeReceptor}
+          query={pos.query}
+          onChangeQuery={pos.setQuery}
+          productos={pos.productos}
+          stockMap={pos.stockMap}
+          loadingProductos={pos.loadingProductos}
 
-        cart={pos.cart}
-        highlightedId={pos.highlightedId}
+          cart={pos.cart}
+          highlightedId={pos.highlightedId}
+          onIncrease={pos.increase}
+          onDecrease={pos.decrease}
+          total={pos.total}
+          onClearCart={pos.clearCart}
 
-        onIncrease={pos.increase}
-        onDecrease={pos.decrease}
-        total={pos.total}
-        onClearCart={pos.clearCart}
+          documentoTributario={pos.documentoTributario}
+          onSetTipoDocumento={pos.setTipoDocumento}
+          onSetReceptor={pos.setReceptor}
 
-        /* Documento */
-        documentoTributario={pos.documentoTributario}
-        onSetTipoDocumento={pos.setTipoDocumento}
-        onSetReceptor={pos.setReceptor}
+          showReceptor={pos.showReceptor}
+          onCloseReceptor={pos.closeReceptor}
 
-        /* Caja */
-        bloqueado={pos.bloqueado}
-        cargandoCaja={pos.cargandoCaja}
+          bloqueado={pos.bloqueado}
+          cargandoCaja={pos.cargandoCaja}
+          onCobrar={pos.onCobrar}
 
-        /* Acciones */
-        onCobrar={pos.onCobrar}
+          pago={pos.pago}
+        />
 
-        /* Pago */
-        pago={pos.pago}
-      />
+      </div>
 
       {/* ===============================
           POST VENTA

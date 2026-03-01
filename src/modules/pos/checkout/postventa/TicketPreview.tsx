@@ -28,8 +28,7 @@ function TicketPreview({ venta }: Props) {
         bg-background
         border border-border
         rounded-xl
-        px-5
-        py-4
+        px-5 py-4
         font-mono
         text-xs
         text-foreground
@@ -73,11 +72,11 @@ function TicketPreview({ venta }: Props) {
               {item.nombre}
             </div>
 
-            <div className="w-6 text-right">
+            <div className="min-w-[24px] text-right">
               x{item.cantidad}
             </div>
 
-            <div className="w-20 text-right">
+            <div className="min-w-[70px] text-right">
               ${item.subtotal.toLocaleString('es-CL')}
             </div>
 
@@ -111,6 +110,7 @@ function TicketPreview({ venta }: Props) {
           label="TOTAL"
           value={totalFinal}
           bold
+          big
         />
 
       </div>
@@ -143,16 +143,25 @@ function TicketPreview({ venta }: Props) {
 
 export default memo(TicketPreview)
 
+/* =====================================================
+   Divider
+===================================================== */
+
 function Divider() {
   return (
     <div className="border-t border-dashed border-border/60" />
   )
 }
 
+/* =====================================================
+   Row
+===================================================== */
+
 interface RowProps {
   label: string
   value: number
   bold?: boolean
+  big?: boolean
   sign?: boolean
 }
 
@@ -160,18 +169,26 @@ function Row({
   label,
   value,
   bold,
+  big,
   sign,
 }: RowProps) {
   return (
     <div
-      className={`flex justify-between ${bold ? 'font-bold text-sm' : ''
-        }`}
+      className={`
+        flex justify-between
+        ${bold ? 'font-semibold' : ''}
+        ${big ? 'text-sm' : 'text-xs'}
+      `}
     >
       <span className="text-muted-foreground">
         {label}
       </span>
 
-      <span className={bold ? 'text-foreground' : ''}>
+      <span
+        className={`
+          ${big ? 'text-foreground font-bold' : ''}
+        `}
+      >
         {sign && value > 0 ? '+' : ''}
         ${value.toLocaleString('es-CL')}
       </span>

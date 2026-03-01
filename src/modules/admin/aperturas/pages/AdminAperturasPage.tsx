@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
+import { Button } from '@/shared/ui/button/button'
+
 import AperturasFilters from '../ui/AperturasFilters'
 import { AperturaCard } from '../ui/AperturaCard'
 
@@ -70,45 +72,48 @@ export default function AdminAperturasPage() {
   =============================== */
 
   return (
-    <div className="h-full flex flex-col px-6 pt-6 pb-4 text-slate-200">
+    <section className="h-full flex flex-col px-6 pt-6 pb-4 gap-6">
 
-      {/* Header */}
-      <div className="shrink-0 mb-4">
+      {/* ================= HEADER ================= */}
+
+      <div>
         <h1 className="text-2xl font-semibold">
           Aperturas de Caja
         </h1>
 
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           Control y auditoría de turnos de caja
         </p>
       </div>
 
-      {/* Filtro día */}
-      <div className="shrink-0 mb-4">
-        <AperturasFilters
-          value={day}
-          onChange={(nextDay) => {
-            setDay(nextDay)
-            setPage(1)
-          }}
-        />
-      </div>
+      {/* ================= FILTRO ================= */}
 
-      {/* Loading */}
+      <AperturasFilters
+        value={day}
+        onChange={(nextDay) => {
+          setDay(nextDay)
+          setPage(1)
+        }}
+      />
+
+      {/* ================= LOADING ================= */}
+
       {isLoading && (
-        <div className="text-sm text-slate-400">
+        <div className="text-sm text-muted-foreground">
           Cargando aperturas...
         </div>
       )}
 
-      {/* Error */}
+      {/* ================= ERROR ================= */}
+
       {isError && (
-        <div className="text-sm text-red-400">
+        <div className="text-sm text-danger">
           Error al cargar aperturas
         </div>
       )}
 
-      {/* CONTENIDO */}
+      {/* ================= CONTENIDO ================= */}
+
       {!isLoading && !isError && (
         <div className="flex-1 flex flex-col overflow-hidden">
 
@@ -116,7 +121,7 @@ export default function AdminAperturasPage() {
           <div className="flex-1 overflow-y-auto">
 
             {aperturas.length === 0 ? (
-              <div className="text-sm text-slate-400 text-center py-10">
+              <div className="text-sm text-muted-foreground text-center py-10">
                 No hay aperturas para el día seleccionado
               </div>
             ) : (
@@ -132,51 +137,32 @@ export default function AdminAperturasPage() {
 
           </div>
 
-          {/* PAGINACIÓN */}
-          {data && data.totalPages > 1 && (
-            <div
-              className="
-                shrink-0
-                flex
-                justify-end
-                items-center
-                gap-2
-                pt-6
-                mt-4
-                border-t
-                border-slate-800
-              "
-            >
+          {/* ================= PAGINACIÓN ================= */}
 
-              <button
+          {data && data.totalPages > 1 && (
+            <div className="shrink-0 flex justify-end items-center gap-4 pt-6 mt-4 border-t border-border">
+
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
-                className="
-                  px-3 py-1 rounded
-                  bg-slate-800
-                  hover:bg-slate-700
-                  disabled:opacity-40
-                "
               >
                 Anterior
-              </button>
+              </Button>
 
-              <span className="text-sm text-slate-400 px-2">
+              <span className="text-sm text-muted-foreground">
                 Página {page} de {data.totalPages}
               </span>
 
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={page === data.totalPages}
                 onClick={() => setPage(p => p + 1)}
-                className="
-                  px-3 py-1 rounded
-                  bg-slate-800
-                  hover:bg-slate-700
-                  disabled:opacity-40
-                "
               >
                 Siguiente
-              </button>
+              </Button>
 
             </div>
           )}
@@ -184,6 +170,6 @@ export default function AdminAperturasPage() {
         </div>
       )}
 
-    </div>
+    </section>
   )
 }

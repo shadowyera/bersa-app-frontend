@@ -11,7 +11,17 @@ function formatCLP(value: number) {
 
 function PaymentSummary({ estado }: Props) {
   return (
-    <div className="rounded-xl bg-slate-800 border border-slate-700 p-4 space-y-2 text-sm">
+    <div
+      className="
+        rounded-xl
+        bg-surface
+        border border-border
+        p-5
+        space-y-3
+        text-sm
+        shadow-sm
+      "
+    >
 
       {/* Subtotal */}
       <Row
@@ -30,7 +40,7 @@ function PaymentSummary({ estado }: Props) {
         />
       )}
 
-      {/* Total a pagar */}
+      {/* Total a pagar (destacado pero no gigante) */}
       <Row
         label="Total a pagar"
         value={estado.totalCobrado}
@@ -43,7 +53,7 @@ function PaymentSummary({ estado }: Props) {
         value={estado.totalPagado}
       />
 
-      <div className="border-t border-slate-700 my-1" />
+      <div className="border-t border-border my-2" />
 
       {/* Diferencias */}
       {estado.falta > 0 && (
@@ -62,14 +72,14 @@ function PaymentSummary({ estado }: Props) {
         />
       )}
 
-      {/* Estado */}
-      <div className="pt-2 text-center text-xs uppercase tracking-wide">
+      {/* Estado general */}
+      <div className="pt-4 text-center text-xs uppercase tracking-wider">
         {estado.puedeConfirmar ? (
-          <span className="text-emerald-400">
+          <span className="text-success font-semibold">
             Listo para pagar
           </span>
         ) : (
-          <span className="text-red-400">
+          <span className="text-danger font-semibold">
             Monto insuficiente
           </span>
         )}
@@ -103,23 +113,29 @@ const Row = memo(function Row({
   sign,
 }: RowProps) {
 
-  const color = highlight
-    ? 'text-emerald-400 text-lg font-semibold'
+  const valueColor = highlight
+    ? 'text-primary text-xl font-semibold'
     : positive
-    ? 'text-emerald-400 font-semibold'
+    ? 'text-success text-lg font-semibold'
     : negative
-    ? 'text-red-400 font-semibold'
+    ? 'text-danger text-lg font-semibold'
     : muted
-    ? 'text-slate-400'
-    : 'text-slate-200'
+    ? 'text-muted-foreground'
+    : 'text-foreground'
 
   return (
-    <div className="flex justify-between">
-      <span className={muted ? 'text-slate-400' : ''}>
+    <div className="flex justify-between items-center">
+      <span
+        className={
+          muted
+            ? 'text-muted-foreground'
+            : 'text-foreground'
+        }
+      >
         {label}
       </span>
 
-      <span className={color}>
+      <span className={valueColor}>
         {sign && value > 0 ? '+' : ''}
         {formatCLP(value)}
       </span>

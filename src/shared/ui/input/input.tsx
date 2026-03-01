@@ -1,14 +1,6 @@
 import * as React from 'react'
 import clsx from 'clsx'
 
-/* =====================================================
-   Input – Base del sistema
-   - Usa tokens (surface, border, foreground)
-   - Focus consistente
-   - Soporta error
-   - Sin conflicto con size nativo HTML
-===================================================== */
-
 type InputSize =
   | 'sm'
   | 'md'
@@ -20,13 +12,9 @@ export interface InputProps
   error?: boolean
 }
 
-/* =====================================================
-   Estilos base
-===================================================== */
-
 const base =
   'w-full rounded-lg border border-border bg-surface text-foreground ' +
-  'placeholder:text-foreground/50 ' +
+  'placeholder:text-muted-foreground ' +
   'transition-all duration-150 ease-out ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary ' +
   'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -58,7 +46,7 @@ export const Input = React.forwardRef<
         base,
         sizes[inputSize],
         error &&
-          'border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/40',
+          'border-danger focus-visible:border-danger focus-visible:ring-danger/40',
         className
       )}
       {...props}

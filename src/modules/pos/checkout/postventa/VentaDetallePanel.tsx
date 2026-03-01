@@ -47,6 +47,8 @@ export function VentaDetallePanel({
 
   }, [venta, detalle])
 
+  /* ================= Estados tempranos ================= */
+
   if (!venta) {
     return (
       <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
@@ -63,8 +65,12 @@ export function VentaDetallePanel({
     )
   }
 
+  /* ================= Permisos ================= */
+
   const puedeAnular =
     venta.estado === 'FINALIZADA'
+
+  /* ================= Acciones ================= */
 
   const confirmarAnulacion = async () => {
     try {
@@ -88,31 +94,35 @@ export function VentaDetallePanel({
       {/* ================= Header ================= */}
 
       <div className="
-        px-4 py-3
+        px-5 py-4
         border-b border-border
         flex items-center justify-between
         bg-background/40
       ">
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-1">
 
-          <div className="text-sm font-semibold">
-            Venta #{venta.numeroVenta
-              .toString()
-              .padStart(3, '0')}
+          <div className="flex items-center gap-3">
+
+            <span className="text-sm font-semibold">
+              Venta #{venta.numeroVenta
+                .toString()
+                .padStart(3, '0')}
+            </span>
+
+            {tipoDocumento && (
+              <Badge
+                variant={
+                  tipoDocumento === 'FACTURA'
+                    ? 'info'
+                    : 'outline'
+                }
+              >
+                {tipoDocumento}
+              </Badge>
+            )}
+
           </div>
-
-          {tipoDocumento && (
-            <Badge
-              variant={
-                tipoDocumento === 'FACTURA'
-                  ? 'info'
-                  : 'outline'
-              }
-            >
-              {tipoDocumento}
-            </Badge>
-          )}
 
           {rut && (
             <span className="text-xs text-muted-foreground">
@@ -136,7 +146,7 @@ export function VentaDetallePanel({
 
       {/* ================= Contenido ================= */}
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-5">
 
         <div
           className={
@@ -152,7 +162,12 @@ export function VentaDetallePanel({
 
       {/* ================= Acciones ================= */}
 
-      <div className="p-4 border-t border-border flex gap-3 bg-background/30">
+      <div className="
+        p-5
+        border-t border-border
+        flex gap-3
+        bg-background/30
+      ">
 
         <Button
           variant="outline"

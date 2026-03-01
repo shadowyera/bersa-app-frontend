@@ -1,3 +1,7 @@
+import { Button } from '@/shared/ui/button/button'
+import { Input } from '@/shared/ui/input/input'
+import { Label } from '@/shared/ui/label/label'
+
 interface Props {
   value: string
   onChange: (day: string) => void
@@ -23,89 +27,59 @@ export default function AperturasFilters({
   const today = getToday()
   const yesterday = getYesterday()
 
+  const isToday = value === today
+
   return (
-    <div
-      className="
-        flex
-        flex-wrap
-        items-center
-        gap-4
-      "
-    >
+    <div className="flex flex-wrap items-end gap-6">
 
       {/* Día */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2">
 
-        <span className="text-sm text-slate-400">
-          Día
-        </span>
+        <Label>Día</Label>
 
-        <input
+        <Input
           type="date"
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="
-            bg-slate-800
-            border border-slate-700
-            rounded-md
-            px-3 py-1.5
-            text-sm
-            text-slate-200
-            w-44
-          "
+          className="w-44"
         />
+
       </div>
 
       {/* Accesos rápidos */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2">
 
-        <span className="text-sm text-slate-400">
-          Accesos rápidos
-        </span>
+        <Label>Accesos rápidos</Label>
 
-        <button
-          onClick={() => onChange(today)}
-          className="
-            px-3 py-1.5
-            rounded-md
-            text-sm
-            border border-slate-700
-            bg-slate-800
-            hover:bg-slate-700
-          "
-        >
-          Hoy
-        </button>
+        <div className="flex flex-wrap gap-2">
 
-        <button
-          onClick={() => onChange(yesterday)}
-          className="
-            px-3 py-1.5
-            rounded-md
-            text-sm
-            border border-slate-700
-            bg-slate-800
-            hover:bg-slate-700
-          "
-        >
-          Ayer
-        </button>
-
-        {value !== today && (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onChange(today)}
-            className="
-              px-3 py-1.5
-              rounded-md
-              text-sm
-              text-emerald-400
-              border border-emerald-600/40
-              hover:bg-emerald-600/10
-            "
           >
-            Ir a hoy
-          </button>
-        )}
+            Hoy
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onChange(yesterday)}
+          >
+            Ayer
+          </Button>
+
+          {!isToday && (
+            <Button
+              variant="success"
+              size="sm"
+              onClick={() => onChange(today)}
+            >
+              Ir a hoy
+            </Button>
+          )}
+
+        </div>
 
       </div>
 
